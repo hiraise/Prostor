@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from issue_datetime_values where (issue_id, field_id) in (\n                   select v.issue_id, v.field_id from issue_datetime_values v\n                   join issues i on i.id = v.issue_id\n                   where v.field_id = $1 and i.project_id = $2 limit $3)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "23e7068991d1a5742f62347501f0efdf6f9604003802184314528dee193da8ff"
+}

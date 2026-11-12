@@ -1,0 +1,61 @@
+{
+  "name": "trackflow-web",
+  "version": "0.1.0",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "imports": {
+    "#lib": "./src/lib",
+    "#lib/*": "./src/lib/*"
+  },
+  "engines": {
+    "node": ">=24.22.1"
+  },
+  "scripts": {
+    "dev": "svelte-kit sync && vite dev",
+    "build": "svelte-kit sync && vite build",
+    "preview": "vite preview",
+    "sync": "svelte-kit sync",
+    "typecheck": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --fail-on-warnings",
+    "lint": "svelte-kit sync && eslint . --max-warnings 0 && prettier --check .",
+    "format": "prettier --write .",
+    "test": "svelte-kit sync && vitest run",
+    "prepare": "svelte-kit sync || true",
+    "api": "openapi-typescript src/lib/api/openapi.json --output src/lib/api/schema.gen.ts --root-types --root-types-no-schema-prefix",
+    "api:check": "openapi-typescript src/lib/api/openapi.json --output src/lib/api/schema.gen.ts --root-types --root-types-no-schema-prefix --check"
+  },
+  "dependencies": {
+    "@lucide/svelte": "1.61.0",
+    "highlight.js": "11.12.0",
+    "svelte": "5.57.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.64.1",
+    "@sveltejs/adapter-static": "4.0.0",
+    "@sveltejs/kit": "3.1.0",
+    "@sveltejs/vite-plugin-svelte": "7.3.1",
+    "@types/node": "24.19.2",
+    "@vitest/browser": "5.0.5",
+    "@vitest/browser-playwright": "5.0.5",
+    "axe-core": "4.14.0",
+    "eslint": "10.13.0",
+    "eslint-plugin-svelte": "3.23.1",
+    "globals": "17.13.0",
+    "openapi-typescript": "7.13.0",
+    "playwright": "1.64.1",
+    "prettier": "3.9.10",
+    "prettier-plugin-svelte": "4.1.1",
+    "svelte-check": "4.7.7",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.0",
+    "vite": "8.3.5",
+    "vitest": "5.0.5",
+    "vitest-browser-svelte": "3.1.0"
+  },
+  "overrides": {
+    "openapi-typescript": {
+      "typescript": "$typescript"
+    }
+  }
+}

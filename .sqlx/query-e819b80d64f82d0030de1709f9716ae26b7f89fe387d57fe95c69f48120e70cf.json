@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update instance set secret = coalesce(secret, $1) returning secret as \"secret!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "secret!",
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "instance",
+            "name": "secret"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bytea"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "e819b80d64f82d0030de1709f9716ae26b7f89fe387d57fe95c69f48120e70cf"
+}

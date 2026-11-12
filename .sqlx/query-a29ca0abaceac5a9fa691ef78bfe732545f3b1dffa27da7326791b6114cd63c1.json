@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select min(rank) as \"rank\" from sprint_issues where sprint_id = $1 and rank > $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "rank",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "a29ca0abaceac5a9fa691ef78bfe732545f3b1dffa27da7326791b6114cd63c1"
+}

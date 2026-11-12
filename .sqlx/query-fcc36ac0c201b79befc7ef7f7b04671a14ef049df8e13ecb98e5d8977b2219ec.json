@@ -1,0 +1,33 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select state, count(*) as \"count!\" from jobs group by state order by state",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "state",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "jobs",
+            "name": "state"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "fcc36ac0c201b79befc7ef7f7b04671a14ef049df8e13ecb98e5d8977b2219ec"
+}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update fields set default_values = array(select v from unnest(default_values) v\n                                                  where not v = any($2)),\n                           version = version + 1\n         where set_id = $1 and kind = 'user' and default_values && $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5a9d902c57d8ea3004bf2a18ee66c1ef35e5822f9509b1e00f22dc77d4487d4f"
+}

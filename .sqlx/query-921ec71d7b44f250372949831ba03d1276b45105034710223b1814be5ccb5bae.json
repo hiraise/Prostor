@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select builtin as \"builtin!\" from saved_searches\n           where owner_id = $1 and builtin is not null",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "builtin!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "saved_searches",
+            "name": "builtin"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "921ec71d7b44f250372949831ba03d1276b45105034710223b1814be5ccb5bae"
+}

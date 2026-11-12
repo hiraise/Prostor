@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select issue_id from comments where id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "issue_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "issue_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "2fce89778969307073179fa81c6001b5b6f01025037dc32a632337f3873c036d"
+}

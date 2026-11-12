@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "with wanted as (\n             select t.token, k.project_id, split_part(t.token, '-', 2)::bigint as number\n             from unnest($1::text[]) t(token)\n             join project_keys k on k.key = split_part(t.token, '-', 1)\n             where split_part(t.token, '-', 2) ~ '^[1-9][0-9]{0,17}$'\n           )\n           select w.token as \"token!\",\n                  coalesce(i.id, a.issue_id) as \"issue!\"\n           from wanted w\n           left join issues i on i.project_id = w.project_id and i.number = w.number\n           left join issue_aliases a on a.project_id = w.project_id and a.number = w.number\n           where i.id is not null or a.issue_id is not null",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "token!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "issue!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "0b553b24c9b669ebff178e7717f649f247a75a116cf3ec829f636f32d1569cc0"
+}

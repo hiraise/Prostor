@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update passwords set must_change = true where user_id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5c4275101082f498de4cab19c21ea1b631f195169b955b5acbe74f9640fe2ac5"
+}

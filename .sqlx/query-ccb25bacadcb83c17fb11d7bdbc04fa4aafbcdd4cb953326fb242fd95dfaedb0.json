@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from notification_subscriptions where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ccb25bacadcb83c17fb11d7bdbc04fa4aafbcdd4cb953326fb242fd95dfaedb0"
+}

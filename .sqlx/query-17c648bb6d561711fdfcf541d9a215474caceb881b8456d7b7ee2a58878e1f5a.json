@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update instance set link_types_seeded_at = now()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "17c648bb6d561711fdfcf541d9a215474caceb881b8456d7b7ee2a58878e1f5a"
+}

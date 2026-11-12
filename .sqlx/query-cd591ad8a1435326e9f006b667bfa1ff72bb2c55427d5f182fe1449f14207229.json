@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update instance set setup_completed_at = now(), setup_code = null",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "cd591ad8a1435326e9f006b667bfa1ff72bb2c55427d5f182fe1449f14207229"
+}

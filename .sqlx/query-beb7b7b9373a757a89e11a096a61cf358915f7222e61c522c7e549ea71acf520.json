@@ -1,0 +1,43 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select issue_id, rank from saved_search_ranks\n               where search_id = $1 and (rank, issue_id) > ($2::text collate \"C\", $3)\n                 and issue_id <> $4\n               order by rank, issue_id limit 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "issue_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "saved_search_ranks",
+            "name": "issue_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "rank",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "saved_search_ranks",
+            "name": "rank"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "beb7b7b9373a757a89e11a096a61cf358915f7222e61c522c7e549ea71acf520"
+}

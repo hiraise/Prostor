@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select team_of as \"project!\", id from groups where team_of = any($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "project!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "team_of"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      true,
+      false
+    ]
+  },
+  "hash": "1f66e3dfa038ac91e5ded496158a7bb7825c32c60ec9e40f1bbf6d9ed9c07119"
+}

@@ -1,0 +1,53 @@
+# A small self-contained deployment: trackflow and its PostgreSQL (deploy/Dockerfile, D-032's
+# 2 vCPU / 4 GB profile is enough). Copy this file and an `.env` beside it:
+#   POSTGRES_PASSWORD=<a password>          # openssl rand -hex 16
+#   TRACKFLOW_SECRET_KEY=<32 bytes base64>  # openssl rand -base64 32; lets the mail screen store secrets
+# Then: docker compose -f compose.server.yaml up -d --wait
+# and `docker compose -f compose.server.yaml logs app` for the setup code line; open the
+# address in a browser and finish the setup wizard (docs/guide/admin.md «Первый запуск»).
+# Upgrades: rebuild the image, `docker compose ... up -d` again — migrations run at start.
+name: trackflow
+
+services:
+  db:
+    image: postgres:18.6-alpine
+    environment:
+      POSTGRES_USER: trackflow
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set it in .env}
+      POSTGRES_DB: trackflow
+    # The parent path, not .../data: PostgreSQL 18+ keeps its data in a versioned subdirectory
+    # (deploy/compose.bench.yaml mounts the same way), which is what pg_upgrade expects.
+    volumes:
+      - dbdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trackflow -d trackflow"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
+  app:
+    image: trackflow:1.12c
+    # Secrets come from .env; add when needed:
+    #   TRACKFLOW_SMTP_URL / TRACKFLOW_MAIL_FROM  - mail transport until the mail screen is set
+    #   TRACKFLOW_TRUSTED_PROXIES=172.16.0.0/12   - behind a reverse proxy that sets X-Forwarded-For
+    environment:
+      DATABASE_URL: postgres://trackflow:${POSTGRES_PASSWORD}@db:5432/trackflow
+      TRACKFLOW_SECRET_KEY: ${TRACKFLOW_SECRET_KEY:?set it in .env}
+      TRACKFLOW_FILES_DIR: /data/files
+    volumes:
+      # Backups must include this volume together with dbdata (docs/guide/admin.md «Файлы»).
+      - appdata:/data
+    ports:
+      # Loopback only: put a reverse proxy with HTTPS in front. To open directly for a test,
+      # change to "7700:7700" (the setup code keeps strangers out until setup is finished).
+      - "127.0.0.1:7700:7700"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  dbdata:
+  appdata:

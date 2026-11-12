@@ -1,0 +1,64 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select s.board_id, s.id as sprint_id, s.name as sprint_name, s.internal\n         from sprint_issues si\n         join sprints s on s.id = si.sprint_id\n         join boards b on b.id = s.board_id and b.mode <> 'query'\n         where si.issue_id = $1\n         order by si.added_at, s.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "board_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "board_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "sprint_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "sprint_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "internal",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "internal"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "26d84f365de237d6bdede3b8a1844e367bd285f5e38f811b19e4adb86574dc87"
+}

@@ -1,0 +1,27 @@
+# Rust
+/target/
+# Linux builds made in a Docker container (step 1.12a)
+/target-linux/
+
+# Web
+/web/node_modules/
+/web/build/
+/web/.svelte-kit/
+/web/test-results/
+/web/.vitest/
+/web/.playwright/
+# Built by `make wasm`
+/web/src/lib/query/query.wasm
+
+# Local
+/data/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+
+/test-results/
+
+# Built deployment artifacts stay on the machine (deploy/README.server.md)
+deploy/*.tar*

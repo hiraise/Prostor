@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update boards set card_fields = array_remove(card_fields, $1),\n                card_initials = array_remove(card_initials, $1), version = version + 1\n         where $1 = any(card_fields) or $1 = any(card_initials)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e2484b83b301161528e2055da3085958f3b5f4fb89f28f0f0148c6c15b9a34fd"
+}

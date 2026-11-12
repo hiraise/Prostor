@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from saved_searches where owner_id = any($1) and builtin is not null",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4ccbdba827a96bb589c7f8f5c7900e7f8e4f2671e7bf577a0a352e78455c2d1b"
+}

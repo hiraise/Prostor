@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "with listed as (\n             select g.id, g.builtin from value_set_groups v join groups g on g.id = v.group_id\n             where v.set_id = $1\n             union\n             select g.id, g.builtin from value_set_groups v\n               join team_groups t on t.team_id = v.group_id\n               join groups g on g.id = t.group_id\n             where v.set_id = $1\n           ),\n           allowed as (\n             select user_id as id from value_set_users where set_id = $1\n             union\n             select m.user_id from listed l join group_members m on m.group_id = l.id\n             union\n             select u.id from users u\n             where exists(select 1 from listed where builtin in ('everyone', 'all_members'))\n           )\n           select u.id from allowed a join users u on u.id = a.id\n           where u.deleted_at is null and u.disabled_at is null\n             and u.builtin is distinct from 'guest'\n             and (strpos(replace(lower(u.full_name), 'ё', 'е'), $2) > 0\n                  or strpos(lower(u.username), $2) > 0)\n           order by u.id <> $3, lower(u.full_name), u.id\n           limit $4",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c6ed82de294a92b3718d49991e66b4f53be29c186d99694f3d38cf7e54c7d7ab"
+}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from project_fields where project_id = $1 and field_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "30e5cd9dbea6730e7bd0e854edcece8ac08986ddda3d8bf818b36bc39be1c0c3"
+}

@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select min(id) from notifications where user_id = $1 and issue_id = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "min",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "3710d8a674ef0fb74203c9ef60697700af9aab309c8f3b4a59bac7ff20a6e056"
+}

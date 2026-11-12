@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from issue_ref_values v using fields f\n             where f.id = v.field_id and f.kind = 'user' and v.value = any($1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "be689e862158a4e51022e04bc8843cbd35dce4b668eb9540b55b708b2e2ea20d"
+}

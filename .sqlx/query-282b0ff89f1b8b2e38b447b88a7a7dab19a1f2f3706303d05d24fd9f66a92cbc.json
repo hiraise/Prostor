@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into instance (id, setup_code) values (true, coalesce($2, $1))\n         on conflict (id) do update\n         set setup_code = case\n               when instance.setup_completed_at is not null then null\n               else coalesce($2, instance.setup_code, $1)\n             end\n         returning setup_code, setup_completed_at",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "setup_code",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "instance",
+            "name": "setup_code"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "setup_completed_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "instance",
+            "name": "setup_completed_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      true,
+      true
+    ]
+  },
+  "hash": "282b0ff89f1b8b2e38b447b88a7a7dab19a1f2f3706303d05d24fd9f66a92cbc"
+}

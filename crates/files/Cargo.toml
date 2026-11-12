@@ -1,0 +1,22 @@
+[package]
+name = "trackflow-files"
+description = "trackflow file store: uploaded files and pictures in a directory (D-033)"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+tokio = { workspace = true, features = ["fs", "io-util"] }
+bytes.workspace = true
+futures-util.workspace = true
+sha2.workspace = true
+uuid.workspace = true
+time.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true

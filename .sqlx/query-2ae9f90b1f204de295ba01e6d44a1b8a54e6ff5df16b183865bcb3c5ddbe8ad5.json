@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update boards set\n           view_users = array(select distinct x from unnest(\n             array(select case when x = any($1) then $2 else x end from unnest(view_users) x)) x\n             where x <> owner_id order by x),\n           edit_users = array(select distinct x from unnest(\n             array(select case when x = any($1) then $2 else x end from unnest(edit_users) x)) x\n             where x <> owner_id order by x),\n           version = version + 1\n         where view_users && $1 or edit_users && $1\n            or (owner_id = $2 and ($2 = any(view_users) or $2 = any(edit_users)))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2ae9f90b1f204de295ba01e6d44a1b8a54e6ff5df16b183865bcb3c5ddbe8ad5"
+}

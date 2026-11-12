@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update issues set resolved_at = $2 where id = any($1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "35aa59d3415e3b0743cb281c2386405e42ae3ef6c8fecd49cdafa5355a09f42b"
+}

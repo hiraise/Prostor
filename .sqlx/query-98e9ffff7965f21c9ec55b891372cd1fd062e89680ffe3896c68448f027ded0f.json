@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select lower(name) as \"name!\" from value_sets\n         where kind = $1 and starts_with(lower(name), lower($2))",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "name!",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "98e9ffff7965f21c9ec55b891372cd1fd062e89680ffe3896c68448f027ded0f"
+}

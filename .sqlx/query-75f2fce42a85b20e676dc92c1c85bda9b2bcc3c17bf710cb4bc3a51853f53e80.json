@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select distinct si.issue_id as \"issue_id!\"\n           from sprint_issues si join sprints s on s.id = si.sprint_id\n           where s.board_id = $1 and ($2::bigint is null or s.id = $2)\n             and exists (\n                 select 1 from boards q\n                 where q.mode = 'query' and q.id <> $1\n                   and (q.query -> 'bindings' @> jsonb_build_array(jsonb_build_array(\n                            jsonb_build_object('t', 'board', 'v', $1)))\n                        or q.query -> 'bindings' @> jsonb_build_array(jsonb_build_array(\n                            jsonb_build_object('t', 'current_sprint', 'v', $1)))))",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "issue_id!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "sprint_issues",
+            "name": "issue_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "75f2fce42a85b20e676dc92c1c85bda9b2bcc3c17bf710cb4bc3a51853f53e80"
+}

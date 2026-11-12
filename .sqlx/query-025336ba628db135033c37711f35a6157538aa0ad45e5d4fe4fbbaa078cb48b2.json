@@ -1,0 +1,172 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, board_id, name, goal, starts_on, ends_on, finished_at, archived_at, internal,\n                order_version, created_at, updated_at, version\n         from sprints where board_id = any($1) order by created_at, id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "board_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "board_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "goal",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "goal"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "starts_on",
+        "type_info": "Date",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "starts_on"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "ends_on",
+        "type_info": "Date",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "ends_on"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "finished_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "finished_at"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "archived_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "archived_at"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "internal",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "internal"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "order_version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "order_version"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "updated_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "updated_at"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "version"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "025336ba628db135033c37711f35a6157538aa0ad45e5d4fe4fbbaa078cb48b2"
+}

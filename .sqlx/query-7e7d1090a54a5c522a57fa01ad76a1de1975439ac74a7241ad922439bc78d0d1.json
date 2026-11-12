@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select\n             exists(select 1 from users where lower(username) = lower($1) and deleted_at is null\n                    and id is distinct from $3) as \"username!\",\n             exists(select 1 from users where lower(email) = lower($2)\n                    and id is distinct from $3) as \"email!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "username!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "email!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "7e7d1090a54a5c522a57fa01ad76a1de1975439ac74a7241ad922439bc78d0d1"
+}

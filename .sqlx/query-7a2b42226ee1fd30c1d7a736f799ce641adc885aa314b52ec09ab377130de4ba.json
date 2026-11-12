@@ -1,0 +1,148 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, at, kind, entity_id, version, change, issues, projects, boards, patch, guard\n         from live_events where at >= $1 order by id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "live_events",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "live_events",
+            "name": "at"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "live_events",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "entity_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "live_events",
+            "name": "entity_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "live_events",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "change",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "live_events",
+            "name": "change"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "issues",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "live_events",
+            "name": "issues"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "projects",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "live_events",
+            "name": "projects"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "boards",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "live_events",
+            "name": "boards"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "patch",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "live_events",
+            "name": "patch"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "guard",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "live_events",
+            "name": "guard"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "7a2b42226ee1fd30c1d7a736f799ce641adc885aa314b52ec09ab377130de4ba"
+}

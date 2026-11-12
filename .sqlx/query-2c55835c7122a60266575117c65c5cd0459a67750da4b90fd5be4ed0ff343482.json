@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select logo_key from projects where id = $1 for update",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "logo_key",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "projects",
+            "name": "logo_key"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "2c55835c7122a60266575117c65c5cd0459a67750da4b90fd5be4ed0ff343482"
+}

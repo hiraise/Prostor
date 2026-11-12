@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into project_rules (project_id, rule, enabled) values ($1, $2, $3)\n         on conflict (project_id, rule) do update set enabled = excluded.enabled\n             where project_rules.enabled <> excluded.enabled",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7a7a1bfe049680915b08414bb9b98751a34810634c0d0c5fc3e6c4cd5581bad1"
+}

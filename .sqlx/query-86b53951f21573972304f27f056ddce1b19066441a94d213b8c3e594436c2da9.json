@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from issue_ref_values where issue_id = $1 and field_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "86b53951f21573972304f27f056ddce1b19066441a94d213b8c3e594436c2da9"
+}

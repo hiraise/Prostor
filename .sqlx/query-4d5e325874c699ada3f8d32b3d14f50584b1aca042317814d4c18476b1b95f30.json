@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update jobs set lease_until = now() + make_interval(secs => $3), updated_at = now()\n         where id = $1 and claim_token = $2 and state = 'running'\n         returning cancel_requested",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "cancel_requested",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "jobs",
+            "name": "cancel_requested"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Float8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4d5e325874c699ada3f8d32b3d14f50584b1aca042317814d4c18476b1b95f30"
+}

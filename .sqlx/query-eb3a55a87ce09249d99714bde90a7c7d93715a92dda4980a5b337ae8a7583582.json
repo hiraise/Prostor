@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update notification_pending\n                  set payload = payload || $3::jsonb,\n                      mentions = (select array(select distinct unnest(mentions || $4))),\n                      due_at = $5\n                where issue_id = $1 and author_id = $2 and kind = 'updated'\n                returning id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "notification_pending",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Jsonb",
+        "Int8Array",
+        "Timestamptz"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "eb3a55a87ce09249d99714bde90a7c7d93715a92dda4980a5b337ae8a7583582"
+}

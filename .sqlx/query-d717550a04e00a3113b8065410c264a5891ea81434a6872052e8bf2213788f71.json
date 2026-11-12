@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into sprint_issues (sprint_id, issue_id, rank)\n         select $1, t.issue, t.rank from unnest($2::bigint[], $3::text[]) as t(issue, rank)\n         on conflict (sprint_id, issue_id) do nothing",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8Array",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d717550a04e00a3113b8065410c264a5891ea81434a6872052e8bf2213788f71"
+}

@@ -1,0 +1,3 @@
+/* Global styles: tokens, themes and base rules (docs/design.md). Imported once by the root layout. */
+@import './tokens.css';
+@import './base.css';

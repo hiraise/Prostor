@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update groups set name = $2, version = version + 1, updated_at = now()\n         where team_of = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7356c80bc5e4b06afd385a0103a9efa074e5c22708857adf2e22ea4bd52fbcd8"
+}

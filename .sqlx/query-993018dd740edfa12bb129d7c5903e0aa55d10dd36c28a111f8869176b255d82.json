@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, source_name, target_name from link_types where deleted_at is null order by id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "link_types",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "source_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "link_types",
+            "name": "source_name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "target_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "link_types",
+            "name": "target_name"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "993018dd740edfa12bb129d7c5903e0aa55d10dd36c28a111f8869176b255d82"
+}

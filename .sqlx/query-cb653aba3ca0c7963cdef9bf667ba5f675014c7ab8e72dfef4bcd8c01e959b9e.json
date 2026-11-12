@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into board_columns (board_id, value_id, rank, wip_min, wip_max)\n         select $1, v, r, mn, mx\n         from unnest($2::bigint[], $3::text[], $4::int[], $5::int[]) as t(v, r, mn, mx)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8Array",
+        "TextArray",
+        "Int4Array",
+        "Int4Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "cb653aba3ca0c7963cdef9bf667ba5f675014c7ab8e72dfef4bcd8c01e959b9e"
+}

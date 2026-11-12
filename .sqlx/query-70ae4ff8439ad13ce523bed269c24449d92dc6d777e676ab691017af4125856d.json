@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update notifications set last = false where user_id = $1 and issue_id = $2 and last",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "70ae4ff8439ad13ce523bed269c24449d92dc6d777e676ab691017af4125856d"
+}

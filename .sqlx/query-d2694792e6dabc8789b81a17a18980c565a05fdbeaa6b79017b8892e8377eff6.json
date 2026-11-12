@@ -1,0 +1,42 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, name from tags\n         where (owner_id = $1 or $1 = any(view_users) or view_groups && $2)\n           and replace(lower(btrim(name)), 'ё', 'е') = any($3)\n         order by id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "name"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8Array",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "d2694792e6dabc8789b81a17a18980c565a05fdbeaa6b79017b8892e8377eff6"
+}

@@ -1,0 +1,200 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select l.id,\n                  s.id as s_id, s.project_id as s_project, s.reporter_id as s_reporter,\n                  s.number is null as \"s_draft!\", s.deleted_at is not null as \"s_deleted!\",\n                  s.audience_users as s_users, s.audience_groups as s_groups,\n                  s.version as s_version,\n                  t.id as t_id, t.project_id as t_project, t.reporter_id as t_reporter,\n                  t.number is null as \"t_draft!\", t.deleted_at is not null as \"t_deleted!\",\n                  t.audience_users as t_users, t.audience_groups as t_groups,\n                  t.version as t_version\n           from issue_links l\n                join issues s on s.id = l.source_id\n                join issues t on t.id = l.target_id\n           where l.id = any($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issue_links",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "s_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "s_project",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "project_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "s_reporter",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "reporter_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "s_draft!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 5,
+        "name": "s_deleted!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 6,
+        "name": "s_users",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "audience_users"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "s_groups",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "audience_groups"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "s_version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "t_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "t_project",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "project_id"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "t_reporter",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "reporter_id"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "t_draft!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 13,
+        "name": "t_deleted!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 14,
+        "name": "t_users",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "audience_users"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "t_groups",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "audience_groups"
+          }
+        }
+      },
+      {
+        "ordinal": 16,
+        "name": "t_version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "version"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      null,
+      null,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "c6b36c3afbc5a94e7cea44b9beee94dfa786a3325bd78909f435a7af1f668f5f"
+}

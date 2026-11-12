@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into setting_secrets (key, value) values ($1, $2)\n         on conflict (key) do update set value = excluded.value",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Bytea"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "92fe159a76e62a804e4deced8c407fe0424a0662fd63c4029690cb8bd51b6cfa"
+}

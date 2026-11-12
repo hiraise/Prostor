@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select distinct v.issue_id as \"issue_id!\" from issue_ref_values v\n           join fields f on f.id = v.field_id\n           where v.value = any($1) and f.kind = any($2) and v.issue_id > $3\n           order by v.issue_id limit $4",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "issue_id!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issue_ref_values",
+            "name": "issue_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "TextArray",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "784c30ad773c49815f6d4a551807f6614680ac5a6d3ed57d7a8fda48ccaf7549"
+}

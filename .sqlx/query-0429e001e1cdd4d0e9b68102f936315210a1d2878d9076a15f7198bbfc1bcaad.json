@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from value_sets s where s.id = any($1)\n           and not exists(select 1 from fields f where f.set_id = s.id)\n           and not exists(select 1 from project_fields p where p.set_id = s.id)\n         returning s.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "value_sets",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "0429e001e1cdd4d0e9b68102f936315210a1d2878d9076a15f7198bbfc1bcaad"
+}

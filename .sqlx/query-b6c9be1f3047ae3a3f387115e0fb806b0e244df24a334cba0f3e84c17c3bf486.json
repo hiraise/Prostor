@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into board_profiles\n           (user_id, board_id, favorite, card_size, collapsed_columns, collapsed_lanes,\n            cell_drafts)\n         values ($1, $2, $3, $4, $5, $6, $7)\n         on conflict (user_id, board_id) do update set favorite = excluded.favorite,\n           card_size = excluded.card_size, collapsed_columns = excluded.collapsed_columns,\n           collapsed_lanes = excluded.collapsed_lanes, cell_drafts = excluded.cell_drafts",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Bool",
+        "Int2",
+        "Int8Array",
+        "TextArray",
+        "Jsonb"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b6c9be1f3047ae3a3f387115e0fb806b0e244df24a334cba0f3e84c17c3bf486"
+}

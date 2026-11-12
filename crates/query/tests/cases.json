@@ -1,0 +1,147 @@
+{
+  "qry_001": [
+    {"name": "empty query", "text": "", "tree": "()", "print": "", "classes": []},
+    {"name": "only spaces", "text": "   ", "tree": "()", "print": ""},
+    {"name": "operators in any case", "text": "State: Open OR Priority: High", "tree": "(or (is 'State' 'Open') (is 'Priority' 'High'))", "print": "State: Open or Priority: High"},
+    {"name": "not and and in any case", "text": "NOT foo And bar", "tree": "(and (not 'foo') 'bar')", "print": "!foo bar"},
+    {"name": "sort words in any case", "text": "SORT: Updated DESC", "tree": "(sort 'Updated' desc)", "print": "sort: Updated desc"},
+    {"name": "value keywords in any case", "text": "IS: ME", "tree": "(is 'IS' 'ME')", "classes": [[0, 2, "attribute"], [2, 3, "punctuation"], [4, 6, "keyword"]]}
+  ],
+  "qry_002": [
+    {"name": "dashed name", "text": "due-date: today", "tree": "(is 'due-date' 'today')", "print": "due-date: today"},
+    {"name": "quoted name with a space", "text": "\"Due Date\": tomorrow", "tree": "(is 'Due Date' 'tomorrow')", "print": "\"Due Date\": tomorrow"},
+    {"name": "quoted name that is an attribute keyword stays quoted", "text": "\"text\": foo", "tree": "(is \"text\" 'foo')", "print": "\"text\": foo"},
+    {"name": "the attribute itself", "text": "text: foo", "tree": "(is 'text' 'foo')", "print": "text: foo"},
+    {"name": "a field named sort", "text": "\"sort\": x", "tree": "(is \"sort\" 'x')", "print": "\"sort\": x"},
+    {"name": "underscores", "text": "Fix_Versions: 2.0", "tree": "(is 'Fix_Versions' '2.0')", "print": "Fix_Versions: 2.0"},
+    {"name": "escapes in a name", "text": "\"a \\\"b\\\" \\\\ c\": x", "tree": "(is 'a \"b\" \\ c' 'x')", "print": "\"a \\\"b\\\" \\\\ c\": x"},
+    {"name": "operator words as names", "text": "not: x or: y", "tree": "(and (is 'not' 'x') (is 'or' 'y'))", "print": "not: x or: y"}
+  ],
+  "qry_003": [
+    {"name": "any of a list", "text": "state: open, \"in progress\", fixed", "tree": "(is 'state' 'open' 'in progress' 'fixed')", "print": "state: open, \"in progress\", fixed"},
+    {"name": "list without spaces", "text": "state: open,fixed", "tree": "(is 'state' 'open' 'fixed')", "print": "state: open, fixed"},
+    {"name": "repeating an attribute is AND", "text": "state: open state: fixed", "tree": "(and (is 'state' 'open') (is 'state' 'fixed'))", "print": "state: open state: fixed"},
+    {"name": "a quoted keyword value is data", "text": "state: \"open\"", "tree": "(is 'state' \"open\")", "print": "state: \"open\""},
+    {"name": "keyword values in a list", "text": "assignee: me, none", "tree": "(is 'assignee' 'me' 'none')", "classes": [[0, 8, "attribute"], [8, 9, "punctuation"], [10, 12, "keyword"], [12, 13, "punctuation"], [14, 18, "keyword"]]},
+    {"name": "operator word as a value", "text": "state: open, or", "tree": "(is 'state' 'open' 'or')", "print": "state: open, or"}
+  ],
+  "qry_004": [
+    {"name": "excluded item", "text": "fix-versions: 2.0, !1.0", "tree": "(is 'fix-versions' '2.0' !'1.0')", "print": "fix-versions: 2.0, !1.0"},
+    {"name": "only excluded items", "text": "state: !fixed, !duplicate", "tree": "(is 'state' !'fixed' !'duplicate')", "print": "state: !fixed, !duplicate"},
+    {"name": "bang on a condition", "text": "!state: open", "tree": "(not (is 'state' 'open'))", "print": "!state: open"},
+    {"name": "not on a condition", "text": "not state: open", "tree": "(not (is 'state' 'open'))", "print": "!state: open"},
+    {"name": "negative number unquoted", "text": "balance < -5", "tree": "(< 'balance' '-5')", "print": "balance < -5"},
+    {"name": "negative range", "text": "balance: -5..-1", "tree": "(is 'balance' '-5'..'-1')", "print": "balance: -5..-1"},
+    {"name": "bang inside a word is text", "text": "a!b", "tree": "'a!b'", "print": "a!b"},
+    {"name": "bang on a group", "text": "!(a or b)", "tree": "(not (or 'a' 'b'))", "print": "!(a or b)"},
+    {"name": "excluded range", "text": "votes: !1..3", "tree": "(is 'votes' !'1'..'3')", "print": "votes: !1..3"}
+  ],
+  "qry_006": [
+    {"name": "quoted text is a phrase", "text": "\"foo bar\"", "tree": "\"foo bar\"", "print": "\"foo bar\""},
+    {"name": "quoted value with a colon", "text": "url: \"http://x\"", "tree": "(is 'url' 'http://x')", "print": "url: \"http://x\""},
+    {"name": "an unquoted colon makes a condition", "text": "http://x", "tree": "(is 'http' '//x')", "print": "http: //x"},
+    {"name": "unclosed quote runs to the end", "text": "\"unclosed", "tree": "\"unclosed\"", "problems": [["unclosed_quote", 0, 9]]},
+    {"name": "time is one word", "text": "14:30", "tree": "'14:30'", "print": "14:30"},
+    {"name": "time as a value", "text": "time: 14:30", "tree": "(is 'time' '14:30')", "print": "time: 14:30"},
+    {"name": "escaped quotes", "text": "\"say \\\"hi\\\"\"", "tree": "\"say \"hi\"\"", "print": "\"say \\\"hi\\\"\""},
+    {"name": "empty quotes", "text": "\"\"", "tree": "\"\"", "print": "\"\""},
+    {"name": "a quoted operator word is text", "text": "\"or\"", "tree": "\"or\"", "print": "\"or\""},
+    {"name": "backslash in a quoted value", "text": "x: \"a\\\\b\"", "tree": "(is 'x' 'a\\b')", "print": "x: a\\b"},
+    {"name": "backslash in a bare value", "text": "x: a\\b", "tree": "(is 'x' 'a\\b')", "print": "x: a\\b"}
+  ],
+  "qry_007": [
+    {"name": "and binds tighter than or", "text": "a b or c", "tree": "(or (and 'a' 'b') 'c')", "print": "a b or c"},
+    {"name": "and binds tighter than or, right", "text": "a or b c", "tree": "(or 'a' (and 'b' 'c'))", "print": "a or b c"},
+    {"name": "explicit and with a group", "text": "a and (b or c)", "tree": "(and 'a' (or 'b' 'c'))", "print": "a (b or c)"},
+    {"name": "group next to a term", "text": "(a or b) c", "tree": "(and (or 'a' 'b') 'c')", "print": "(a or b) c"},
+    {"name": "groups next to each other", "text": "(a)(b)", "tree": "(and 'a' 'b')", "print": "a b"},
+    {"name": "redundant groups", "text": "((a or (b c)))", "tree": "(or 'a' (and 'b' 'c'))", "print": "a or b c"},
+    {"name": "not binds tightest", "text": "not a or b", "tree": "(or (not 'a') 'b')", "print": "!a or b"},
+    {"name": "two negations", "text": "!a !b", "tree": "(and (not 'a') (not 'b'))", "print": "!a !b"},
+    {"name": "trailing or is text", "text": "cats or", "tree": "(and 'cats' \"or\")", "print": "cats \"or\""},
+    {"name": "operator words without operands are text", "text": "or not", "tree": "(and \"or\" \"not\")", "print": "\"or\" \"not\""},
+    {"name": "or right after or is text", "text": "a or or b", "tree": "(or 'a' (and \"or\" 'b'))", "print": "a or \"or\" b"},
+    {"name": "double negation", "text": "!!a", "tree": "(not (not 'a'))", "print": "!!a"},
+    {"name": "nested group inside and inside or", "text": "a (b or c) or d", "tree": "(or (and 'a' (or 'b' 'c')) 'd')", "print": "a (b or c) or d"},
+    {"name": "not before a group", "text": "not (a b)", "tree": "(not (and 'a' 'b'))", "print": "!(a b)"}
+  ],
+  "qry_008": [
+    {"name": "closed range", "text": "created: 2026-01..2026-03", "tree": "(is 'created' '2026-01'..'2026-03')", "print": "created: 2026-01..2026-03"},
+    {"name": "open end", "text": "votes: 5..", "tree": "(is 'votes' '5'..)", "print": "votes: 5.."},
+    {"name": "open start", "text": "votes: ..5", "tree": "(is 'votes' ..'5')", "print": "votes: ..5"},
+    {"name": "greater than", "text": "votes > 5", "tree": "(> 'votes' '5')", "print": "votes > 5"},
+    {"name": "comparison without spaces", "text": "votes>=5", "tree": "(>= 'votes' '5')", "print": "votes >= 5"},
+    {"name": "date-time", "text": "due <= 2026-10-23T14:30", "tree": "(<= 'due' '2026-10-23T14:30')", "print": "due <= 2026-10-23T14:30"},
+    {"name": "a space after the dots ends the range", "text": "created: 2026-01.. foo", "tree": "(and (is 'created' '2026-01'..) 'foo')", "print": "created: 2026-01.. foo"},
+    {"name": "ranges and values in one list", "text": "votes: 1..3, 7, !5", "tree": "(is 'votes' '1'..'3' '7' !'5')", "print": "votes: 1..3, 7, !5"},
+    {"name": "date words in a range", "text": "updated: last-week..today", "tree": "(is 'updated' 'last-week'..'today')", "print": "updated: last-week..today", "classes": [[0, 7, "attribute"], [7, 8, "punctuation"], [9, 18, "keyword"], [18, 20, "punctuation"], [20, 25, "keyword"]]},
+    {"name": "a range start ending in a dot is quoted", "text": "v: \"1.\"..2", "tree": "(is 'v' '1.'..'2')", "print": "v: \"1.\"..2"},
+    {"name": "spaced comparison of a negative", "text": "balance<-5", "tree": "(< 'balance' '-5')", "print": "balance < -5"}
+  ],
+  "qry_044": [
+    {"name": "one key", "text": "sort: updated", "tree": "(sort 'updated')", "print": "sort: updated"},
+    {"name": "keys with directions after a condition", "text": "state: open sort: votes desc, created asc", "tree": "(is 'state' 'open') (sort 'votes' desc 'created' asc)", "print": "state: open sort: votes desc, created asc"},
+    {"name": "terms after the sort", "text": "sort: priority foo", "tree": "'foo' (sort 'priority')", "print": "foo sort: priority"},
+    {"name": "quoted key", "text": "sort: \"due date\" desc", "tree": "(sort 'due date' desc)", "print": "sort: \"due date\" desc"},
+    {"name": "quoted keyword key is a field", "text": "sort: \"updated\"", "tree": "(sort \"updated\")", "print": "sort: \"updated\""},
+    {"name": "sort between terms", "text": "a sort: votes b", "tree": "(and 'a' 'b') (sort 'votes')", "print": "a b sort: votes"},
+    {"name": "sort after or", "text": "a or b sort: votes", "tree": "(or 'a' 'b') (sort 'votes')", "print": "a or b sort: votes"},
+    {"name": "classes of a sort", "text": "sort: votes desc", "tree": "(sort 'votes' desc)", "classes": [[0, 4, "keyword"], [4, 5, "punctuation"], [6, 11, "attribute"], [12, 16, "keyword"]]}
+  ],
+  "qry_062": [
+    {"name": "russian or", "text": "статус: открыта или приоритет: высокий", "tree": "(or (is 'статус' 'открыта') (is 'приоритет' 'высокий'))", "print": "статус: открыта or приоритет: высокий", "classes": [[0, 6, "attribute"], [6, 7, "punctuation"], [8, 15, "keyword"], [16, 19, "operator"], [20, 29, "attribute"], [29, 30, "punctuation"], [31, 38, "value"]]},
+    {"name": "russian not", "text": "не ошибка", "tree": "(not 'ошибка')", "print": "!ошибка"},
+    {"name": "russian and", "text": "а и б", "tree": "(and 'а' 'б')", "print": "а б"},
+    {"name": "russian sort", "text": "сортировка: изменена убыв", "tree": "(sort 'изменена' desc)", "print": "sort: изменена desc"},
+    {"name": "yo folds to ye", "text": "это: решённые", "tree": "(is 'это' 'решённые')", "classes": [[0, 3, "attribute"], [3, 4, "punctuation"], [5, 13, "keyword"]]},
+    {"name": "quoted russian operator is text", "text": "\"или\"", "tree": "\"или\"", "print": "\"или\""},
+    {"name": "russian attribute and date", "text": "Решена: сегодня", "tree": "(is 'Решена' 'сегодня')", "classes": [[0, 6, "attribute"], [6, 7, "punctuation"], [8, 15, "keyword"]]},
+    {"name": "mixed languages", "text": "проект: ABC and не state: Fixed", "tree": "(and (is 'проект' 'ABC') (not (is 'state' 'Fixed')))", "print": "проект: ABC !state: Fixed"},
+    {"name": "russian date word with dashes", "text": "создана: прошлая-неделя", "tree": "(is 'создана' 'прошлая-неделя')", "classes": [[0, 7, "attribute"], [7, 8, "punctuation"], [9, 23, "keyword"]]}
+  ],
+  "qry_049": [
+    {"name": "board and sprint attributes", "text": "board: Team sprint: current", "tree": "(and (is 'board' 'Team') (is 'sprint' 'current'))", "print": "board: Team sprint: current", "classes": [[0, 5, "attribute"], [5, 6, "punctuation"], [7, 11, "value"], [12, 18, "attribute"], [18, 19, "punctuation"], [20, 27, "keyword"]]},
+    {"name": "russian board and sprint", "text": "доска: Команда спринт: текущий", "tree": "(and (is 'доска' 'Команда') (is 'спринт' 'текущий'))", "classes": [[0, 5, "attribute"], [5, 6, "punctuation"], [7, 14, "value"], [15, 21, "attribute"], [21, 22, "punctuation"], [23, 30, "keyword"]]},
+    {"name": "sprint of a board", "text": "sprint: \"Team/Sprint 2\"", "tree": "(is 'sprint' 'Team/Sprint 2')", "print": "sprint: \"Team/Sprint 2\""},
+    {"name": "negated board", "text": "!board: Team", "tree": "(not (is 'board' 'Team'))", "print": "!board: Team"}
+  ],
+  "recovery": [
+    {"name": "unclosed quote", "text": "\"abc", "tree": "\"abc\"", "problems": [["unclosed_quote", 0, 4]], "classes": [[0, 4, "error"]]},
+    {"name": "unclosed group", "text": "(a b", "tree": "(and 'a' 'b')", "problems": [["unclosed_group", 0, 1]]},
+    {"name": "lone open paren", "text": "(", "tree": "(error)", "problems": [["unclosed_group", 0, 1]]},
+    {"name": "unexpected close", "text": "a) b", "tree": "(and 'a' 'b')", "problems": [["unexpected_close", 1, 2]], "classes": [[0, 1, "text"], [1, 2, "error"], [3, 4, "text"]]},
+    {"name": "missing value", "text": "state:", "tree": "(is 'state')", "problems": [["missing_value", 5, 6]]},
+    {"name": "missing value after a comma", "text": "state: open,", "tree": "(is 'state' 'open')", "problems": [["missing_value", 11, 12]]},
+    {"name": "missing value after a bang", "text": "state: !", "tree": "(is 'state')", "problems": [["missing_value", 7, 8]]},
+    {"name": "missing value after a comparison", "text": "votes >", "tree": "(> 'votes')", "problems": [["missing_value", 6, 7]]},
+    {"name": "a name where a value should be", "text": "state: priority: high", "tree": "(and (is 'state') (is 'priority' 'high'))", "problems": [["missing_value", 5, 6]]},
+    {"name": "missing operand", "text": "a !", "tree": "(and 'a' (error))", "problems": [["missing_operand", 2, 3]]},
+    {"name": "bang before a close", "text": "(a !)", "tree": "(and 'a' (error))", "problems": [["missing_operand", 3, 4]]},
+    {"name": "empty group", "text": "()", "tree": "(error)", "problems": [["empty_group", 0, 2]], "classes": [[0, 2, "error"]]},
+    {"name": "sort twice", "text": "sort: a sort: b", "tree": "(error) (sort 'a')", "problems": [["sort_twice", 8, 15]]},
+    {"name": "sort in a group", "text": "(sort: a)", "tree": "(error)", "problems": [["sort_in_group", 1, 8]]},
+    {"name": "sort without keys", "text": "sort:", "tree": "(error)", "problems": [["missing_value", 4, 5]]},
+    {"name": "range without ends", "text": "votes: ..", "tree": "(is 'votes' ..)", "problems": [["bad_range", 7, 9]]},
+    {"name": "stray colon", "text": ": x", "tree": "(and (error) 'x')", "problems": [["unexpected_symbol", 0, 1]]},
+    {"name": "stray comparison and comma", "text": "> 5, b", "tree": "(and (error) '5' (error) 'b')", "problems": [["unexpected_symbol", 0, 1], ["unexpected_symbol", 3, 4]]},
+    {"name": "several problems in order", "text": "(state: , \"x", "tree": "(and (is 'state') (error) \"x\")", "problems": [["unclosed_group", 0, 1], ["missing_value", 6, 7], ["unexpected_symbol", 8, 9], ["unclosed_quote", 10, 12]]}
+  ],
+  "print": [
+    {"name": "spaces normalized", "text": "  state:open   or(  a  )", "tree": "(or (is 'state' 'open') 'a')", "print": "state: open or a"},
+    {"name": "symbols keep their quotes", "text": "\"a(b\": \"x,y\"", "tree": "(is 'a(b' 'x,y')", "print": "\"a(b\": \"x,y\""},
+    {"name": "leading bang keeps quotes", "text": "name: \"!x\"", "tree": "(is 'name' '!x')", "print": "name: \"!x\""},
+    {"name": "needless quotes dropped", "text": "\"state\": \"fixed\"", "tree": "(is 'state' 'fixed')", "print": "state: fixed"},
+    {"name": "quoted range start with a space", "text": "foo: \"a b\"..", "tree": "(is 'foo' 'a b'..)", "print": "foo: \"a b\".."},
+    {"name": "quoted date word stays quoted", "text": "x: \"today\"", "tree": "(is 'x' \"today\")", "print": "x: \"today\""},
+    {"name": "quoted attribute word as text", "text": "\"is\"", "tree": "\"is\"", "print": "\"is\""},
+    {"name": "explicit ands dropped", "text": "a and b and (c or d) or !e", "tree": "(or (and 'a' 'b' (or 'c' 'd')) (not 'e'))", "print": "a b (c or d) or !e"},
+    {"name": "explicit not becomes a bang", "text": "not not x", "tree": "(not (not 'x'))", "print": "!!x"},
+    {"name": "the sort goes last", "text": "sort: votes state: open", "tree": "(is 'state' 'open') (sort 'votes')", "print": "state: open sort: votes"},
+    {"name": "value that looks like a name", "text": "x: \"a:\"", "tree": "(is 'x' 'a:')", "print": "x: \"a:\""}
+  ],
+  "utf16": [
+    {"name": "cjk name and emoji value", "text": "\"日本\": 🎉", "tree": "(is '日本' '🎉')", "print": "日本: 🎉", "classes": [[0, 4, "attribute"], [4, 5, "punctuation"], [6, 8, "value"]]},
+    {"name": "problem after an emoji", "text": "🎉 \"abc", "tree": "(and '🎉' \"abc\")", "problems": [["unclosed_quote", 3, 7]]},
+    {"name": "problem after cyrillic", "text": "проект: Тест )", "tree": "(is 'проект' 'Тест')", "problems": [["unexpected_close", 13, 14]], "classes": [[0, 6, "attribute"], [6, 7, "punctuation"], [8, 12, "value"], [13, 14, "error"]]}
+  ]
+}

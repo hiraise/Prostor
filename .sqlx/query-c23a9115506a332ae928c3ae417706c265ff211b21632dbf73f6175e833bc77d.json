@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update api_tokens set last_used_at = $2\n         where id = $1 and (last_used_at is null or last_used_at < $2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c23a9115506a332ae928c3ae417706c265ff211b21632dbf73f6175e833bc77d"
+}

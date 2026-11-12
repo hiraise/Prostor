@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from sprint_issues where sprint_id = $1 and issue_id = any($2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e3bf0a649eba6d9487466c9a09850b3ac60e8126ec974ecb3c1bdd4e7e40b565"
+}

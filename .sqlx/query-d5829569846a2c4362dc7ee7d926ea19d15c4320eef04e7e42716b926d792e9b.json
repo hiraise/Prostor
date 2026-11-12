@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update board_projects bp set color = c.color\n         from unnest($2::bigint[], $3::smallint[]) as c(project_id, color)\n         where bp.board_id = $1 and bp.project_id = c.project_id",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8Array",
+        "Int2Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d5829569846a2c4362dc7ee7d926ea19d15c4320eef04e7e42716b926d792e9b"
+}

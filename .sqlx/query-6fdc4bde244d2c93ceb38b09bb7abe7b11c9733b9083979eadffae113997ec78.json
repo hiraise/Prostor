@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select p.issue_id from sprint_issues c join sprint_issues p on p.sprint_id = c.sprint_id\n         where c.sprint_id = $1 and c.issue_id = $2 and p.rank is not null\n           and (c.rank is null or (p.rank, p.issue_id) < (c.rank, c.issue_id))\n         order by p.rank desc, p.issue_id desc limit 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "issue_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "sprint_issues",
+            "name": "issue_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "6fdc4bde244d2c93ceb38b09bb7abe7b11c9733b9083979eadffae113997ec78"
+}

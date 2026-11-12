@@ -1,0 +1,196 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select user_id, email, email_html, own_changes, mentions,\n                  watch_created, watch_updated, watch_resolved, watch_comment,\n                  watch_vote, watch_tag,\n                  autowatch_created, autowatch_commented, autowatch_assigned, autowatch_voted\n           from notification_settings where user_id = any($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "email",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "email"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "email_html",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "email_html"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "own_changes",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "own_changes"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "mentions",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "mentions"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "watch_created",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "watch_created"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "watch_updated",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "watch_updated"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "watch_resolved",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "watch_resolved"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "watch_comment",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "watch_comment"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "watch_vote",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "watch_vote"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "watch_tag",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "watch_tag"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "autowatch_created",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "autowatch_created"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "autowatch_commented",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "autowatch_commented"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "autowatch_assigned",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "autowatch_assigned"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "autowatch_voted",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "autowatch_voted"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "684d729b18d9d11aa6e3c82a96a845f3b1c2bdcea181ab4f44ec7a7b614b98f9"
+}

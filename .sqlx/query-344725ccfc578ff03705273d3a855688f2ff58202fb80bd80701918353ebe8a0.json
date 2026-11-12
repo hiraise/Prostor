@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update group_aliases set group_id = $2 where group_id = any($1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "344725ccfc578ff03705273d3a855688f2ff58202fb80bd80701918353ebe8a0"
+}

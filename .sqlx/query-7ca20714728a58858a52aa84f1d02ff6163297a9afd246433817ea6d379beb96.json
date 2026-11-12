@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update users set disabled_at = coalesce(disabled_at, now()), disabled_reason = $2,\n                          disabled_label = $3, version = version + 1, updated_at = now()\n         where id = any($1) and deleted_at is null",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7ca20714728a58858a52aa84f1d02ff6163297a9afd246433817ea6d379beb96"
+}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from issue_float_values where (issue_id, field_id) in (\n                   select issue_id, field_id from issue_float_values where field_id = $1 limit $2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "20a9be462bdf3a9fe03b6ca88820d3645716e8e7bf15441398676ec7226abab6"
+}

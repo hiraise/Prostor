@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into group_aliases (old_id, group_id) select unnest($1::bigint[]), $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "35e2f826a79584c629d13a81f305f34a1dfe4f97111950ff153c0c2a1fcc2a3f"
+}

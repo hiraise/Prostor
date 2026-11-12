@@ -1,0 +1,4 @@
+# Generated files (`make db-prepare`, `make api`): collapsed in diffs on GitHub and GitLab.
+.sqlx/** linguist-generated=true
+web/src/lib/api/openapi.json linguist-generated=true
+web/src/lib/api/schema.gen.ts linguist-generated=true

@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update tags set\n               view_users = array(select x from unnest(view_users) x where x <> all($1)),\n               use_users = array(select x from unnest(use_users) x where x <> all($1)),\n               edit_users = array(select x from unnest(edit_users) x where x <> all($1))\n             where view_users && $1 or use_users && $1 or edit_users && $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b5081f3c6877dfc31efbb9810d1d3fcd84e4657d426a80492dda1a610a9b53c4"
+}

@@ -1,0 +1,137 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select l.source_id as parent, o.id, o.project_id, o.number, o.summary, o.reporter_id,\n                  o.audience_users, o.audience_groups, o.resolved_at, o.deleted_at\n           from issue_links l\n           join link_types t on t.id = l.type_id and t.builtin = $2\n           join issues o on o.id = l.target_id\n           where l.source_id = any($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "parent",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issue_links",
+            "name": "source_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "project_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "project_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "number",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "number"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "summary",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "summary"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "reporter_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "reporter_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "audience_users",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "audience_users"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "audience_groups",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "audience_groups"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "resolved_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "resolved_at"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "deleted_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "deleted_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "3d07026a450dceb8f3ac0e8537485805605a8df86e9ad970e3222233413f3b29"
+}

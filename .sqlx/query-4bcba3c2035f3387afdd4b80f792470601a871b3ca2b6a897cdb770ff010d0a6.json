@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update users set replaced_by = $2 where replaced_by = any($1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4bcba3c2035f3387afdd4b80f792470601a871b3ca2b6a897cdb770ff010d0a6"
+}

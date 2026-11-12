@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update boards set name = $2, owner_id = $3, preset = $4, sprints_on = $5, mode = $6,\n                query = $7, auto_sprint_id = $8, column_field_id = $9, card_fields = $10,\n                card_initials = $11, color_mode = $12, color_field_id = $13,\n                estimation_field_id = $14, original_estimation_field_id = $15,\n                backlog_search_id = $16, view_users = $17, view_groups = $18, edit_users = $19,\n                edit_groups = $20, view_readers = $21, edit_updaters = $22,\n                lane_mode = $23, lane_field_id = $24, lane_attribute = $25, lane_values = $26,\n                other_lane = $27, new_card_value_id = $28,\n                version = version + 1, updated_at = now()\n         where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text",
+        "Int8",
+        "Text",
+        "Bool",
+        "Text",
+        "Jsonb",
+        "Int8",
+        "Int8",
+        "Int8Array",
+        "Int8Array",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8Array",
+        "Int8Array",
+        "Int8Array",
+        "Int8Array",
+        "Bool",
+        "Bool",
+        "Text",
+        "Int8",
+        "Text",
+        "TextArray",
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ca021d1b093e82283fde7e13e6e25482c0461b6064979eccc4361eac2a1cbfe9"
+}

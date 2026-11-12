@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update instance set render_version = $1 where id",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int2"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ef23b6c3789353ef45d449f691cf173f5e6ef8243a13e85d1dd6e5ec2f7274a8"
+}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into issue_ref_values (issue_id, field_id, value)\n         select v.issue_id, v.field_id, $2 from issue_ref_values v join fields f on f.id = v.field_id\n         where f.kind = 'group' and v.value = any($1)\n         on conflict do nothing",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a3e12782bdaef21a60bec1fc02660540d37b92c960e1e07d8cc0316db4144222"
+}

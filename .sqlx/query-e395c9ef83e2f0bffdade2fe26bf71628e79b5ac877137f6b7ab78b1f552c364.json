@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update sprints set archived_at = $2, version = version + 1, updated_at = now()\n         where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e395c9ef83e2f0bffdade2fe26bf71628e79b5ac877137f6b7ab78b1f552c364"
+}

@@ -1,0 +1,152 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "with ends as (\n             select id, type_id, true as is_source, target_id as other_id, created_at\n             from issue_links where source_id = $1\n             union all\n             select id, type_id, false, source_id, created_at\n             from issue_links where target_id = $1\n           )\n           select e.id as \"link!\", e.type_id as \"type_id!\", e.is_source as \"is_source!\",\n                  e.created_at as \"created_at!\", o.id, o.project_id, o.number, o.summary,\n                  o.reporter_id, o.audience_users, o.audience_groups, o.resolved_at, o.deleted_at\n           from ends e join issues o on o.id = e.other_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "link!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "type_id!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "is_source!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "created_at!",
+        "type_info": "Timestamptz",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "project_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "project_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "number",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "number"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "summary",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "summary"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "reporter_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "reporter_id"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "audience_users",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "audience_users"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "audience_groups",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "audience_groups"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "resolved_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "resolved_at"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "deleted_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "deleted_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "daf671d2af89c41b05b1bc3c60f6329e2fd8be561dc9b861c6d239f3e45a47bf"
+}

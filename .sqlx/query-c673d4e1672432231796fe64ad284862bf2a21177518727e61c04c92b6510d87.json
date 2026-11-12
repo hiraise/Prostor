@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select issue_id from issue_aliases where project_id = $1 and number = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "issue_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issue_aliases",
+            "name": "issue_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "c673d4e1672432231796fe64ad284862bf2a21177518727e61c04c92b6510d87"
+}

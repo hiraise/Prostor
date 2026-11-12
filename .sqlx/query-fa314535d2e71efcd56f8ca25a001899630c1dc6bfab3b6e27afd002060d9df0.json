@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select b.id, b.name, b.mode = 'query' as \"query!\" from boards b\n           where ($5 or replace(lower(btrim(b.name)), 'ё', 'е') = any($6))\n             and (b.owner_id = $1 or $1 = any(b.view_users) or b.view_groups && $2\n                  or $1 = any(b.edit_users) or b.edit_groups && $2\n                  or (b.view_readers\n                      and exists (select from board_projects bp where bp.board_id = b.id)\n                      and ($3 or not exists (select from board_projects bp\n                                             where bp.board_id = b.id\n                                               and bp.project_id <> all($4)))))\n           order by b.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "query!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8Array",
+        "Bool",
+        "Int8Array",
+        "Bool",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "fa314535d2e71efcd56f8ca25a001899630c1dc6bfab3b6e27afd002060d9df0"
+}

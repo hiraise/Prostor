@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into capability_groups (capability, group_id)\n         select $1, unnest($2::bigint[]) on conflict do nothing",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2dcab199c81b8b97c1eafd20765b33cae42d931d007acde70d873f1f42e24e8c"
+}

@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update board_columns set rank = $2, wip_min = $3, wip_max = $4 where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text",
+        "Int4",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5e8d4bc833d3d966318511443f6778a8d9b879e70334ce6532ec7fa6f8e3f8cf"
+}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update sessions set last_seen_at = $2 where id = $1 and last_seen_at < $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Timestamptz"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d7bf6cd9baee692155ed3b7bd5a1cf2b2b7526bda6a1827d8ade60b2449fb0b6"
+}

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into issue_aliases (project_id, number, issue_id) values ($1, $2, $3)\n         on conflict (project_id, number) do update set issue_id = excluded.issue_id",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a6223f09c897d7a83b83d4298e5c32e84ae6c197350fbcc69dd413cade766b74"
+}

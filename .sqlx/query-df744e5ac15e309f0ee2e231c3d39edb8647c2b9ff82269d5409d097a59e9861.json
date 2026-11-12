@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update saved_searches set owner_id = $2, view_users = $3, view_groups = $4,\n                edit_users = $5, edit_groups = $6, version = version + 1, updated_at = now()\n         where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Int8Array",
+        "Int8Array",
+        "Int8Array",
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "df744e5ac15e309f0ee2e231c3d39edb8647c2b9ff82269d5409d097a59e9861"
+}

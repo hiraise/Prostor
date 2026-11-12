@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select exists(select 1 from role_assignments\n                         where role_id = $1 and user_id is not distinct from $2\n                           and group_id is not distinct from $3\n                           and project_id is not distinct from $4) as \"found!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "found!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "6d042c1216eaca4412b76cbbd1329a276229e48d6b8a94e652050d66b3e32204"
+}

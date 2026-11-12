@@ -1,0 +1,51 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select\n             (select count(*) from users where id = any($1) and deleted_at is null) as \"accounts!\",\n             (select count(*) from sessions where user_id = any($1)) as \"sessions!\",\n             (select count(*) from api_tokens where user_id = any($1)) as \"tokens!\",\n             (select count(*) from group_members where user_id = any($1)) as \"memberships!\",\n             (select count(*) from role_assignments where user_id = any($1)) as \"assignments!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "accounts!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "sessions!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "tokens!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "memberships!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "assignments!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "0d9e639e46aab487f0d4d7a36cbecc1e2ba962061d9213c17d89f599da51cff8"
+}

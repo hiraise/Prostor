@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update project_fields p set\n           default_values = array(select v from unnest(p.default_values) v where not v = any($2)),\n           version = p.version + 1\n         from fields f\n         where f.id = p.field_id and f.kind = 'user' and p.set_id = $1\n           and p.default_values && $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e7168febf30162ec05fcd055e7751177e15204c43138e02b555bf29f21025125"
+}

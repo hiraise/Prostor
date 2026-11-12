@@ -1,0 +1,198 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select a.id as \"id!\", a.author_id as \"author_id!\",\n                  a.audience_users as \"audience_users!\", a.audience_groups as \"audience_groups!\",\n                  a.version as \"version!\",\n                  k.author_id as \"comment_author?\", k.audience_users as \"comment_users?\",\n                  k.audience_groups as \"comment_groups?\",\n                  i.id as \"issue_id!\", i.project_id as \"project_id!\",\n                  i.reporter_id as \"reporter_id!\", i.number is null as \"draft!\",\n                  i.deleted_at is not null as \"deleted!\", i.audience_users as \"issue_users!\",\n                  i.audience_groups as \"issue_groups!\", i.version as \"issue_version!\"\n           from attachments a\n                join issues i on i.id = a.issue_id\n                left join comments k on k.id = a.comment_id\n           where a.id = any($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "attachments",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "author_id!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "attachments",
+            "name": "author_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "audience_users!",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "attachments",
+            "name": "audience_users"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "audience_groups!",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "attachments",
+            "name": "audience_groups"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "version!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "attachments",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "comment_author?",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "author_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "comment_users?",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "audience_users"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "comment_groups?",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "audience_groups"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "issue_id!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "project_id!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "project_id"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "reporter_id!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "reporter_id"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "draft!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 12,
+        "name": "deleted!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 13,
+        "name": "issue_users!",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "audience_users"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "issue_groups!",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "audience_groups"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "issue_version!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "version"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "41df1ee3ff391e70af832910df0449ae0269a954eae7c4cd4ded7bdcb94f756e"
+}

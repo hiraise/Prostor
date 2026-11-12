@@ -1,0 +1,59 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select g.id, g.name, g.builtin,\n                  coalesce((select array_agg(m.user_id order by m.user_id) from group_members m\n                            join users u on u.id = m.user_id and u.deleted_at is null\n                            where m.group_id = g.id), '{}') as \"members!\"\n           from groups g\n           where replace(lower(btrim(g.name)), 'ё', 'е') = any($1)\n           order by g.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "builtin",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "builtin"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "members!",
+        "type_info": "Int8Array",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      null
+    ]
+  },
+  "hash": "b436f3581a14a90f431aa5c263f38128abcf6cf1cbdfd9833f0a2059ad3736c4"
+}

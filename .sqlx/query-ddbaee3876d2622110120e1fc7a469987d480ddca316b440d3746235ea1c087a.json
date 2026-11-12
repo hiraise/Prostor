@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update board_profiles set collapsed_columns = array_remove(collapsed_columns, $2)\n         where board_id = $1 and $2 = any(collapsed_columns)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ddbaee3876d2622110120e1fc7a469987d480ddca316b440d3746235ea1c087a"
+}

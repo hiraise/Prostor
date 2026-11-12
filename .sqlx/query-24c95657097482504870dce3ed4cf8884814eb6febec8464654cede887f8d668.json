@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into user_preferences (user_id, data) values ($1, $2::jsonb - $3::text[])\n         on conflict (user_id) do update\n           set data = (user_preferences.data || $2::jsonb) - $3::text[], updated_at = now()\n         returning data",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "data",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "user_preferences",
+            "name": "data"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Jsonb",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "24c95657097482504870dce3ed4cf8884814eb6febec8464654cede887f8d668"
+}

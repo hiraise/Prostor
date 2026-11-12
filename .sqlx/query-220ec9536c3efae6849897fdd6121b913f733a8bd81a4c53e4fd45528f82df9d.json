@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update comments set audience_groups = array(\n           select distinct g from unnest(\n             array(select x from unnest(audience_groups) x where x <> all($1)) || $2::bigint) g)\n         where audience_groups && $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "220ec9536c3efae6849897fdd6121b913f733a8bd81a4c53e4fd45528f82df9d"
+}

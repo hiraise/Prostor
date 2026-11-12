@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update boards set\n               view_users = array(select x from unnest(view_users) x where x <> all($1)),\n               edit_users = array(select x from unnest(edit_users) x where x <> all($1)),\n               version = version + 1\n             where view_users && $1 or edit_users && $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2083e8c2e9573e99cff511b88879caf51a117b422a0ab61be9f1e29b3b5b2040"
+}

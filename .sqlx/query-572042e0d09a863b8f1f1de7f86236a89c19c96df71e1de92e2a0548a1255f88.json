@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update jobs\n         set state = case when cancel_requested then 'cancelled'\n                          when attempts >= max_attempts then 'failed'\n                          else 'queued' end,\n             finished_at = case when cancel_requested or attempts >= max_attempts then now() end,\n             last_error = 'the worker running the job stopped responding',\n             run_at = now(), lease_until = null, updated_at = now()\n         where state = 'running' and lease_until < now()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "572042e0d09a863b8f1f1de7f86236a89c19c96df71e1de92e2a0548a1255f88"
+}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into value_set_groups (set_id, group_id)\n         select $2, group_id from value_set_groups where set_id = $1 on conflict do nothing",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c7c9ffd294e5a97b9a9db8bc9752d70f17d54dce3ca29edd91089545ba6985fd"
+}

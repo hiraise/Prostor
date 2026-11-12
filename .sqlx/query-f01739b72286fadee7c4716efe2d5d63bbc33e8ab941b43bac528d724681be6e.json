@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select case when $2::bigint is null then exists (\n                    select 1 from issue_links l\n                    join link_types t on t.id = l.type_id and t.builtin = 'subtask'\n                    where l.source_id = $1)\n                else exists (\n                    select 1 from issue_ref_values\n                    where issue_id = $1 and field_id = $2 and value = any($3))\n                end as \"lane!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "lane!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "f01739b72286fadee7c4716efe2d5d63bbc33e8ab941b43bac528d724681be6e"
+}

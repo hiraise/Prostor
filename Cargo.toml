@@ -1,0 +1,117 @@
+[workspace]
+resolver = "3"
+members = ["crates/*", "tools/bench"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.99"
+license = "AGPL-3.0-or-later"
+publish = false
+
+[workspace.dependencies]
+# Our crates
+trackflow-api = { path = "crates/api" }
+trackflow-domain = { path = "crates/domain" }
+trackflow-files = { path = "crates/files" }
+trackflow-markup = { path = "crates/markup" }
+trackflow-query = { path = "crates/query" }
+trackflow-server = { path = "crates/server" }
+trackflow-service = { path = "crates/service" }
+trackflow-store = { path = "crates/store" }
+trackflow-testkit = { path = "crates/testkit" }
+
+axum = { version = "0.8.9", features = ["macros", "ws"] }
+tokio = { version = "1.54.0", features = ["macros", "rt-multi-thread", "net", "signal", "sync", "time"] }
+tokio-util = "0.7.20"
+tower = "0.5.3"
+tower-http = { version = "0.7.1", features = ["catch-panic", "fs", "compression-br", "compression-gzip", "compression-zstd", "decompression-gzip", "trace"] }
+http-body-util = "0.1.5"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.154"
+sqlx = { version = "0.9.0", default-features = false, features = ["runtime-tokio", "tls-rustls", "postgres", "macros", "migrate", "json", "time"] }
+time = { version = "0.3.55", features = ["serde", "serde-human-readable", "serde-well-known", "macros"] }
+utoipa = { version = "6.0.0", features = ["axum_extras", "time"] }
+utoipa-axum = "0.3.0"
+uuid = { version = "1.28.0", features = ["v4", "v7"] }
+url = "2.5.8"
+base64 = "0.23.1"
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", features = ["env-filter", "fmt", "json"] }
+rust-embed = "8.13.0"
+mime_guess = "2.0.5"
+thiserror = "2.0.21"
+anyhow = "1.0.104"
+# Passwords, tokens and secrets (D-023).
+argon2 = "0.6.0"
+sha2 = "0.11.1"
+getrandom = "0.4.3"
+# Secret settings sealed with the instance key (NTF-004).
+aes-gcm = "0.10.3"
+# Account emails over SMTP (D-026), TLS through rustls like the database connection.
+lettre = { version = "0.11.23", default-features = false, features = ["builder", "hostname", "pool", "smtp-transport", "tokio1-rustls-tls"] }
+# Rich text (D-031): CommonMark with our extensions, sanitized against an allowlist.
+comrak = { version = "0.57.0", default-features = false }
+ammonia = "4.2.4"
+# Files (D-033): signed links, images (decoders we accept only), the Gravatar import over rustls
+# with the ring provider the database and mail connections already use.
+hmac = "0.13.0"
+image = { version = "0.25.10", default-features = false, features = ["png", "jpeg", "gif", "webp"] }
+bytes = "1.12.1"
+futures-util = { version = "0.3.34", default-features = false, features = ["std"] }
+# Live connections (D-040): the test client of the gateway; axum's `ws` uses the same version.
+tokio-tungstenite = "0.29.0"
+# The benchmark opens thousands of sockets: it raises its open-files limit (no unsafe code).
+rlimit = "0.11.0"
+http = "1.5.0"
+hyper-util = { version = "0.1.21", features = ["client-legacy", "http1", "tokio"] }
+hyper-rustls = { version = "0.27.10", default-features = false, features = ["http1", "tls12", "ring", "webpki-roots"] }
+tempfile = "3.27.0"
+rustls = { version = "0.23.46", default-features = false, features = ["ring", "std", "tls12"] }
+# Time zones: the IANA database, from the system or built in when the system has none.
+jiff = { version = "0.2.38", default-features = false, features = ["std", "tz-system", "tzdb-zoneinfo", "tzdb-bundle-always"] }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+unused_must_use = "deny"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+todo = "deny"
+dbg_macro = "deny"
+print_stdout = "deny"
+print_stderr = "deny"
+
+[profile.dev]
+# Faster builds and smaller debug info; enough for backtraces with line numbers.
+debug = "line-tables-only"
+
+# Password hashing is deliberately slow; unoptimized it takes seconds, so tests would crawl.
+[profile.dev.package.argon2]
+opt-level = 3
+[profile.dev.package.blake2]
+opt-level = 3
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
+
+# `make bench`: optimized like release, but rebuilt in seconds after a change instead of three to four minutes (D-039).
+# `make bench-stress` and the hardening step measure the release profile itself.
+[profile.perf]
+inherits = "release"
+lto = false
+codegen-units = 16
+incremental = true
+strip = false
+
+# The query language's WebAssembly module (`make wasm`, D-038): small rather than fast.
+[profile.wasm]
+inherits = "release"
+lto = true
+panic = "abort"
+opt-level = "s"

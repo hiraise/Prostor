@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update field_values set\n           name = coalesce($2, name),\n           description = coalesce($3, description),\n           color = case when $4 then $5 else color end,\n           archived = coalesce($6, archived),\n           resolved = coalesce($7, resolved),\n           released = coalesce($8, released),\n           release_date = case when $9 then $10 else release_date end,\n           start_date = case when $11 then $12 else start_date end,\n           assembled_on = case when $13 then $14 else assembled_on end,\n           owner_id = case when $15 then $16 else owner_id end,\n           rank = coalesce($17, rank),\n           version = version + 1,\n           updated_at = now()\n         where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text",
+        "Text",
+        "Bool",
+        "Int2",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Date",
+        "Bool",
+        "Date",
+        "Bool",
+        "Date",
+        "Bool",
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "122a91281d840783b94b53d0d6be99dc17f99a2d0fcc265c3c6b53ec6a75fde2"
+}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from board_projects where board_id = $1 and project_id <> all($2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7d43d9e81a845645970fbac73fe087af6617e0542a1f7b3d8996cc046d4e65e9"
+}

@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select setup_code from instance where setup_completed_at is null for update",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "setup_code",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "instance",
+            "name": "setup_code"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "138b3da6cda1db6424af750eb13fe56e47a88bdc99f693af59752f47dd13a900"
+}

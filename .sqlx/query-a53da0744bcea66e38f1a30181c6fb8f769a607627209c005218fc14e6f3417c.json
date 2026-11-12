@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select from pg_advisory_lock($1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a53da0744bcea66e38f1a30181c6fb8f769a607627209c005218fc14e6f3417c"
+}

@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select u.id from group_members m join users u on u.id = m.user_id\n           where m.group_id = $1 and u.deleted_at is null\n             and (strpos(lower(u.full_name), lower($2)) > 0 or strpos(lower(u.username), lower($2)) > 0)\n             and (lower(u.full_name), u.id) > (lower($3), $4)\n           order by lower(u.full_name), u.id\n           limit $5",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1893015b1464bb31d40cae5d08fcb4b16cd601f019ebf355c180e133d05e2e0a"
+}

@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select t.id from api_tokens t join users u on u.id = t.user_id\n         where t.id = any($1) and u.disabled_at is null",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "api_tokens",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "436601e163d2a03e1c53c031f0b7c95f2dcc203a130a1298ee2ca63699e77c29"
+}

@@ -1,0 +1,89 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select favorite, card_size, collapsed_columns, collapsed_lanes,\n                cell_drafts as \"cell_drafts: sqlx::types::Json<BTreeMap<String, IssueId>>\",\n                visited_at\n         from board_profiles where user_id = $1 and board_id = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "favorite",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "board_profiles",
+            "name": "favorite"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "card_size",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "board_profiles",
+            "name": "card_size"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "collapsed_columns",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "board_profiles",
+            "name": "collapsed_columns"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "collapsed_lanes",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "board_profiles",
+            "name": "collapsed_lanes"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "cell_drafts: sqlx::types::Json<BTreeMap<String, IssueId>>",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "board_profiles",
+            "name": "cell_drafts"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "visited_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "board_profiles",
+            "name": "visited_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true
+    ]
+  },
+  "hash": "cd06462f4968aab545545701636fdf3360341e54db6fa35d35a9fe09220b54cc"
+}

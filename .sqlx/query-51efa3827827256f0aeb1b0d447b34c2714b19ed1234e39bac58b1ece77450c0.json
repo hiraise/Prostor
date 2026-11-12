@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select issue_id from attachments where id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "issue_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "attachments",
+            "name": "issue_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "51efa3827827256f0aeb1b0d447b34c2714b19ed1234e39bac58b1ece77450c0"
+}

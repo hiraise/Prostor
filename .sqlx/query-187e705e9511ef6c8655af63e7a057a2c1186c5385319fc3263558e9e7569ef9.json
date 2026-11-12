@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "with added as (\n               insert into live_events (kind, entity_id, version, change, issues, projects,\n                                        boards, patch, guard)\n               select e.kind, e.entity, e.version, e.change, e.issues::bigint[],\n                      e.projects::bigint[], e.boards::bigint[], e.patch, e.guard\n               from unnest($1::text[], $2::bigint[], $3::bigint[], $4::text[], $5::text[],\n                           $6::text[], $7::text[], $8::jsonb[], $9::jsonb[])\n                    with ordinality as e(kind, entity, version, change, issues, projects, boards,\n                                         patch, guard, n)\n               order by e.n\n               returning id)\n           select max(id) as \"newest!\" from added",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "newest!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "TextArray",
+        "Int8Array",
+        "Int8Array",
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "JsonbArray",
+        "JsonbArray"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "187e705e9511ef6c8655af63e7a057a2c1186c5385319fc3263558e9e7569ef9"
+}

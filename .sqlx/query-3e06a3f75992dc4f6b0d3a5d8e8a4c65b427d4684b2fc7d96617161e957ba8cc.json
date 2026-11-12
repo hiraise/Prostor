@@ -1,0 +1,35 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select g.id,\n                  case\n                    when g.builtin = 'everyone'\n                      then (select count(*) from users where deleted_at is null)\n                    when g.builtin = 'all_members' then (select count(*) from users\n                                                         where deleted_at is null\n                                                           and builtin is distinct from 'guest')\n                    when g.team_of is not null then team_size(g.id)\n                    else (select count(*) from group_members m where m.group_id = g.id)\n                  end as \"members!\"\n           from groups g where g.id = any($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "members!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "3e06a3f75992dc4f6b0d3a5d8e8a4c65b427d4684b2fc7d96617161e957ba8cc"
+}

@@ -1,0 +1,38 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select key, value from setting_secrets",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "key",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "setting_secrets",
+            "name": "key"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "value",
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "setting_secrets",
+            "name": "value"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "f31d0e4390b186587e68b78ba114f936f10646a9339c8ff446118d869055a232"
+}

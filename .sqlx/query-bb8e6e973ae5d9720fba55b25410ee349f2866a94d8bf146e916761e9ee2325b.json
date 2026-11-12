@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update project_fields set\n           set_id = coalesce($3, set_id),\n           rank = coalesce($4, rank),\n           can_be_empty = coalesce($5, can_be_empty),\n           empty_label = coalesce($6, empty_label),\n           default_values = coalesce($7, default_values),\n           private = coalesce($8, private),\n           version = version + 1,\n           updated_at = now()\n         where project_id = $1 and field_id = $2",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Int8",
+        "Text",
+        "Bool",
+        "Text",
+        "Int8Array",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bb8e6e973ae5d9720fba55b25410ee349f2866a94d8bf146e916761e9ee2325b"
+}

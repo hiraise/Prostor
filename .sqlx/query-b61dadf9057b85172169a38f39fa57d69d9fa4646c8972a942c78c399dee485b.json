@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into board_projects (board_id, project_id)\n         select $1, p from unnest($2::bigint[]) p on conflict do nothing",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b61dadf9057b85172169a38f39fa57d69d9fa4646c8972a942c78c399dee485b"
+}

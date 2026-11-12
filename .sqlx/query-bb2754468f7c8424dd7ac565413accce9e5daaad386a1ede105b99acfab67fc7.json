@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select v.set_id, v.user_id from value_set_users v join users u on u.id = v.user_id\n         where v.set_id = any($1) order by lower(u.full_name), u.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "set_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "value_set_users",
+            "name": "set_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "value_set_users",
+            "name": "user_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "bb2754468f7c8424dd7ac565413accce9e5daaad386a1ede105b99acfab67fc7"
+}

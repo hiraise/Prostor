@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into issue_watchers (issue_id, user_id) select $1, unnest($2::bigint[])\n         on conflict do nothing",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "76c6c021a8689d5b3c5e6737647673f6c09db7add6f9fd22617c3149b9561bc1"
+}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update field_values set owner_id = $2, version = version + 1, updated_at = now()\n         where owner_id = any($1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b6bc39cb5f9d40e25e2120a4e20b4d9713fd9783191c6989bdf17310cd499a8d"
+}

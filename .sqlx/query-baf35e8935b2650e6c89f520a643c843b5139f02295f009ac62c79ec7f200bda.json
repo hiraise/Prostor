@@ -1,0 +1,12 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update instance set fields_seeded_at = now()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": []
+  },
+  "hash": "baf35e8935b2650e6c89f520a643c843b5139f02295f009ac62c79ec7f200bda"
+}

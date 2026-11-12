@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select (select id from groups where builtin = 'everyone') as \"everyone!\",\n                  (select id from groups where builtin = 'all_members') as \"all_members!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "everyone!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "all_members!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "b2505dff1e99d85ebd5d7ee548f5dfd47bf91f5e33334c15de239c7ada896e91"
+}

@@ -1,0 +1,37 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into comments (issue_id, author_id, text, html, mentioned_users, issue_tokens,\n                               file_names, render_version, audience_users, audience_groups)\n         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) returning id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Text",
+        "Text",
+        "Int8Array",
+        "TextArray",
+        "TextArray",
+        "Int2",
+        "Int8Array",
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ec31e162e4f3586a6f24f434753f42c0d159705e8a392cb4486f99e94e33abae"
+}

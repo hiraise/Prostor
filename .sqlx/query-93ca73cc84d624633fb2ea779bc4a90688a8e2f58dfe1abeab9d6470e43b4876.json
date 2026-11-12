@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update boards set backlog_search_id = $2 where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "93ca73cc84d624633fb2ea779bc4a90688a8e2f58dfe1abeab9d6470e43b4876"
+}

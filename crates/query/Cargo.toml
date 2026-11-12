@@ -1,0 +1,17 @@
+[package]
+name = "trackflow-query"
+description = "trackflow query language: lexer, error-tolerant parser, vocabulary, highlighting and printer"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+# Pure and portable: builds for wasm32-unknown-unknown (the browser's copy of the language, 1.5d).
+[dependencies]
+serde.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+
+[lints]
+workspace = true

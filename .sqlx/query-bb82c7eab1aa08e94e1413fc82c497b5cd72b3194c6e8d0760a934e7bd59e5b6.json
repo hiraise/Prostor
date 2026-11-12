@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into project_keys (key, project_id) values ($1, $2) on conflict (key) do nothing",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bb82c7eab1aa08e94e1413fc82c497b5cd72b3194c6e8d0760a934e7bd59e5b6"
+}

@@ -1,0 +1,53 @@
+// The signed-in person and the addresses of signing in (architecture.md §14).
+export {
+  adoptSession,
+  currentUser,
+  ensureSession,
+  getSession,
+  initSession,
+  onPasswordChangeRequired,
+  onSessionEnd,
+  onSignInElsewhere,
+  passwordChanged,
+  runSetup,
+  sessionEndedOnServer,
+  setSessionForTests,
+  signIn,
+  signOut,
+  updateCurrentUser,
+  type EndReason,
+} from './session.svelte.ts';
+export {
+  can,
+  canAdminister,
+  canAnywhere,
+  canSeeCapabilities,
+  canSeeDirectory,
+  canSeeFields,
+  canSeeGroups,
+  canSeeJobs,
+  canSeeLinkTypes,
+  canSeeMail,
+  canSeeRoles,
+  canSeeSettings,
+  clearAccess,
+  ensureAccess,
+  getAccess,
+  hasCapability,
+  refreshAccess,
+  setAccessForTests,
+} from './access.svelte.ts';
+export {
+  clearPreferences,
+  preferences,
+  setPreferencesForTests,
+  type PreferenceKey,
+} from './preferences.svelte.ts';
+export {
+  changePasswordHref,
+  endReason,
+  forgotPasswordHref,
+  safeNext,
+  setupHref,
+  signInHref,
+} from './routes.ts';

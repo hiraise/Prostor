@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select from pg_notify($1, $2)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "835fdbe5240e938c93c1dc1afbff5ae7559e26c4aa2f2415b213f1f89dbcd821"
+}

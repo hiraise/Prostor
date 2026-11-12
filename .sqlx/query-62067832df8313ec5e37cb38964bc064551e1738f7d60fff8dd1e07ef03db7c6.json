@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update jobs set payload = '{}', updated_at = now()\n         where id = $1 and claim_token = $2 and state = 'running'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "62067832df8313ec5e37cb38964bc064551e1738f7d60fff8dd1e07ef03db7c6"
+}

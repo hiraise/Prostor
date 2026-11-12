@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select rule, enabled from project_rules where project_id = $1 order by rule",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "rule",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "project_rules",
+            "name": "rule"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "enabled",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "project_rules",
+            "name": "enabled"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "58a8801c03370530e9b7c391bc80da21556ad6f5822a1c0b2fd25b702cceee79"
+}

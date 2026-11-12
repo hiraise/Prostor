@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update projects set key = $2, version = version + 1, updated_at = now() where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "40ef7ae795caf4b13501f00e8d8d42e6d1c0fc59e1f3bbe02c7ec29b623539f0"
+}

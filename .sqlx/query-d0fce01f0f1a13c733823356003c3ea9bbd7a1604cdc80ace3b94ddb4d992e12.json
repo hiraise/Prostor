@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "with source as (\n             select id, name, description, color, rank, archived, resolved, released,\n                    release_date, start_date, assembled_on, owner_id\n             from field_values where set_id = $1\n           ),\n           inserted as (\n             insert into field_values (set_id, name, description, color, rank, archived,\n                                       resolved, released, release_date, start_date,\n                                       assembled_on, owner_id)\n             select $2, name, description, color, rank, archived, resolved, released,\n                    release_date, start_date, assembled_on, owner_id\n             from source order by rank\n             returning id, name\n           )\n           select s.id as \"old!\", i.id as \"new!\"\n           from source s join inserted i on lower(i.name) = lower(s.name)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "old!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "field_values",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "new!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "field_values",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "d0fce01f0f1a13c733823356003c3ea9bbd7a1604cdc80ace3b94ddb4d992e12"
+}

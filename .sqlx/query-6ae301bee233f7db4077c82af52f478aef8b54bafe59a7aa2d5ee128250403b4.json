@@ -1,0 +1,136 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select project_id, field_id, set_id, rank, can_be_empty, empty_label, default_values,\n                private, version, created_at\n         from project_fields where project_id = any($1) order by project_id, rank, field_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "project_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "project_fields",
+            "name": "project_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "field_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "project_fields",
+            "name": "field_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "set_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "project_fields",
+            "name": "set_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "rank",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "project_fields",
+            "name": "rank"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "can_be_empty",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "project_fields",
+            "name": "can_be_empty"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "empty_label",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "project_fields",
+            "name": "empty_label"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "default_values",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "project_fields",
+            "name": "default_values"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "private",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "project_fields",
+            "name": "private"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "project_fields",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "project_fields",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "6ae301bee233f7db4077c82af52f478aef8b54bafe59a7aa2d5ee128250403b4"
+}

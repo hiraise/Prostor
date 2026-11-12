@@ -1,0 +1,172 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, owner_id, name, query, builtin, project_id, view_users, view_groups,\n                edit_users, edit_groups, created_at, updated_at, version\n         from saved_searches where id = $1 and hidden_at is null for update",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "saved_searches",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "owner_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "saved_searches",
+            "name": "owner_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "saved_searches",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "query",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "saved_searches",
+            "name": "query"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "builtin",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "saved_searches",
+            "name": "builtin"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "project_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "saved_searches",
+            "name": "project_id"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "view_users",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "saved_searches",
+            "name": "view_users"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "view_groups",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "saved_searches",
+            "name": "view_groups"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "edit_users",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "saved_searches",
+            "name": "edit_users"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "edit_groups",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "saved_searches",
+            "name": "edit_groups"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "saved_searches",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "updated_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "saved_searches",
+            "name": "updated_at"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "saved_searches",
+            "name": "version"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "807f70e7fef5e27ad776b38d86f366619010434017eac07e5eb8b5ccdf99515e"
+}

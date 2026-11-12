@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update tags set owner_id = $2, view_users = $3, view_groups = $4, use_users = $5,\n                use_groups = $6, edit_users = $7, edit_groups = $8,\n                version = version + 1, updated_at = now()\n         where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Int8Array",
+        "Int8Array",
+        "Int8Array",
+        "Int8Array",
+        "Int8Array",
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0d1a4c940ed86da2935e1d52879954e84f156d985873e96643c402f07af1ce3e"
+}

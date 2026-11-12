@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into group_members (group_id, user_id)\n         select id, $1 from groups where auto_join and builtin is null\n         on conflict do nothing",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4e3ff35230a80452b7658e10eabee2aa055c99ba308acf69e2fa6428bfefc558"
+}

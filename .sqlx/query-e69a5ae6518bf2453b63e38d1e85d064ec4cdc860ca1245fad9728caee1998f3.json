@@ -1,0 +1,174 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select it.issue_id, t.id, t.name, t.owner_id, t.color, t.version, t.created_at,\n                t.view_users, t.view_groups, t.use_users, t.use_groups, t.edit_users,\n                t.edit_groups\n         from issue_tags it join tags t on t.id = it.tag_id\n         where it.issue_id = any($1)\n           and (t.owner_id = $2 or $2 = any(t.view_users) or t.view_groups && $3)\n         order by it.issue_id, lower(t.name), t.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "issue_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issue_tags",
+            "name": "issue_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "owner_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "owner_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "color",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "color"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "view_users",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "view_users"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "view_groups",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "view_groups"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "use_users",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "use_users"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "use_groups",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "use_groups"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "edit_users",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "edit_users"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "edit_groups",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "edit_groups"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "Int8",
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "e69a5ae6518bf2453b63e38d1e85d064ec4cdc860ca1245fad9728caee1998f3"
+}

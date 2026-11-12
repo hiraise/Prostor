@@ -1,0 +1,26 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select render_version from instance where id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "render_version",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "instance",
+            "name": "render_version"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "b170824a591e1652e4193d5cd42acc5a26f340eb4167f573fdc34d77450ef313"
+}

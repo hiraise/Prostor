@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select payload->>'to' as \"to!\", payload->>'text' as \"text!\" from jobs\n           where kind = 'mail.send' order by id desc limit 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "to!",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "text!",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "30b96f5f5ae1984e3cd4749eef815fa8f88290c9bec26394e0f299ae36559bc0"
+}

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into saved_search_ranks (search_id, issue_id, rank) values ($1, $2, $3)\n             on conflict (search_id, issue_id) do update set rank = excluded.rank",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "9378ac60a335164907877a9959ef834eb1ecd97f574c0c774ad1891655ea4ba1"
+}

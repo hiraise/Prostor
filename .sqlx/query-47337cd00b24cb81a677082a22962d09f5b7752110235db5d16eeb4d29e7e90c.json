@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select e.issue as \"issue!\", count(*) as \"count!\"\n           from (select source_id as issue from issue_links where source_id = any($1)\n                 union all\n                 select target_id from issue_links where target_id = any($1)) e\n           group by e.issue",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "issue!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "47337cd00b24cb81a677082a22962d09f5b7752110235db5d16eeb4d29e7e90c"
+}

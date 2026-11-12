@@ -1,0 +1,196 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, name, kind, multi, aliases, builtin, auto_attach, rank, set_id, can_be_empty,\n                empty_label, private, default_values, version, created_at\n         from fields where id = any($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "fields",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "fields",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "fields",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "multi",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "fields",
+            "name": "multi"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "aliases",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "fields",
+            "name": "aliases"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "builtin",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "fields",
+            "name": "builtin"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "auto_attach",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "fields",
+            "name": "auto_attach"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "rank",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "fields",
+            "name": "rank"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "set_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "fields",
+            "name": "set_id"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "can_be_empty",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "fields",
+            "name": "can_be_empty"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "empty_label",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "fields",
+            "name": "empty_label"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "private",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "fields",
+            "name": "private"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "default_values",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "fields",
+            "name": "default_values"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "fields",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "fields",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "843ae04971e932e6d9cf1743cce6e661d85bb002ea0028c1d0bf09140190cf1e"
+}

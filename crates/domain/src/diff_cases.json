@@ -1,0 +1,105 @@
+[
+  {
+    "name": "equal texts are one same part",
+    "before": "same",
+    "after": "same",
+    "parts": [["same", "same"]]
+  },
+  {
+    "name": "empty texts have no parts",
+    "before": "",
+    "after": "",
+    "parts": []
+  },
+  {
+    "name": "a new text is one addition",
+    "before": "",
+    "after": "new text",
+    "parts": [["added", "new text"]]
+  },
+  {
+    "name": "a deleted text is one removal",
+    "before": "old text",
+    "after": "",
+    "parts": [["removed", "old text"]]
+  },
+  {
+    "name": "a changed word keeps the rest",
+    "before": "The login button does nothing",
+    "after": "The submit button does nothing",
+    "parts": [
+      ["same", "The "],
+      ["removed", "login"],
+      ["added", "submit"],
+      ["same", " button does nothing"]
+    ]
+  },
+  {
+    "name": "additions and removals in the middle",
+    "before": "a b c d",
+    "after": "a x b d",
+    "parts": [
+      ["same", "a "],
+      ["removed", "b c"],
+      ["added", "x b"],
+      ["same", " d"]
+    ]
+  },
+  {
+    "name": "a removed word joins the whitespace after it",
+    "before": "one two three",
+    "after": "one three",
+    "parts": [
+      ["same", "one "],
+      ["removed", "two "],
+      ["same", "three"]
+    ]
+  },
+  {
+    "name": "a rewrite in the middle",
+    "before": "a b c d e",
+    "after": "a x d e",
+    "parts": [
+      ["same", "a "],
+      ["removed", "b c"],
+      ["added", "x"],
+      ["same", " d e"]
+    ]
+  },
+  {
+    "name": "changed words in Russian",
+    "before": "Кнопка входа ничего не делает",
+    "after": "Кнопка сохранения ничего не делает",
+    "parts": [
+      ["same", "Кнопка "],
+      ["removed", "входа"],
+      ["added", "сохранения"],
+      ["same", " ничего не делает"]
+    ]
+  },
+  {
+    "name": "a longer rewrite",
+    "before": "the quick brown fox jumps over the lazy dog",
+    "after": "the slow brown fox climbs over the lazy cat",
+    "parts": [
+      ["same", "the "],
+      ["removed", "quick"],
+      ["added", "slow"],
+      ["same", " brown fox "],
+      ["removed", "jumps"],
+      ["added", "climbs"],
+      ["same", " over the lazy "],
+      ["removed", "dog"],
+      ["added", "cat"]
+    ]
+  },
+  {
+    "name": "a pure addition at the end",
+    "before": "crash on save",
+    "after": "crash on save after login",
+    "parts": [
+      ["same", "crash on save"],
+      ["added", " after login"]
+    ]
+  }
+]

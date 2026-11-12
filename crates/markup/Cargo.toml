@@ -1,0 +1,18 @@
+[package]
+name = "trackflow-markup"
+description = "trackflow rich text: Markdown to safe HTML with mentions, issue IDs and file references"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+publish.workspace = true
+
+[dependencies]
+comrak.workspace = true
+ammonia.workspace = true
+
+[dev-dependencies]
+serde.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

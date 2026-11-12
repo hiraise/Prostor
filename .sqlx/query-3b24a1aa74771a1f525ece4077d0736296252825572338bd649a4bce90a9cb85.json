@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update link_types set deleted_at = null, deleted_by = null, version = version + 1,\n                updated_at = now()\n         where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3b24a1aa74771a1f525ece4077d0736296252825572338bd649a4bce90a9cb85"
+}

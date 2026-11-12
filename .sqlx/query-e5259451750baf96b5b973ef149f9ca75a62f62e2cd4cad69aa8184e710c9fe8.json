@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select distinct board_id from sprints where id = any($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "board_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "board_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e5259451750baf96b5b973ef149f9ca75a62f62e2cd4cad69aa8184e710c9fe8"
+}

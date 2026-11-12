@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update fields set default_values = array_remove(default_values, $1), version = version + 1\n         where $1 = any(default_values) and kind <> 'user'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8b24b431869c90dd4ea650beadb8dc2fe02ef39bd0e9e110f5133eee0518df94"
+}

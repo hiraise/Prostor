@@ -1,0 +1,220 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, issue_id, author_id, text, html, mentioned_users, issue_tokens, file_names,\n                render_version, created_at, updated_at, updated_by, audience_users,\n                audience_groups, deleted_at, deleted_by, version\n         from comments where id = any($1) order by id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "issue_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "issue_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "author_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "author_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "text",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "text"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "html",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "html"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "mentioned_users",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "mentioned_users"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "issue_tokens",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "issue_tokens"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "file_names",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "file_names"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "render_version",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "render_version"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "updated_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "updated_at"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "updated_by",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "updated_by"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "audience_users",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "audience_users"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "audience_groups",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "audience_groups"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "deleted_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "deleted_at"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "deleted_by",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "deleted_by"
+          }
+        }
+      },
+      {
+        "ordinal": 16,
+        "name": "version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "comments",
+            "name": "version"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      false
+    ]
+  },
+  "hash": "a6ce32f5910333b3d802509ead3a8547f1a1f87ce1f6f1103fe15574798abdbb"
+}

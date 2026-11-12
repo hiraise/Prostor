@@ -1,0 +1,134 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select g.id, g.name, g.description, g.builtin, g.auto_join, g.team_of, g.version,\n                  g.created_at,\n                  case when g.builtin is null then 1 else 0 end as \"rank!\",\n                  case\n                    when g.builtin = 'everyone'\n                      then (select count(*) from users where deleted_at is null)\n                    when g.builtin = 'all_members' then (select count(*) from users\n                                                         where deleted_at is null\n                                                           and builtin is distinct from 'guest')\n                    when g.team_of is not null then team_size(g.id)\n                    else (select count(*) from group_members m where m.group_id = g.id)\n                  end as \"members!\"\n           from groups g\n           where (strpos(lower(g.name), lower($1)) > 0 or g.builtin = any($2))\n             and ((g.team_of is null and $3)\n                  or (g.team_of is not null and $4\n                      and ($9::bigint[] is null or g.team_of = any($9))))\n             and (case when g.builtin is null then 1 else 0 end, lower(g.name), g.id)\n                 > ($5, lower($6), $7)\n           order by case when g.builtin is null then 1 else 0 end, lower(g.name), g.id\n           limit $8",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "description",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "description"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "builtin",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "builtin"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "auto_join",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "auto_join"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "team_of",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "team_of"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "groups",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "rank!",
+        "type_info": "Int4",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 9,
+        "name": "members!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "TextArray",
+        "Bool",
+        "Bool",
+        "Int4",
+        "Text",
+        "Int8",
+        "Int8",
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "e156f1aa6d5f7b59d69bd918454d9e59a0b9364cb009130d3da957e45dce2876"
+}

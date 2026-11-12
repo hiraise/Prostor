@@ -1,0 +1,76 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select b.id, b.name, b.owner_id, coalesce(p.favorite, false) as \"favorite!\",\n                  array(select project_id from board_projects where board_id = b.id\n                        order by project_id) as \"projects!\"\n           from boards b\n           left join board_profiles p on p.board_id = b.id and p.user_id = $1\n           where (b.owner_id = $1 or $1 = any(b.view_users) or b.view_groups && $2\n                  or $1 = any(b.edit_users) or b.edit_groups && $2\n                  or (b.view_readers\n                      and exists (select from board_projects bp where bp.board_id = b.id)\n                      and ($3 or not exists (select from board_projects bp\n                                             where bp.board_id = b.id\n                                               and bp.project_id <> all($4)))))\n             and ($5::text is null or b.name ilike $5)\n             and ($6::bigint is null or exists (select from board_projects bp\n                                                where bp.board_id = b.id and bp.project_id = $6))\n             and (not $7 or (not coalesce(p.favorite, false), lower(b.name), b.id) > ($8, $9, $10))\n           order by not coalesce(p.favorite, false), lower(b.name), b.id\n           limit $11",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "owner_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "owner_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "favorite!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 4,
+        "name": "projects!",
+        "type_info": "Int8Array",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8Array",
+        "Bool",
+        "Int8Array",
+        "Text",
+        "Int8",
+        "Bool",
+        "Bool",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "adcd97ad4fea72ea1541d1c04d120bb735d39b8eda13f972899c890bd9737543"
+}

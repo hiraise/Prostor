@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into sprint_issues (sprint_id, issue_id, lane_rank) values ($1, $2, $3)\n         on conflict (sprint_id, issue_id) do update set lane_rank = excluded.lane_rank",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "89a49a0c869b02857f60313b2dd705c589f033807131f4c8c2738b78aa5a7762"
+}

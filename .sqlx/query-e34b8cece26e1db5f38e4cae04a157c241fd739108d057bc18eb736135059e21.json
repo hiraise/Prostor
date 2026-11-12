@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select exists(\n             select 1 from group_members where group_id = $1 and user_id = $2\n             union all\n             select 1 from team_groups t join groups g on g.id = t.group_id\n             where t.team_id = $1\n               and (g.builtin = 'everyone'\n                    or (g.builtin = 'all_members'\n                        and exists(select 1 from users u\n                                   where u.id = $2 and u.builtin is distinct from 'guest'))\n                    or exists(select 1 from group_members m\n                              where m.group_id = g.id and m.user_id = $2))\n           ) as \"included!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "included!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "e34b8cece26e1db5f38e4cae04a157c241fd739108d057bc18eb736135059e21"
+}

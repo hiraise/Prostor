@@ -1,0 +1,52 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select issue_id, field_id, value from issue_date_values where issue_id = any($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "issue_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issue_date_values",
+            "name": "issue_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "field_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issue_date_values",
+            "name": "field_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "value",
+        "type_info": "Date",
+        "origin": {
+          "Table": {
+            "table": "issue_date_values",
+            "name": "value"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "74565ab11ed869289c65856da1e1bfca387e87405b0ce92074db4e71ee57d457"
+}

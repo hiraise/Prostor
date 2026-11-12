@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into issue_history (issue_id, author_id, origin, silent, kind, field_id,\n                                    comment_id, removed, added)\n         select r.issue, $2, $3, $4, r.kind, r.field, r.comment, r.removed, r.added\n         from unnest($1::bigint[], $5::text[], $6::bigint[], $7::bigint[], $8::jsonb[],\n                     $9::jsonb[])\n              with ordinality as r(issue, kind, field, comment, removed, added, n)\n         order by r.n",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "Int8",
+        "Text",
+        "Bool",
+        "TextArray",
+        "Int8Array",
+        "Int8Array",
+        "JsonbArray",
+        "JsonbArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6b0019694e02588efe2af44708acc2d332b57af9f31fadf75fbc073f0207c371"
+}

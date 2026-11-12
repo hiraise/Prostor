@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select array(select distinct project_id from project_fields where set_id = $1\n                        order by project_id) as \"projects!\",\n                  array(select id from fields where set_id = $1 order by id) as \"fields!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "projects!",
+        "type_info": "Int8Array",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "fields!",
+        "type_info": "Int8Array",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "c7c45f87085988727f419c5ab4d844c5f4fbed0ebeaefa94a866c4d270c3558a"
+}

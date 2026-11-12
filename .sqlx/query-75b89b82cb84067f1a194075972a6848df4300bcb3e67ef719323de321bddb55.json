@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from issues where reporter_id = any($1) and number is null",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "75b89b82cb84067f1a194075972a6848df4300bcb3e67ef719323de321bddb55"
+}

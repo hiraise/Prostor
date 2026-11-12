@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select (select count(*) from sprints where board_id = $1 and not internal) as \"sprints!\",\n                  (select count(distinct si.issue_id) from sprint_issues si\n                   join sprints s on s.id = si.sprint_id where s.board_id = $1) as \"cards!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "sprints!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "cards!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "8e987d86684ac7a793e05261f0508da8ea6980ed71b7a3661e62e2dc96941c45"
+}

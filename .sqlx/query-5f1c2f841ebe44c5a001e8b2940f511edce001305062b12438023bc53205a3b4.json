@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select k as \"key!\" from attachments a,\n                  unnest(array[a.storage_key, a.thumbnail_key]) k\n           where a.issue_id = any($1) and k is not null",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "key!",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "5f1c2f841ebe44c5a001e8b2940f511edce001305062b12438023bc53205a3b4"
+}

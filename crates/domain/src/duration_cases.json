@@ -1,0 +1,43 @@
+{
+  "parse": [
+    { "input": "90m", "minutes": 90 },
+    { "input": "1h 30m", "minutes": 90 },
+    { "input": "1h30m", "minutes": 90 },
+    { "input": "  2d ", "minutes": 960 },
+    { "input": "1w", "minutes": 2400 },
+    { "input": "1w 2d 3h 4m", "minutes": 3544 },
+    { "input": "1W 1D", "minutes": 2880 },
+    { "input": "1 h 5 m", "minutes": 65 },
+    { "input": "0m", "minutes": 0 },
+    { "input": "1ч 30м", "minutes": 90 },
+    { "input": "2н 1д", "minutes": 5280 },
+    { "input": "1Д", "minutes": 480 },
+    { "input": "1d", "minutes": 450, "day": 450 },
+    { "input": "", "problem": "required" },
+    { "input": "   ", "problem": "required" },
+    { "input": "90", "problem": "invalid" },
+    { "input": "h", "problem": "invalid" },
+    { "input": "1x", "problem": "invalid" },
+    { "input": "30m 1h", "problem": "invalid" },
+    { "input": "1h 1h", "problem": "invalid" },
+    { "input": "1hour", "problem": "invalid" },
+    { "input": "1.5h", "problem": "invalid" },
+    { "input": "-1h", "problem": "invalid" },
+    { "input": "1000000001m", "problem": "out_of_range" },
+    { "input": "99999999999999999999m", "problem": "out_of_range" },
+    { "input": "999999w", "problem": "out_of_range" }
+  ],
+  "format": [
+    { "minutes": 0, "en": "0m", "ru": "0м" },
+    { "minutes": 45, "en": "45m", "ru": "45м" },
+    { "minutes": 90, "en": "1h 30m", "ru": "1ч 30м" },
+    { "minutes": 120, "en": "2h", "ru": "2ч" },
+    { "minutes": 480, "en": "1d", "ru": "1д" },
+    { "minutes": 960, "en": "2d", "ru": "2д" },
+    { "minutes": 2400, "en": "1w", "ru": "1н" },
+    { "minutes": 3544, "en": "1w 2d 3h 4m", "ru": "1н 2д 3ч 4м" },
+    { "minutes": 480, "en": "1d 30m", "ru": "1д 30м", "day": 450 },
+    { "minutes": 2250, "en": "1w", "ru": "1н", "day": 450 },
+    { "minutes": -5, "en": "0m", "ru": "0м" }
+  ]
+}

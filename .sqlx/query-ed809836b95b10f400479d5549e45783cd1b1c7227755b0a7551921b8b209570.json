@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id from users\n           where deleted_at is null and ($1 or builtin is distinct from 'guest')\n             and (strpos(lower(full_name), lower($2)) > 0 or strpos(lower(username), lower($2)) > 0)\n             and (lower(full_name), id) > (lower($3), $4)\n           order by lower(full_name), id\n           limit $5",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Bool",
+        "Text",
+        "Text",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ed809836b95b10f400479d5549e45783cd1b1c7227755b0a7551921b8b209570"
+}

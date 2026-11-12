@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select count(distinct v.issue_id) as \"n!\" from issue_ref_values v\n               join issues i on i.id = v.issue_id where v.field_id = $1 and i.project_id = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "n!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "c0c2e9e118af9b436fdcf661d05cb5009152552739e2aa2224fc770f4516a8a0"
+}

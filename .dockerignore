@@ -1,0 +1,16 @@
+# Keep the build context small: build outputs, dependencies and local files stay out.
+.git
+skills
+.zcode
+.env
+target
+target-linux
+node_modules
+web/node_modules
+web/.svelte-kit
+web/build
+web/.playwright
+web/test-results
+data
+deploy/*.tar*
+*.log

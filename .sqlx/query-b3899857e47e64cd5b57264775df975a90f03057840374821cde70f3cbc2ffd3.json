@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update saved_searches set\n               view_users = array(select x from unnest(view_users) x where x <> all($1)),\n               edit_users = array(select x from unnest(edit_users) x where x <> all($1)),\n               version = version + 1\n             where view_users && $1 or edit_users && $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b3899857e47e64cd5b57264775df975a90f03057840374821cde70f3cbc2ffd3"
+}

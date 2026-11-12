@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update project_fields p set default_values = array_remove(p.default_values, $1),\n                                     version = p.version + 1\n         from fields f\n         where f.id = p.field_id and f.kind <> 'user' and $1 = any(p.default_values)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "afdbab5b3c710134e479885db3fa683a4922bb419d5f3ce5e899c6177e1d1e8c"
+}

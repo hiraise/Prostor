@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update users set file_link_secret = coalesce(file_link_secret, $2) where id = $1\n           returning file_link_secret as \"secret!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "secret!",
+        "type_info": "Bytea",
+        "origin": {
+          "Table": {
+            "table": "users",
+            "name": "file_link_secret"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Bytea"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "2df1fcb471b144a3b1f63cf4acb1e8e9cfd439bb14462c8a4756788d6082f71c"
+}

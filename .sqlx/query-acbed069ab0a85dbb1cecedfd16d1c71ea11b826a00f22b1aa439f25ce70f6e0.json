@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update issues set board_skips = '{}' where id = $1 and cardinality(board_skips) > 0",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "acbed069ab0a85dbb1cecedfd16d1c71ea11b826a00f22b1aa439f25ce70f6e0"
+}

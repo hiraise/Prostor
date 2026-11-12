@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update jobs set state = 'cancelled', finished_at = now(), lease_until = null,\n                     updated_at = now()\n                 where id = $1 and claim_token = $2 and state = 'running'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a40ce3bf2f8eeeea85337f76d332d1be11073b510521ef746013487980b93eb6"
+}

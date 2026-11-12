@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select si.issue_id from sprint_issues si\n         join issue_links l on l.target_id = si.issue_id and l.source_id = $2\n         join link_types t on t.id = l.type_id and t.builtin = 'subtask'\n         where si.sprint_id = $1 and si.lane_rank is null\n         order by si.issue_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "issue_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "sprint_issues",
+            "name": "issue_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "3956b4c0762587e6caefae2bdcd58530621c9f7d2fda4e3fd89f7d6d3d743bf6"
+}

@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update roles set name = coalesce($2, name), description = coalesce($3, description),\n                          version = version + 1, updated_at = now()\n         where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fbbc3ce748f3ef780ea0ba4c60c4d802888b00ac13955ff1148f36634a2730ab"
+}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from issues where id in (\n           select i.id from issues i\n           where i.number is null and i.updated_at < now() - make_interval(secs => $1)\n             and i.summary = '' and i.description = ''\n             and not exists (select 1 from attachments a where a.issue_id = i.id)\n             and not exists (select 1 from issue_links l where l.source_id = i.id)\n             and not exists (select 1 from issue_links l where l.target_id = i.id)\n             and not exists (select 1 from issue_tags t where t.issue_id = i.id)\n           order by i.updated_at\n           limit $2\n           for update skip locked\n         )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Float8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1156bd01ae472c9888b61b01b4d5b8f9a0bcd4bcd3527fe77c77bfed9ca46f53"
+}

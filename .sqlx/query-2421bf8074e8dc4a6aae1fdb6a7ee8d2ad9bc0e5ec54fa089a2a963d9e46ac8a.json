@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from role_assignments where user_id = any($1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2421bf8074e8dc4a6aae1fdb6a7ee8d2ad9bc0e5ec54fa089a2a963d9e46ac8a"
+}

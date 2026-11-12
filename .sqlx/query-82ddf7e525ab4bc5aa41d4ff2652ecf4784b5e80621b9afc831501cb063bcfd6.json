@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update value_sets set version = version + 1, updated_at = now() where id = any($1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "82ddf7e525ab4bc5aa41d4ff2652ecf4784b5e80621b9afc831501cb063bcfd6"
+}

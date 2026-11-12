@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update sprints set archived_at = now(), version = version + 1, updated_at = now()\n         where board_id = $1 and id <> $2 and not internal and archived_at is null\n         returning id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "fcc8791bcc5ddee4206622a44c7a9672b2ea245e92ca5efd64197026ea387778"
+}

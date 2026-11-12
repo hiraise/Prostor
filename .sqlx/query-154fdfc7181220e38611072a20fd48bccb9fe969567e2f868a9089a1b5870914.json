@@ -1,0 +1,83 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select b.id as board_id, b.name as board_name, s.id as sprint_id,\n                  s.name as sprint_name, s.internal, b.id = any(i.board_skips) as \"skipped!\"\n           from issues i\n           join board_projects bp on bp.project_id = i.project_id\n           join boards b on b.id = bp.board_id and b.mode = 'auto'\n           join issue_ref_values cv on cv.issue_id = i.id and cv.field_id = b.column_field_id\n           join board_columns c on c.board_id = b.id and c.value_id = cv.value\n           join sprints s on s.board_id = b.id and s.archived_at is null\n                and (case when b.sprints_on then s.id = b.auto_sprint_id else s.internal end)\n           where i.id = $1\n             and not exists (select from sprint_issues x join sprints y on y.id = x.sprint_id\n                             where y.board_id = b.id and x.issue_id = i.id)\n           order by b.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "board_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "board_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "sprint_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "sprint_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "internal",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "sprints",
+            "name": "internal"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "skipped!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "154fdfc7181220e38611072a20fd48bccb9fe969567e2f868a9089a1b5870914"
+}

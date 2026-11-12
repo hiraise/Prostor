@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into board_profiles (user_id, board_id, visited_at) values ($1, $2, now())\n         on conflict (user_id, board_id) do update set visited_at = now()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "bf925b8439e233aec1c96ec30c66a808a52824e615c322dfa03b2955bc0f05c1"
+}

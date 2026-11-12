@@ -1,0 +1,88 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, board_id, value_id, rank, wip_min, wip_max from board_columns\n         where board_id = $1 order by rank, id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "board_columns",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "board_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "board_columns",
+            "name": "board_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "value_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "board_columns",
+            "name": "value_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "rank",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "board_columns",
+            "name": "rank"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "wip_min",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "board_columns",
+            "name": "wip_min"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "wip_max",
+        "type_info": "Int4",
+        "origin": {
+          "Table": {
+            "table": "board_columns",
+            "name": "wip_max"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true
+    ]
+  },
+  "hash": "fa05669c3c6adb86a81975aeb7ca303ac12b8462fcc2b7e3658c7af86b5b4341"
+}

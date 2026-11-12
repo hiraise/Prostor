@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "with person as (\n             select id, builtin is distinct from 'guest' as member from users where id = $2\n           ),\n           listed as (\n             select g.id from value_set_groups v join groups g on g.id = v.group_id\n             where v.set_id = $1\n             union\n             select t.group_id from value_set_groups v join team_groups t on t.team_id = v.group_id\n             where v.set_id = $1\n           )\n           select exists(\n             select 1 from value_set_users where set_id = $1 and user_id = $2\n             union all\n             select 1 from listed l join groups g on g.id = l.id, person p\n             where g.builtin = 'everyone'\n                or (g.builtin = 'all_members' and p.member)\n                or exists(select 1 from group_members m where m.group_id = g.id and m.user_id = p.id)\n           ) as \"allowed!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "allowed!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "a19af269644ffb4d479e8a3077c92f3998a679bcf552f20611ab0b21de3db58d"
+}

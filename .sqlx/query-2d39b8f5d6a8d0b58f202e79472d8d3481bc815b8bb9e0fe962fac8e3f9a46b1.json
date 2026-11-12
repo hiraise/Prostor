@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update jobs set state = 'failed', last_error = $3, finished_at = now(),\n                     lease_until = null, updated_at = now()\n                 where id = $1 and claim_token = $2 and state = 'running'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2d39b8f5d6a8d0b58f202e79472d8d3481bc815b8bb9e0fe962fac8e3f9a46b1"
+}

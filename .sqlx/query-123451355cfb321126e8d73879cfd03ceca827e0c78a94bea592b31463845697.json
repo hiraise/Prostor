@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select state as \"state: String\" from jobs where id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "state: String",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "jobs",
+            "name": "state"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "123451355cfb321126e8d73879cfd03ceca827e0c78a94bea592b31463845697"
+}

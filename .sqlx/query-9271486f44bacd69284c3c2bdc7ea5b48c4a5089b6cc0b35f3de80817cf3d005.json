@@ -1,0 +1,24 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "with mine as (\n             select group_id as id from group_members where user_id = $1\n             union all\n             select id from groups where builtin = 'everyone'\n             union all\n             select id from groups where builtin = 'all_members' and not $2\n           )\n           select id as \"id!\" from mine\n           union\n           select t.team_id from team_groups t where t.group_id in (select id from mine)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "9271486f44bacd69284c3c2bdc7ea5b48c4a5089b6cc0b35f3de80817cf3d005"
+}

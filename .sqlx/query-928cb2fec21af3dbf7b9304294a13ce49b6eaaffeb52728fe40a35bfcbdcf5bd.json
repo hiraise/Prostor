@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update issues set description_html = $2, mentioned_users = $3, issue_tokens = $4,\n                           file_names = $5, render_version = $6\n         where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text",
+        "Int8Array",
+        "TextArray",
+        "TextArray",
+        "Int2"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "928cb2fec21af3dbf7b9304294a13ce49b6eaaffeb52728fe40a35bfcbdcf5bd"
+}

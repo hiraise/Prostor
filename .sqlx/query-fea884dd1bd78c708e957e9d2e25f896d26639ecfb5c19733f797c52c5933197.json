@@ -1,0 +1,151 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, issue_id, at, author_id, origin, silent, kind, field_id, comment_id,\n                        removed, added\n                 from issue_history where issue_id = $1 and kind = any($2) and id < $3\n                 order by id desc limit $4",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issue_history",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "issue_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issue_history",
+            "name": "issue_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "issue_history",
+            "name": "at"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "author_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issue_history",
+            "name": "author_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "origin",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "issue_history",
+            "name": "origin"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "silent",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "issue_history",
+            "name": "silent"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "kind",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "issue_history",
+            "name": "kind"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "field_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issue_history",
+            "name": "field_id"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "comment_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issue_history",
+            "name": "comment_id"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "removed",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "issue_history",
+            "name": "removed"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "added",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "issue_history",
+            "name": "added"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "TextArray",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "fea884dd1bd78c708e957e9d2e25f896d26639ecfb5c19733f797c52c5933197"
+}

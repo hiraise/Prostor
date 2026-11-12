@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select data from user_preferences where user_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "data",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "user_preferences",
+            "name": "data"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "6394635c99641ac07c23bacb27a03ca1e5f36f33dc4cdef2cdea9aae72265241"
+}

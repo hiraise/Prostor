@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update projects set default_audience_group_id = $2, version = version + 1,\n                             updated_at = now()\n         where default_audience_group_id = any($1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "38c4bcb4e4d2d1eefdcd405c6872fc0e3bea7bfc333f6055033a75f8bbec3bb1"
+}

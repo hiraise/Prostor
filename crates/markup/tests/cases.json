@@ -1,0 +1,68 @@
+{
+  "cnt_040": [
+    {"name": "emphasis and strong", "text": "*a* _b_ **c** __d__ ***e*** ~~f~~ `g` ``h ` i``", "html": "<p><em>a</em> <em>b</em> <strong>c</strong> <strong>d</strong> <em><strong>e</strong></em> <del>f</del> <code>g</code> <code>h ` i</code></p>\n"},
+    {"name": "atx headings", "text": "# One\n## Two\n### Three\n#### Four\n##### Five\n###### Six", "html": "<h1>One</h1>\n<h2>Two</h2>\n<h3>Three</h3>\n<h4>Four</h4>\n<h5>Five</h5>\n<h6>Six</h6>\n"},
+    {"name": "setext headings", "text": "Title\n=====\n\nSub\n---", "html": "<h1>Title</h1>\n<h2>Sub</h2>\n"},
+    {"name": "soft and hard breaks", "text": "one\ntwo  \nthree\\\nfour", "html": "<p>one\ntwo<br>\nthree<br>\nfour</p>\n"},
+    {"name": "thematic breaks", "text": "a\n\n***\n\n- - -\n\n___", "html": "<p>a</p>\n<hr>\n<hr>\n<hr>\n"},
+    {"name": "quotes", "text": "> quoted\n> **text**\n>\n> > nested", "html": "<blockquote>\n<p>quoted\n<strong>text</strong></p>\n<blockquote>\n<p>nested</p>\n</blockquote>\n</blockquote>\n"},
+    {"name": "indented and fenced code", "text": "    indented <b>\n\n```\nfenced & raw\n```", "html": "<pre><code>indented &lt;b&gt;\n</code></pre>\n<pre><code>fenced &amp; raw\n</code></pre>\n"},
+    {"name": "escapes", "text": "\\*not emphasis\\* \\# \\[x\\]", "html": "<p>*not emphasis* # [x]</p>\n"},
+    {"name": "raw html is text", "text": "<b>bold</b>\n\n<div onclick=\"x()\">block</div>", "html": "<p>&lt;b&gt;bold&lt;/b&gt;</p>\n&lt;div onclick=\"x()\"&gt;block&lt;/div&gt;\n"}
+  ],
+  "cnt_041": [
+    {"name": "bulleted lists", "text": "- a\n* b\n+ c\n\n- one\n  - nested", "html": "<ul>\n<li data-sourcepos=\"1:1-1:3\">a</li>\n</ul>\n<ul>\n<li data-sourcepos=\"2:1-2:3\">b</li>\n</ul>\n<ul>\n<li data-sourcepos=\"3:1-4:0\">c</li>\n</ul>\n<ul>\n<li data-sourcepos=\"5:1-6:10\">one\n<ul>\n<li data-sourcepos=\"6:3-6:10\">nested</li>\n</ul>\n</li>\n</ul>\n"},
+    {"name": "ordered lists with a start", "text": "3. three\n4. four\n\n1) a\n2) b", "html": "<ol start=\"3\">\n<li data-sourcepos=\"1:1-1:8\">three</li>\n<li data-sourcepos=\"2:1-3:0\">four</li>\n</ol>\n<ol>\n<li data-sourcepos=\"4:1-4:4\">a</li>\n<li data-sourcepos=\"5:1-5:4\">b</li>\n</ol>\n"},
+    {"name": "nested ordered lists", "text": "1. one\n   1. inner\n   2. inner two\n2. two", "html": "<ol>\n<li data-sourcepos=\"1:1-3:15\">one\n<ol>\n<li data-sourcepos=\"2:4-2:11\">inner</li>\n<li data-sourcepos=\"3:4-3:15\">inner two</li>\n</ol>\n</li>\n<li data-sourcepos=\"4:1-4:6\">two</li>\n</ol>\n"},
+    {"name": "checklists keep their lines", "text": "- [ ] open\n- [x] done\n  - [ ] nested", "html": "<ul>\n<li data-sourcepos=\"1:1-1:10\"><input type=\"checkbox\" disabled=\"\"> open</li>\n<li data-sourcepos=\"2:1-3:14\"><input type=\"checkbox\" checked=\"\" disabled=\"\"> done\n<ul>\n<li data-sourcepos=\"3:3-3:14\"><input type=\"checkbox\" disabled=\"\"> nested</li>\n</ul>\n</li>\n</ul>\n"}
+  ],
+  "cnt_042": [
+    {"name": "tables with alignment", "text": "| L | C | R | N |\n|:--|:-:|--:|---|\n| *a* | b | c | d |", "html": "<table>\n<thead>\n<tr>\n<th align=\"left\">L</th>\n<th align=\"center\">C</th>\n<th align=\"right\">R</th>\n<th>N</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td align=\"left\"><em>a</em></td>\n<td align=\"center\">b</td>\n<td align=\"right\">c</td>\n<td>d</td>\n</tr>\n</tbody>\n</table>\n"},
+    {"name": "tables without outer pipes", "text": "a | b\n--- | ---\n1 | 2", "html": "<table>\n<thead>\n<tr>\n<th>a</th>\n<th>b</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>1</td>\n<td>2</td>\n</tr>\n</tbody>\n</table>\n"}
+  ],
+  "cnt_043": [
+    {"name": "inline links with titles", "text": "[site](https://example.com \"Example\")", "html": "<p><a href=\"https://example.com\" title=\"Example\" rel=\"noopener noreferrer nofollow\">site</a></p>\n"},
+    {"name": "reference links", "text": "[one][Ref] and [Ref]\n\n[ref]: https://example.com/r", "html": "<p><a href=\"https://example.com/r\" rel=\"noopener noreferrer nofollow\">one</a> and <a href=\"https://example.com/r\" rel=\"noopener noreferrer nofollow\">Ref</a></p>\n"},
+    {"name": "angle autolinks", "text": "<https://example.com/a> <mail@example.com>", "html": "<p><a href=\"https://example.com/a\" rel=\"noopener noreferrer nofollow\">https://example.com/a</a> <a href=\"mailto:mail@example.com\" rel=\"noopener noreferrer nofollow\">mail@example.com</a></p>\n"},
+    {"name": "bare urls and emails", "text": "see www.example.com and https://example.org/x?y=1, or write to team@example.com.", "html": "<p>see <a href=\"http://www.example.com\" rel=\"noopener noreferrer nofollow\">www.example.com</a> and <a href=\"https://example.org/x?y=1\" rel=\"noopener noreferrer nofollow\">https://example.org/x?y=1</a>, or write to <a href=\"mailto:team@example.com\" rel=\"noopener noreferrer nofollow\">team@example.com</a>.</p>\n"},
+    {"name": "image by url", "text": "![logo](https://example.com/l.png \"Logo\")", "html": "<p><img src=\"https://example.com/l.png\" alt=\"logo\" title=\"Logo\"></p>\n"}
+  ],
+  "cnt_045": [
+    {"name": "language class", "text": "```rust\nfn main() {}\n```", "html": "<pre><code class=\"language-rust\">fn main() {}\n</code></pre>\n"},
+    {"name": "aliases and symbols", "text": "```c++\nint x;\n```\n\n```vb.net\nDim x\n```", "html": "<pre><code class=\"language-c++\">int x;\n</code></pre>\n<pre><code class=\"language-vb.net\">Dim x\n</code></pre>\n"},
+    {"name": "odd info strings lose the class", "text": "```<x> y\ncode\n```", "html": "<pre><code>code\n</code></pre>\n"},
+    {"name": "no language", "text": "```\nplain\n```", "html": "<pre><code>plain\n</code></pre>\n"}
+  ],
+  "cnt_054": [
+    {"name": "known mention", "text": "ask @jsmith please", "users": {"jsmith": 57}, "mentions": [57], "html": "<p>ask <a href=\"tf-user:57\" rel=\"noopener noreferrer nofollow\">@jsmith</a> please</p>\n"},
+    {"name": "case and trailing dot", "text": "Thanks, @JSmith.", "users": {"jsmith": 57}, "mentions": [57], "html": "<p>Thanks, <a href=\"tf-user:57\" rel=\"noopener noreferrer nofollow\">@JSmith</a>.</p>\n"},
+    {"name": "longest login wins", "text": "@ann.lee and @ann", "users": {"ann": 1, "ann.lee": 2}, "mentions": [2, 1], "html": "<p><a href=\"tf-user:2\" rel=\"noopener noreferrer nofollow\">@ann.lee</a> and <a href=\"tf-user:1\" rel=\"noopener noreferrer nofollow\">@ann</a></p>\n"},
+    {"name": "unknown stays text", "text": "@nobody here", "users": {}, "mentions": [], "html": "<p>@nobody here</p>\n"},
+    {"name": "inside code and links ignored", "text": "`@jsmith` [@jsmith](https://x.example)\n\n    @jsmith", "users": {"jsmith": 57}, "mentions": [], "html": "<p><code>@jsmith</code> <a href=\"https://x.example\" rel=\"noopener noreferrer nofollow\">@jsmith</a></p>\n<pre><code>@jsmith\n</code></pre>\n"},
+    {"name": "emails are not mentions", "text": "a@b.c x.@jsmith y/@jsmith", "users": {"jsmith": 57, "b.c": 3}, "mentions": [], "html": "<p><a href=\"mailto:a@b.c\" rel=\"noopener noreferrer nofollow\">a@b.c</a> x.@jsmith y/@jsmith</p>\n"},
+    {"name": "underscores survive emphasis rules", "text": "hi @john_doe_ and _@jsmith_", "users": {"john_doe_": 8, "jsmith": 57}, "mentions": [8, 57], "html": "<p>hi <a href=\"tf-user:8\" rel=\"noopener noreferrer nofollow\">@john_doe_</a> and <em><a href=\"tf-user:57\" rel=\"noopener noreferrer nofollow\">@jsmith</a></em></p>\n"},
+    {"name": "repeated once", "text": "@jsmith @jsmith", "users": {"jsmith": 57}, "mentions": [57], "html": "<p><a href=\"tf-user:57\" rel=\"noopener noreferrer nofollow\">@jsmith</a> <a href=\"tf-user:57\" rel=\"noopener noreferrer nofollow\">@jsmith</a></p>\n"}
+  ],
+  "cnt_056": [
+    {"name": "tokens", "text": "Fixed in WEB-12, see A_1-7 and WEB-12.", "issue_tokens": ["WEB-12", "A_1-7"], "html": "<p>Fixed in <a href=\"tf-issue:WEB-12\" rel=\"noopener noreferrer nofollow\">WEB-12</a>, see <a href=\"tf-issue:A_1-7\" rel=\"noopener noreferrer nofollow\">A_1-7</a> and <a href=\"tf-issue:WEB-12\" rel=\"noopener noreferrer nofollow\">WEB-12</a>.</p>\n"},
+    {"name": "inside code and links ignored", "text": "`WEB-1` [WEB-2](https://x.example) <https://x.example/WEB-3>", "issue_tokens": [], "html": "<p><code>WEB-1</code> <a href=\"https://x.example\" rel=\"noopener noreferrer nofollow\">WEB-2</a> <a href=\"https://x.example/WEB-3\" rel=\"noopener noreferrer nofollow\">https://x.example/WEB-3</a></p>\n"},
+    {"name": "lowercase and glued ignored", "text": "web-12 XWEB-12a W-1 WEB-0", "issue_tokens": [], "html": "<p>web-12 XWEB-12a W-1 WEB-0</p>\n"},
+    {"name": "in headings and emphasis", "text": "# WEB-4\n\n**WEB-5**", "issue_tokens": ["WEB-4", "WEB-5"], "html": "<h1><a href=\"tf-issue:WEB-4\" rel=\"noopener noreferrer nofollow\">WEB-4</a></h1>\n<p><strong><a href=\"tf-issue:WEB-5\" rel=\"noopener noreferrer nofollow\">WEB-5</a></strong></p>\n"}
+  ],
+  "cnt_044": [
+    {"name": "image and link to files", "text": "![shot](shot.png) [log](build%20log.txt) [ref][f]\n\n[f]: notes.md", "files": ["shot.png", "build log.txt", "notes.md"], "html": "<p><img src=\"tf-file:shot.png\" alt=\"shot\"> <a href=\"tf-file:build%20log.txt\" rel=\"noopener noreferrer nofollow\">log</a> <a href=\"tf-file:notes.md\" rel=\"noopener noreferrer nofollow\">ref</a></p>\n"},
+    {"name": "paths, anchors and urls are not files", "text": "[a](/x) [b](#y) [c](?z) [d](./w) [e](https://x.example/f.png)", "files": [], "html": "<p><a href=\"/x\" rel=\"noopener noreferrer nofollow\">a</a> <a href=\"#y\" rel=\"noopener noreferrer nofollow\">b</a> <a href=\"?z\" rel=\"noopener noreferrer nofollow\">c</a> <a href=\"./w\" rel=\"noopener noreferrer nofollow\">d</a> <a href=\"https://x.example/f.png\" rel=\"noopener noreferrer nofollow\">e</a></p>\n"}
+  ],
+  "basic_profile": [
+    {"name": "no markers", "profile": "basic", "text": "@jsmith WEB-12 ![s](shot.png) **ok**", "users": {"jsmith": 57}, "mentions": [], "issue_tokens": [], "files": [], "html": "<p>@jsmith WEB-12 <img src=\"shot.png\" alt=\"s\"> <strong>ok</strong></p>\n"}
+  ],
+  "xss": [
+    {"name": "script", "text": "<script>alert(1)</script>", "excludes": ["<script"]},
+    {"name": "img onerror", "text": "<img src=x onerror=alert(1)>", "excludes": ["<img"]},
+    {"name": "javascript links", "text": "[x](javascript:alert(1)) [y](JaVaScRiPt:alert(1)) <javascript:alert(1)>", "excludes": ["href=\"javascript", "href=\"JaVaScRiPt"]},
+    {"name": "data and vbscript links", "text": "[x](data:text/html;base64,PHNjcmlwdD4=) ![y](data:image/png;base64,AAAA) [z](vbscript:x)", "excludes": ["data:", "vbscript:"]},
+    {"name": "attribute breakout through names", "text": "![a\" onerror=\"x](f\"onerror=\"x.png) [t](https://x.example \"a\\\" onmouseover=\\\"x\")", "excludes": ["\" onerror", "\" onmouseover", "<img src=\"tf-file:f\""]},
+    {"name": "hand-written markers", "text": "[me](tf-user:1) <tf-issue:ABC-1> ![f](TF-FILE:a.png)", "excludes": ["href=\"tf-", "src=\"tf-", "src=\"TF-"], "mentions": [], "issue_tokens": [], "files": []},
+    {"name": "html comments", "text": "a <!-- hidden --> b", "excludes": ["<!--"]}
+  ]
+}

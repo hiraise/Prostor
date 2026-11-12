@@ -1,0 +1,55 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select issue_id, field_id, value from issue_text_values\n         where render_version < $1 and (issue_id, field_id) > ($2, $3)\n         order by issue_id, field_id limit $4",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "issue_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issue_text_values",
+            "name": "issue_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "field_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issue_text_values",
+            "name": "field_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "value",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "issue_text_values",
+            "name": "value"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int2",
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "219576797765ed3537c4186afc987717a4c4a4ba50f1c3c183019f9f021aefa5"
+}

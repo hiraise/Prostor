@@ -1,0 +1,44 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select count(*) filter (where read_at is null) as \"total!\",\n                  count(*) filter (\n                      where read_at is null and 'mention' = any(reasons)) as \"direct!\",\n                  count(*) filter (\n                      where read_at is null and exists(\n                          select 1 from unnest(reasons) as r\n                          where r like 'tag:%' or r like 'search:%')) as \"subscriptions!\",\n                  count(*) filter (\n                      where read_at is null and kind = 'system') as \"system!\"\n           from notifications\n           where user_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "total!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "direct!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 2,
+        "name": "subscriptions!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 3,
+        "name": "system!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "ec9ce83e7939976cecfbca4559b4af014ef261ccd08e6fb5c4c01e885b15dc51"
+}

@@ -1,0 +1,160 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, name, source_name, target_name, direction, builtin, locked, deleted_at,\n                deleted_by, version, created_at, updated_at\n         from link_types where id = $1 for share",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "link_types",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "link_types",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "source_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "link_types",
+            "name": "source_name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "target_name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "link_types",
+            "name": "target_name"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "direction",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "link_types",
+            "name": "direction"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "builtin",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "link_types",
+            "name": "builtin"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "locked",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "link_types",
+            "name": "locked"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "deleted_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "link_types",
+            "name": "deleted_at"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "deleted_by",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "link_types",
+            "name": "deleted_by"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "link_types",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "link_types",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "updated_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "link_types",
+            "name": "updated_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "6ce59a10802303cc7b993d57614b9391625ec5b5ff7923ba28904d44ee2143fa"
+}

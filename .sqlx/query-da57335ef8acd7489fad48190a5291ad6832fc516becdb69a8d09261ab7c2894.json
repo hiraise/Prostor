@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update groups set name = coalesce($2, name), description = coalesce($3, description),\n                           auto_join = coalesce($4, auto_join), version = version + 1,\n                           updated_at = now()\n         where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text",
+        "Text",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "da57335ef8acd7489fad48190a5291ad6832fc516becdb69a8d09261ab7c2894"
+}

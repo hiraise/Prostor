@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update roles set permissions = $2, version = version + 1, updated_at = now()\n         where id = $1 and builtin is null",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "TextArray"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b5b0e44a62b35d3b245f0d888dd3e2afc628cdd4fc9e05f3aa89e45a181f7ac6"
+}

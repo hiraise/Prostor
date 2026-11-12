@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from roles where id = $1 and builtin is null",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "15a337b44c6e6f5f1dce98b9e91461138f059fb271bb41161aa5fd8dbaea8cb1"
+}

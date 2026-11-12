@@ -1,0 +1,160 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, name, owner_id, color, version, created_at,\n                view_users, view_groups, use_users, use_groups, edit_users, edit_groups\n         from tags where id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "owner_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "owner_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "color",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "color"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "view_users",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "view_users"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "view_groups",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "view_groups"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "use_users",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "use_users"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "use_groups",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "use_groups"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "edit_users",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "edit_users"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "edit_groups",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "tags",
+            "name": "edit_groups"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "3be5fde82b3af9c4c34b669469b9ed0eadafb8b7cf35380e23baff716095e514"
+}

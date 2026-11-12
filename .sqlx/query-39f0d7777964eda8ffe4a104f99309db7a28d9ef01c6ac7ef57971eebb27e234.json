@@ -1,0 +1,90 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, user_id, tag_id, saved_search_id, kinds, created_at\n           from notification_subscriptions\n           where user_id = $1 and (tag_id = $2 or saved_search_id = $3)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "notification_subscriptions",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "user_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "notification_subscriptions",
+            "name": "user_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "tag_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "notification_subscriptions",
+            "name": "tag_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "saved_search_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "notification_subscriptions",
+            "name": "saved_search_id"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "kinds",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "notification_subscriptions",
+            "name": "kinds"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "notification_subscriptions",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "39f0d7777964eda8ffe4a104f99309db7a28d9ef01c6ac7ef57971eebb27e234"
+}

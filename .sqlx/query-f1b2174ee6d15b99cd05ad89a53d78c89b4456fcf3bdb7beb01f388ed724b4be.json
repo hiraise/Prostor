@@ -1,0 +1,25 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "with recursive up(id, depth) as (\n             select source_id, 1 from issue_links where type_id = $1 and target_id = $2\n             union all\n             select l.source_id, up.depth + 1\n             from issue_links l join up on l.target_id = up.id\n             where l.type_id = $1 and up.depth < $3\n           )\n           select id as \"id!\" from up order by depth",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Int4"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "f1b2174ee6d15b99cd05ad89a53d78c89b4456fcf3bdb7beb01f388ed724b4be"
+}

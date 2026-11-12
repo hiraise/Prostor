@@ -1,0 +1,402 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, name, owner_id, preset, sprints_on, mode, query, auto_sprint_id,\n                  column_field_id, card_fields, card_initials, color_mode, color_field_id,\n                  estimation_field_id, original_estimation_field_id, backlog_search_id,\n                  lane_mode, lane_field_id, lane_attribute, lane_values, other_lane,\n                  new_card_value_id, view_users, view_groups, edit_users, edit_groups, view_readers, edit_updaters,\n                  created_at, updated_at, version,\n                  array(select project_id from board_projects where board_id = b.id\n                        order by project_id) as \"projects!\",\n                  array(select color from board_projects where board_id = b.id\n                        order by project_id) as \"project_colors!: Vec<Option<i16>>\"\n           from boards b where id = any($1)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "owner_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "owner_id"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "preset",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "preset"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "sprints_on",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "sprints_on"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "mode",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "mode"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "query",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "query"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "auto_sprint_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "auto_sprint_id"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "column_field_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "column_field_id"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "card_fields",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "card_fields"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "card_initials",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "card_initials"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "color_mode",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "color_mode"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "color_field_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "color_field_id"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "estimation_field_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "estimation_field_id"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "original_estimation_field_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "original_estimation_field_id"
+          }
+        }
+      },
+      {
+        "ordinal": 15,
+        "name": "backlog_search_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "backlog_search_id"
+          }
+        }
+      },
+      {
+        "ordinal": 16,
+        "name": "lane_mode",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "lane_mode"
+          }
+        }
+      },
+      {
+        "ordinal": 17,
+        "name": "lane_field_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "lane_field_id"
+          }
+        }
+      },
+      {
+        "ordinal": 18,
+        "name": "lane_attribute",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "lane_attribute"
+          }
+        }
+      },
+      {
+        "ordinal": 19,
+        "name": "lane_values",
+        "type_info": "TextArray",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "lane_values"
+          }
+        }
+      },
+      {
+        "ordinal": 20,
+        "name": "other_lane",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "other_lane"
+          }
+        }
+      },
+      {
+        "ordinal": 21,
+        "name": "new_card_value_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "new_card_value_id"
+          }
+        }
+      },
+      {
+        "ordinal": 22,
+        "name": "view_users",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "view_users"
+          }
+        }
+      },
+      {
+        "ordinal": 23,
+        "name": "view_groups",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "view_groups"
+          }
+        }
+      },
+      {
+        "ordinal": 24,
+        "name": "edit_users",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "edit_users"
+          }
+        }
+      },
+      {
+        "ordinal": 25,
+        "name": "edit_groups",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "edit_groups"
+          }
+        }
+      },
+      {
+        "ordinal": 26,
+        "name": "view_readers",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "view_readers"
+          }
+        }
+      },
+      {
+        "ordinal": 27,
+        "name": "edit_updaters",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "edit_updaters"
+          }
+        }
+      },
+      {
+        "ordinal": 28,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "created_at"
+          }
+        }
+      },
+      {
+        "ordinal": 29,
+        "name": "updated_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "updated_at"
+          }
+        }
+      },
+      {
+        "ordinal": 30,
+        "name": "version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "ordinal": 31,
+        "name": "projects!",
+        "type_info": "Int8Array",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 32,
+        "name": "project_colors!: Vec<Option<i16>>",
+        "type_info": "Int2Array",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      null,
+      null
+    ]
+  },
+  "hash": "9b5cf80a6e45d7c234cf66312871df6d1fac3c711de87b84234beb872097aeea"
+}

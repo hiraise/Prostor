@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select project_id from project_fields where field_id = $1 order by project_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "project_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "project_fields",
+            "name": "project_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "dc13842449604319882e63fe2b42364259e65b9041b084c0ab2cd2fcc30194ec"
+}

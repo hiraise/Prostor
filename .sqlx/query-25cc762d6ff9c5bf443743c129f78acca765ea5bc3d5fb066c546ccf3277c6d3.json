@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select min(rank collate \"C\") as \"rank\" from fields where rank > $1::text collate \"C\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "rank",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "25cc762d6ff9c5bf443743c129f78acca765ea5bc3d5fb066c546ccf3277c6d3"
+}

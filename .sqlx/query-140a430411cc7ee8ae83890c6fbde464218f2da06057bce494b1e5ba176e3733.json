@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update projects set deleting_at = coalesce(deleting_at, now()), deletion_job_id = $2,\n                             version = version + 1, updated_at = now()\n         where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "140a430411cc7ee8ae83890c6fbde464218f2da06057bce494b1e5ba176e3733"
+}

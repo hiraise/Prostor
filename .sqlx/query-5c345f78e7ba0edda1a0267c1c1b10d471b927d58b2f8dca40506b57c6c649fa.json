@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update board_profiles set collapsed_columns = '{}'\n         where board_id = $1 and cardinality(collapsed_columns) > 0",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "5c345f78e7ba0edda1a0267c1c1b10d471b927d58b2f8dca40506b57c6c649fa"
+}

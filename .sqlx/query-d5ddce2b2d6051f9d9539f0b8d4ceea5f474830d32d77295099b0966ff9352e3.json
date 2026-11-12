@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select rank from saved_search_ranks where search_id = $1 and issue_id = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "rank",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "saved_search_ranks",
+            "name": "rank"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "d5ddce2b2d6051f9d9539f0b8d4ceea5f474830d32d77295099b0966ff9352e3"
+}

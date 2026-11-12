@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update issues set updated_at = now(), updated_by = $2, version = version + 1\n         where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "7b06a9e9d02a56d836937ca13d68d935c642d34067cab7500de2a1b0f3811a52"
+}

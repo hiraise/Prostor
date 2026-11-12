@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select to_regclass('_sqlx_migrations') is not null as \"exists!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "exists!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "7eecd0a6a8926c3187a7cca5f72362d7d48084b8adf805ae17294759db13af22"
+}

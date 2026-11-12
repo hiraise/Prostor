@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update jobs\n         set progress_done = $3, progress_total = $4, status_text = coalesce($5, status_text),\n             updated_at = now()\n         where id = $1 and claim_token = $2 and state = 'running'\n         returning cancel_requested",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "cancel_requested",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "jobs",
+            "name": "cancel_requested"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Int8",
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "ede27e6da758ade8a9422f03421ad76d9c7327af6400fb4f04d7362251da50ac"
+}

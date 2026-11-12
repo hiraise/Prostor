@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update comments set html = $2, mentioned_users = $3, issue_tokens = $4,\n                             file_names = $5, render_version = $6\n         where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text",
+        "Int8Array",
+        "TextArray",
+        "TextArray",
+        "Int2"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fdc800d0af08c303c21ae45e876d03e8706bf4f95c36fbf0eb07956d885bd6b3"
+}

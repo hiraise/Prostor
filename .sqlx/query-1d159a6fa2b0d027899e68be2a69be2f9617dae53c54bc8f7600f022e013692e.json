@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update fields set\n           default_values = array(select distinct coalesce(case when v = any($1) then $2::bigint end, v)\n                                  from unnest(default_values) v\n                                  where not (v = any($1) and $2::bigint is null)),\n           version = version + 1\n         where kind = 'user' and default_values && $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "1d159a6fa2b0d027899e68be2a69be2f9617dae53c54bc8f7600f022e013692e"
+}

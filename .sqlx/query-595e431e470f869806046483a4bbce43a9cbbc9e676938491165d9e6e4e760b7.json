@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into issue_ref_values (issue_id, field_id, value)\n                 select $1, $2, unnest($3::bigint[]) on conflict do nothing",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "595e431e470f869806046483a4bbce43a9cbbc9e676938491165d9e6e4e760b7"
+}

@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select issue_id from issue_votes where issue_id = any($1) and user_id = $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "issue_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issue_votes",
+            "name": "issue_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "90c515da6d49df921ebd61b81d6238b85693379fc8e4e6c038b545309f028048"
+}

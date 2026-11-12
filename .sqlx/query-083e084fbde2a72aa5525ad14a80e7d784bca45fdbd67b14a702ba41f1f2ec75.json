@@ -1,0 +1,198 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into notification_settings\n             (user_id, email, email_html, own_changes, mentions,\n              watch_created, watch_updated, watch_resolved, watch_comment, watch_vote, watch_tag,\n              autowatch_created, autowatch_commented, autowatch_assigned, autowatch_voted)\n           values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)\n           on conflict (user_id) do update\n             set email = excluded.email, email_html = excluded.email_html,\n                 own_changes = excluded.own_changes, mentions = excluded.mentions,\n                 watch_created = excluded.watch_created,\n                 watch_updated = excluded.watch_updated,\n                 watch_resolved = excluded.watch_resolved,\n                 watch_comment = excluded.watch_comment,\n                 watch_vote = excluded.watch_vote, watch_tag = excluded.watch_tag,\n                 autowatch_created = excluded.autowatch_created,\n                 autowatch_commented = excluded.autowatch_commented,\n                 autowatch_assigned = excluded.autowatch_assigned,\n                 autowatch_voted = excluded.autowatch_voted\n           returning email, email_html, own_changes, mentions,\n                     watch_created, watch_updated, watch_resolved, watch_comment,\n                     watch_vote, watch_tag,\n                     autowatch_created, autowatch_commented, autowatch_assigned, autowatch_voted",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "email",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "email"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "email_html",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "email_html"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "own_changes",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "own_changes"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "mentions",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "mentions"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "watch_created",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "watch_created"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "watch_updated",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "watch_updated"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "watch_resolved",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "watch_resolved"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "watch_comment",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "watch_comment"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "watch_vote",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "watch_vote"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "watch_tag",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "watch_tag"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "autowatch_created",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "autowatch_created"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "autowatch_commented",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "autowatch_commented"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "autowatch_assigned",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "autowatch_assigned"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "autowatch_voted",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "notification_settings",
+            "name": "autowatch_voted"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "083e084fbde2a72aa5525ad14a80e7d784bca45fdbd67b14a702ba41f1f2ec75"
+}

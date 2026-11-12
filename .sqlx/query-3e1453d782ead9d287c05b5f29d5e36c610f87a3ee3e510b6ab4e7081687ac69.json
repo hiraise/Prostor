@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update users set\n           username = coalesce($2, username),\n           full_name = coalesce($3, full_name),\n           email = coalesce($4, email),\n           email_verified_at = case when $4::text is not null\n                                         and lower($4) is distinct from lower(email)\n                                    then null else email_verified_at end,\n           version = version + 1,\n           updated_at = now()\n         where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3e1453d782ead9d287c05b5f29d5e36c610f87a3ee3e510b6ab4e7081687ac69"
+}

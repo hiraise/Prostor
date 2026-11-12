@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update issues set votes = votes - 1 where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8b1efa7834f2fa4785c0bc553de1ef0f0445f67839c3b8b3d69e3cbdfb317825"
+}

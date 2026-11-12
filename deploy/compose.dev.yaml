@@ -1,0 +1,32 @@
+# Services for local development: `make db-up`. Ports are bound to loopback only.
+name: trackflow-dev
+
+services:
+  postgres:
+    image: postgres:18.6-alpine
+    # Room for parallel test processes: each test has its own database and pool.
+    command: ["postgres", "-c", "max_connections=300"]
+    environment:
+      POSTGRES_USER: trackflow
+      POSTGRES_PASSWORD: trackflow
+      POSTGRES_DB: trackflow
+    ports:
+      - "127.0.0.1:5433:5432"
+    volumes:
+      # Since PostgreSQL 18 the image keeps data under /var/lib/postgresql/<major>/.
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U trackflow -d trackflow"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  mailpit:
+    # Catches all outgoing email; web UI on http://127.0.0.1:8025
+    image: axllent/mailpit:v1.31.6
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+
+volumes:
+  pgdata:

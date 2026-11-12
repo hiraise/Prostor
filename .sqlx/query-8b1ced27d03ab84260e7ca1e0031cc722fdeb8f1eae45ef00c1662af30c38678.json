@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update jobs\n                 set state = case when cancel_requested then 'cancelled' else 'queued' end,\n                     finished_at = case when cancel_requested then now() end,\n                     attempts = attempts - 1, run_at = now(), lease_until = null,\n                     updated_at = now()\n                 where id = $1 and claim_token = $2 and state = 'running'",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8b1ced27d03ab84260e7ca1e0031cc722fdeb8f1eae45ef00c1662af30c38678"
+}

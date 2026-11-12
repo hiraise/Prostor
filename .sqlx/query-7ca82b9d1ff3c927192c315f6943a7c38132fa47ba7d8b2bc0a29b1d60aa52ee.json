@@ -1,0 +1,33 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select field_id, count(*) as \"count!\" from project_fields group by field_id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "field_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "project_fields",
+            "name": "field_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "count!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      null
+    ]
+  },
+  "hash": "7ca82b9d1ff3c927192c315f6943a7c38132fa47ba7d8b2bc0a29b1d60aa52ee"
+}

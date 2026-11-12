@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update issues set audience_users = $2, audience_groups = $3 where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8Array",
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e7075dc4cc5a55e8829ff68fb0ee198297afbf36bd988045b4ec23bc51df6eaf"
+}

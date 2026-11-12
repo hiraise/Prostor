@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update notifications\n           set read_at = case when $5::boolean then null else now() end\n           where user_id = $1\n             and ($2::boolean\n                  or ($3::bigint[] is not null and id = any($3))\n                  or ($4::bigint is not null and issue_id = $4))",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Bool",
+        "Int8Array",
+        "Int8",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "3663b960a2c1489c0dae8ebfb1e4da723731fbeb9f06b895fcf79f1187df2a53"
+}

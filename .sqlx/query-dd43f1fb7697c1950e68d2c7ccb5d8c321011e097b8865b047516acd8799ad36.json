@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id from boards\n         where column_field_id = $1 or lane_field_id = $1 or color_field_id = $1\n            or estimation_field_id = $1 or original_estimation_field_id = $1\n            or $1 = any(card_fields)",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "boards",
+            "name": "id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "dd43f1fb7697c1950e68d2c7ccb5d8c321011e097b8865b047516acd8799ad36"
+}

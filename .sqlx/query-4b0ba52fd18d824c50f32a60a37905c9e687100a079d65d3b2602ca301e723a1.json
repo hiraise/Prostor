@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select t.group_id from team_groups t join groups g on g.id = t.group_id\n         where t.team_id = $1 order by g.builtin is null, lower(g.name), g.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "group_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "team_groups",
+            "name": "group_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4b0ba52fd18d824c50f32a60a37905c9e687100a079d65d3b2602ca301e723a1"
+}

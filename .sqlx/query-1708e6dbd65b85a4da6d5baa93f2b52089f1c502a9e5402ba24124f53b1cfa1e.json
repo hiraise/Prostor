@@ -1,0 +1,196 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select id, set_id, name, description, color, rank, archived, resolved, released,\n                release_date, start_date, assembled_on, owner_id, version, created_at\n         from field_values where id = $1 for update",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "field_values",
+            "name": "id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "set_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "field_values",
+            "name": "set_id"
+          }
+        }
+      },
+      {
+        "ordinal": 2,
+        "name": "name",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "field_values",
+            "name": "name"
+          }
+        }
+      },
+      {
+        "ordinal": 3,
+        "name": "description",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "field_values",
+            "name": "description"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
+        "name": "color",
+        "type_info": "Int2",
+        "origin": {
+          "Table": {
+            "table": "field_values",
+            "name": "color"
+          }
+        }
+      },
+      {
+        "ordinal": 5,
+        "name": "rank",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "field_values",
+            "name": "rank"
+          }
+        }
+      },
+      {
+        "ordinal": 6,
+        "name": "archived",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "field_values",
+            "name": "archived"
+          }
+        }
+      },
+      {
+        "ordinal": 7,
+        "name": "resolved",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "field_values",
+            "name": "resolved"
+          }
+        }
+      },
+      {
+        "ordinal": 8,
+        "name": "released",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "field_values",
+            "name": "released"
+          }
+        }
+      },
+      {
+        "ordinal": 9,
+        "name": "release_date",
+        "type_info": "Date",
+        "origin": {
+          "Table": {
+            "table": "field_values",
+            "name": "release_date"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "start_date",
+        "type_info": "Date",
+        "origin": {
+          "Table": {
+            "table": "field_values",
+            "name": "start_date"
+          }
+        }
+      },
+      {
+        "ordinal": 11,
+        "name": "assembled_on",
+        "type_info": "Date",
+        "origin": {
+          "Table": {
+            "table": "field_values",
+            "name": "assembled_on"
+          }
+        }
+      },
+      {
+        "ordinal": 12,
+        "name": "owner_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "field_values",
+            "name": "owner_id"
+          }
+        }
+      },
+      {
+        "ordinal": 13,
+        "name": "version",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "field_values",
+            "name": "version"
+          }
+        }
+      },
+      {
+        "ordinal": 14,
+        "name": "created_at",
+        "type_info": "Timestamptz",
+        "origin": {
+          "Table": {
+            "table": "field_values",
+            "name": "created_at"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  },
+  "hash": "1708e6dbd65b85a4da6d5baa93f2b52089f1c502a9e5402ba24124f53b1cfa1e"
+}

@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select true as \"found!\" from instance\n         where setup_completed_at is not null and fields_seeded_at is null for update",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "found!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "9cbc248439b7365a5fa28304d5f0e1ed945367b8082c545ca1689ad45354a56c"
+}

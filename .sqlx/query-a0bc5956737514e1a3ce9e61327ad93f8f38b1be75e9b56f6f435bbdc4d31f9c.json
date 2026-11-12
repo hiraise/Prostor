@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from live_events\n         where at < now() - make_interval(secs => $1)\n           and id < (select max(id) from live_events)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Float8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "a0bc5956737514e1a3ce9e61327ad93f8f38b1be75e9b56f6f435bbdc4d31f9c"
+}

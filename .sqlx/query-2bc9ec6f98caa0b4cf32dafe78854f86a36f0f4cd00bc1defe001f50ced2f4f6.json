@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select min(rank collate \"C\") as \"first\", max(rank collate \"C\") as \"last\"\n           from field_values where set_id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "first",
+        "type_info": "Text",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "last",
+        "type_info": "Text",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "2bc9ec6f98caa0b4cf32dafe78854f86a36f0f4cd00bc1defe001f50ced2f4f6"
+}

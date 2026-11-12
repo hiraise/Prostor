@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update issues set project_id = $2 where id = $1 and number is null",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "e3daf49230f449be679594cefd8633616416f56397caeab47bae77ae3ba54032"
+}

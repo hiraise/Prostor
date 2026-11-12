@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "with people as (\n             select id, builtin is not distinct from 'guest' as guest from users\n             where id = any($1)\n           ),\n           mine as (\n             select m.user_id, m.group_id as id from group_members m where m.user_id = any($1)\n             union all\n             select p.id, g.id from people p cross join groups g where g.builtin = 'everyone'\n             union all\n             select p.id, g.id from people p cross join groups g\n             where g.builtin = 'all_members' and not p.guest\n           )\n           select user_id as \"user!\", id as \"group!\" from mine\n           union\n           select m.user_id, t.team_id from team_groups t join mine m on t.group_id = m.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "user!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "group!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "f7a48f1807987a2c1ca378bde9bbddfd76fef0dee4045c0e5b8bedeb47f20524"
+}

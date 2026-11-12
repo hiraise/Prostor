@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select payload as \"payload: Value\" from jobs where id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "payload: Value",
+        "type_info": "Jsonb",
+        "origin": {
+          "Table": {
+            "table": "jobs",
+            "name": "payload"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1ed9a891c614f62f666dd8725e9665694b7d2cc2ab996351423494ea4e350be3"
+}

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update issues set audience_groups = array(\n           select distinct g from unnest(\n             array(select x from unnest(audience_groups) x where x <> all($1)) || $2::bigint) g)\n         where audience_groups && $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b8af94ece46077726359ecf6141ce31c8ba8f6e2173ba5b1c4f55fdc7c2d05a8"
+}

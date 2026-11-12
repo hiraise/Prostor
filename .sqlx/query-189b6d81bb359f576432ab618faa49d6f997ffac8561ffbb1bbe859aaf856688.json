@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from issues where id = $1 and number is null",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "189b6d81bb359f576432ab618faa49d6f997ffac8561ffbb1bbe859aaf856688"
+}

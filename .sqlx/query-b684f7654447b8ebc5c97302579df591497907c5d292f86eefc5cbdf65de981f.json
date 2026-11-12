@@ -1,0 +1,30 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select (select count(*) from value_set_users where set_id = $1) as \"users!\",\n                  (select count(*) from value_set_groups where set_id = $1) as \"groups!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "users!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      },
+      {
+        "ordinal": 1,
+        "name": "groups!",
+        "type_info": "Int8",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null,
+      null
+    ]
+  },
+  "hash": "b684f7654447b8ebc5c97302579df591497907c5d292f86eefc5cbdf65de981f"
+}

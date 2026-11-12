@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select issue_id, lane_rank as \"lane_rank!\" from sprint_issues\n           where sprint_id = $1 and issue_id = any($2) and lane_rank is not null",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "issue_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "sprint_issues",
+            "name": "issue_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "lane_rank!",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sprint_issues",
+            "name": "lane_rank"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "764d4ba5acb51854b9d809d29a5e5e881748e7b369503711c037a378fea970de"
+}

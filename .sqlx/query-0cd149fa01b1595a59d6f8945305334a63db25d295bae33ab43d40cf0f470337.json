@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from tags where owner_id = any($1)\n           and cardinality(view_users) + cardinality(view_groups) + cardinality(use_users)\n             + cardinality(use_groups) + cardinality(edit_users) + cardinality(edit_groups) = 0",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0cd149fa01b1595a59d6f8945305334a63db25d295bae33ab43d40cf0f470337"
+}

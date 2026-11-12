@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select k.project_id, k.key from project_keys k join projects p on p.id = k.project_id\n         where k.project_id = any($1) and k.key <> p.key\n         order by k.created_at, k.key",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "project_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "project_keys",
+            "name": "project_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "key",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "project_keys",
+            "name": "key"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8Array"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "a3ccd17ad4c3da8db7fd24491ebe759a6fb8b2cfbe5901e5f670cdfde4035fdd"
+}

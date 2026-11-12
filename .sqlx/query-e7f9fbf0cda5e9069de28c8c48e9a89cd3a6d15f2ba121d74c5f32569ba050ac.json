@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "with taken as (\n             update projects set next_number = next_number + 1 where id = $2\n             returning next_number - 1 as number\n           )\n           update issues set project_id = $2, number = taken.number\n           from taken where issues.id = $1\n           returning issues.number as \"number!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "number!",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "number"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      true
+    ]
+  },
+  "hash": "e7f9fbf0cda5e9069de28c8c48e9a89cd3a6d15f2ba121d74c5f32569ba050ac"
+}

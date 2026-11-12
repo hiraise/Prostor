@@ -1,0 +1,41 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select si.sprint_id as sprint, si.rank\n         from sprint_issues si join sprints s on s.id = si.sprint_id\n         where s.board_id = $1 and si.issue_id = $2 order by s.created_at, s.id",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "sprint",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "sprint_issues",
+            "name": "sprint_id"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "rank",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "sprint_issues",
+            "name": "rank"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      true
+    ]
+  },
+  "hash": "b0a55266d225c57f82b9831987d61a5724b662b5fb5fc513df33137b6d7f8048"
+}

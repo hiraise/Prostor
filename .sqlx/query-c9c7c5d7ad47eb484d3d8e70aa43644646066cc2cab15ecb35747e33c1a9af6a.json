@@ -1,0 +1,21 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "with active as (\n             select id from users\n             where disabled_at is null and deleted_at is null and builtin is distinct from 'guest'\n           )\n           select exists(\n             select 1 from role_assignments a join roles r on r.id = a.role_id\n             left join groups g on g.id = a.group_id\n             where r.builtin = 'system_admin' and a.project_id is null\n               and (a.user_id in (select id from active)\n                    or exists(select 1 from group_members m\n                              where m.group_id = a.group_id\n                                and m.user_id in (select id from active))\n                    or (g.builtin in ('everyone', 'all_members')\n                        and exists(select 1 from active)))\n           ) as \"remains!\"",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "remains!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "c9c7c5d7ad47eb484d3d8e70aa43644646066cc2cab15ecb35747e33c1a9af6a"
+}

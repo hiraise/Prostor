@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update users set disabled_at = null, disabled_reason = null, disabled_label = null,\n                          version = version + 1, updated_at = now()\n         where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "449e072e4236cf8c143d5242dc7401817fc068cd7c22485ef7ab338888bab9f6"
+}

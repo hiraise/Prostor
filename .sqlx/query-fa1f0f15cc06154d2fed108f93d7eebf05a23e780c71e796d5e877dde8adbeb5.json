@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update saved_searches s set owner_id = $2,\n           name = case when exists (select from saved_searches h\n                                    where lower(h.name) = lower(s.name) and h.id <> s.id\n                                      and h.hidden_at is null\n                                      and (h.owner_id = $2\n                                           or (h.owner_id = any($1) and h.id < s.id)))\n                       then s.name || ' #' || s.id else s.name end,\n           version = version + 1\n         where s.owner_id = any($1)",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8Array",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fa1f0f15cc06154d2fed108f93d7eebf05a23e780c71e796d5e877dde8adbeb5"
+}

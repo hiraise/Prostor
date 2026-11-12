@@ -1,0 +1,18 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "update projects set name = coalesce($2, name), description = coalesce($3, description),\n                             description_html = coalesce($4, description_html),\n                             render_version = coalesce($5, render_version),\n                             version = version + 1, updated_at = now()\n         where id = $1",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text",
+        "Text",
+        "Text",
+        "Int2"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "be34277d2a0948346817d770fa10336ca18744367dd42f55f2e47a4927d50299"
+}
