@@ -4,7 +4,7 @@ import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vitest/config';
 
 // Address of the Rust server in development (`make dev` starts both).
-const api = process.env.TRACKFLOW_API ?? 'http://127.0.0.1:7700';
+const api = process.env.TASKMASTER_API ?? 'http://127.0.0.1:7700';
 
 // Oldest supported browsers (UI-035): Baseline 2024. The two latest Chrome, Edge, Firefox and
 // Opera releases are far newer; Safari 17.4 is the real floor. `shell/browser-support.ts` checks

@@ -14,6 +14,8 @@ export interface FakeRequest {
 export interface FakeAnswer {
   status?: number;
   body?: unknown;
+  /** Extra response headers, such as an export's two counts. */
+  headers?: Record<string, string>;
 }
 
 export type FakeRoute = FakeAnswer | ((request: FakeRequest) => FakeAnswer | Promise<FakeAnswer>);
@@ -45,7 +47,11 @@ export function fakeApi(routes: Record<string, FakeRoute>): FakeRequest[] {
     const status = answer.status ?? 200;
     return new Response(status === 204 ? null : JSON.stringify(answer.body ?? {}), {
       status,
-      headers: { 'content-type': 'application/json', 'x-request-id': 'test-request' },
+      headers: {
+        'content-type': 'application/json',
+        'x-request-id': 'test-request',
+        ...answer.headers,
+      },
     });
   });
   return calls;

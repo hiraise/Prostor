@@ -7,10 +7,10 @@
 use std::collections::BTreeMap;
 
 use sqlx::PgConnection;
-use trackflow_domain::live::{Change, EntityKind, Guard, LINK_VERSION, NewEvent, Patch};
-use trackflow_domain::{AttachmentId, BoardId, CommentId, IssueId, LinkId, ProjectId, SprintId};
-use trackflow_store::boards as store_boards;
-use trackflow_store::live::{self as store, LinkFacts};
+use taskmaster_domain::live::{Change, EntityKind, Guard, LINK_VERSION, NewEvent, Patch};
+use taskmaster_domain::{AttachmentId, BoardId, CommentId, IssueId, LinkId, ProjectId, SprintId};
+use taskmaster_store::boards as store_boards;
+use taskmaster_store::live::{self as store, LinkFacts};
 
 use crate::Result;
 
@@ -396,7 +396,8 @@ impl Batch {
                 continue;
             };
             let boards =
-                trackflow_store::saved_searches::ranks::boards_of(&mut *conn, order.search).await?;
+                taskmaster_store::saved_searches::ranks::boards_of(&mut *conn, order.search)
+                    .await?;
             if boards.is_empty() {
                 continue;
             }

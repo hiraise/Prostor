@@ -2,9 +2,9 @@
 //! its cards in an internal one (BRD-024). Sprint management is step 1.8b; 1.8a creates the first.
 
 use sqlx::{PgConnection, PgExecutor};
+use taskmaster_domain::boards::sprints::SprintDates;
+use taskmaster_domain::{BoardId, SprintId};
 use time::{Date, OffsetDateTime};
-use trackflow_domain::boards::sprints::SprintDates;
-use trackflow_domain::{BoardId, SprintId};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Sprint {

@@ -103,23 +103,25 @@ describe('CNT-001: the comment box', () => {
         body: { items: [commentItem(20, posted)], older: null, newer: null },
       },
     });
+    // The box rests as one line; a click opens it.
+    const start = screen.getByRole('button', { name: 'Write a comment…' });
+    await start.click();
     const box = screen.getByRole('form', { name: 'New comment' });
     const field = box.getByRole('textbox', { name: /^Comment/ });
 
-    // Nothing to send: said, not sent.
-    await box.getByRole('button', { name: 'Send' }).click();
-    await expect.element(box.getByText('Write something or add a file.')).toBeVisible();
-    expect(sent(calls, 'POST', '/issues/501/comments')).toEqual([]);
-
+    // «Отправить» appears only once writing has begun.
+    expect(box.getByRole('button', { name: 'Send' }).query()).toBeNull();
     await field.fill('Fixed in **main**');
+    await expect.element(box.getByRole('button', { name: 'Send' })).toBeVisible();
     await field.click();
     await userEvent.keyboard('{Control>}{Enter}{/Control}');
     await expect
       .poll(() => sent(calls, 'POST', '/issues/501/comments'))
       .toEqual([{ text: 'Fixed in **main**' }]);
     await expect.poll(() => screen.getByRole('article').elements().length).toBe(2);
-    // The box is empty again; the new comment follows the first, next to the box.
-    await expect.element(box.getByRole('textbox', { name: /^Comment/ })).toHaveValue('');
+    // A sent comment folds the box back to its resting line.
+    expect(box.query()).toBeNull();
+    await expect.element(screen.getByRole('button', { name: 'Write a comment…' })).toBeVisible();
     const cards = screen.getByRole('article');
     expect(cards.elements()).toHaveLength(2);
     expect(cards.nth(1).element().textContent).toContain('Fixed in main');
@@ -127,6 +129,49 @@ describe('CNT-001: the comment box', () => {
       '10',
     );
     await expectAccessible(screen.container);
+  });
+
+  it('«Отмена» folds the box back, asking first while a draft exists', async () => {
+    const { screen, calls } = await show([]);
+
+    // An empty box folds at once.
+    await screen.getByRole('button', { name: 'Write a comment…' }).click();
+    await screen
+      .getByRole('form', { name: 'New comment' })
+      .getByRole('button', {
+        name: 'Cancel',
+      })
+      .click();
+    await expect.element(screen.getByRole('button', { name: 'Write a comment…' })).toBeVisible();
+
+    // A draft asks before it is thrown away.
+    await screen.getByRole('button', { name: 'Write a comment…' }).click();
+    await screen.getByRole('textbox', { name: /^Comment/ }).fill('On second thought');
+    await screen
+      .getByRole('form', { name: 'New comment' })
+      .getByRole('button', {
+        name: 'Cancel',
+      })
+      .click();
+    const confirm = screen.getByRole('dialog', { name: 'Discard the draft?' });
+    await confirm.getByRole('button', { name: 'Keep writing' }).click();
+    await expect
+      .element(screen.getByRole('textbox', { name: /^Comment/ }))
+      .toHaveValue('On second thought');
+    await screen
+      .getByRole('form', { name: 'New comment' })
+      .getByRole('button', {
+        name: 'Cancel',
+      })
+      .click();
+    await screen
+      .getByRole('dialog', { name: 'Discard the draft?' })
+      .getByRole('button', {
+        name: 'Discard',
+      })
+      .click();
+    await expect.element(screen.getByRole('button', { name: 'Write a comment…' })).toBeVisible();
+    expect(sent(calls, 'POST', '/issues/501/comments')).toEqual([]);
   });
 
   it('CNT-018: files alone are a comment', async () => {
@@ -140,6 +185,7 @@ describe('CNT-001: the comment box', () => {
       }),
       'GET /issues/501/activity': { body: { items: [], older: null, newer: null } },
     });
+    await screen.getByRole('button', { name: 'Write a comment…' }).click();
     const field = screen.getByRole('textbox', { name: /^Comment/ });
     const drop = new DataTransfer();
     drop.items.add(new File(['x'], 'log.txt', { type: 'text/plain' }));
@@ -156,6 +202,7 @@ describe('CNT-001: the comment box', () => {
     const { screen, calls } = await show([], {
       'GET /issues/501/mention-candidates': { body: { users: [BORIS] } },
     });
+    await screen.getByRole('button', { name: 'Write a comment…' }).click();
     await screen.getByRole('textbox', { name: /^Comment/ }).click();
     await userEvent.keyboard('@bo');
     await expect.element(screen.getByRole('listbox', { name: 'People to mention' })).toBeVisible();
@@ -178,6 +225,7 @@ describe('CNT-003: the audience of a comment', () => {
     await expect.element(card.getByText(/Developers/)).toBeVisible();
     expect(card.element().classList).toContain('restricted');
 
+    await screen.getByRole('button', { name: 'Write a comment…' }).click();
     const box = screen.getByRole('form', { name: 'New comment' });
     await box.getByRole('button', { name: 'Visibility' }).click();
     await box.getByRole('radio', { name: 'Only the chosen' }).click();
@@ -371,6 +419,8 @@ describe('CNT-001: Russian texts', () => {
   it('the box and the actions speak Russian', async () => {
     setLocale('ru');
     const { screen } = await show([comment(1, 'Текст')]);
+    await screen.getByRole('button', { name: 'Написать комментарий…' }).click();
+    await screen.getByRole('textbox', { name: /^Комментарий/ }).fill('Черновик');
     await expect.element(screen.getByRole('button', { name: 'Отправить' })).toBeVisible();
     await screen.getByRole('button', { name: 'Действия с комментарием' }).click();
     await expect

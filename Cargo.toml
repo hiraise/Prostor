@@ -11,15 +11,15 @@ publish = false
 
 [workspace.dependencies]
 # Our crates
-trackflow-api = { path = "crates/api" }
-trackflow-domain = { path = "crates/domain" }
-trackflow-files = { path = "crates/files" }
-trackflow-markup = { path = "crates/markup" }
-trackflow-query = { path = "crates/query" }
-trackflow-server = { path = "crates/server" }
-trackflow-service = { path = "crates/service" }
-trackflow-store = { path = "crates/store" }
-trackflow-testkit = { path = "crates/testkit" }
+taskmaster-api = { path = "crates/api" }
+taskmaster-domain = { path = "crates/domain" }
+taskmaster-files = { path = "crates/files" }
+taskmaster-markup = { path = "crates/markup" }
+taskmaster-query = { path = "crates/query" }
+taskmaster-server = { path = "crates/server" }
+taskmaster-service = { path = "crates/service" }
+taskmaster-store = { path = "crates/store" }
+taskmaster-testkit = { path = "crates/testkit" }
 
 axum = { version = "0.8.9", features = ["macros", "ws"] }
 tokio = { version = "1.54.0", features = ["macros", "rt-multi-thread", "net", "signal", "sync", "time"] }
@@ -70,6 +70,8 @@ tempfile = "3.27.0"
 rustls = { version = "0.23.46", default-features = false, features = ["ring", "std", "tls12"] }
 # Time zones: the IANA database, from the system or built in when the system has none.
 jiff = { version = "0.2.38", default-features = false, features = ["std", "tz-system", "tzdb-zoneinfo", "tzdb-bundle-always"] }
+# XLSX export (QRY-084): pure Rust, no runtime and no C.
+rust_xlsxwriter = { version = "0.79", default-features = false }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

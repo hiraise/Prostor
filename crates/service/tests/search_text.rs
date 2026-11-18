@@ -2,30 +2,30 @@
 //! database (plan step 1.5 §C4, D-037). Each test names the catalog rows it covers.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::role::PredefinedRole;
+use taskmaster_domain::fields::FieldKind;
+use taskmaster_domain::issues::history::Origin;
+use taskmaster_domain::issues::values::Input;
+use taskmaster_domain::projects::Template;
+use taskmaster_domain::search::SortBy;
+use taskmaster_domain::settings::Language;
+use taskmaster_domain::{FieldId, IssueId, ProjectId, UserId};
+use taskmaster_query::ProblemCode;
+use taskmaster_service::fields::{self, NewFieldInput, SetSource};
+use taskmaster_service::issues::{self, AudienceInput, FieldChange, NewIssue};
+use taskmaster_service::project_fields::{self, AttachInput, SetUse};
+use taskmaster_service::projects::{self, NewProjectInput};
+use taskmaster_service::search::{self, SearchInput, SearchPage};
+use taskmaster_service::setup::{self, Setup};
+use taskmaster_service::users::{self, NewAccount};
+use taskmaster_service::{Passwords, access, comments, roles};
+use taskmaster_store::PgPool;
+use taskmaster_store::access::Holder;
+use taskmaster_store::sessions::Origin as SessionOrigin;
+use taskmaster_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::datetime;
-use trackflow_domain::access::Access;
-use trackflow_domain::access::role::PredefinedRole;
-use trackflow_domain::fields::FieldKind;
-use trackflow_domain::issues::history::Origin;
-use trackflow_domain::issues::values::Input;
-use trackflow_domain::projects::Template;
-use trackflow_domain::search::SortBy;
-use trackflow_domain::settings::Language;
-use trackflow_domain::{FieldId, IssueId, ProjectId, UserId};
-use trackflow_query::ProblemCode;
-use trackflow_service::fields::{self, NewFieldInput, SetSource};
-use trackflow_service::issues::{self, AudienceInput, FieldChange, NewIssue};
-use trackflow_service::project_fields::{self, AttachInput, SetUse};
-use trackflow_service::projects::{self, NewProjectInput};
-use trackflow_service::search::{self, SearchInput, SearchPage};
-use trackflow_service::setup::{self, Setup};
-use trackflow_service::users::{self, NewAccount};
-use trackflow_service::{Passwords, access, comments, roles};
-use trackflow_store::PgPool;
-use trackflow_store::access::Holder;
-use trackflow_store::sessions::Origin as SessionOrigin;
-use trackflow_testkit::TestDb;
 
 const T0: OffsetDateTime = datetime!(2026-10-01 09:00 UTC);
 const WEB: Origin = Origin::Web;
@@ -77,7 +77,7 @@ async fn create_user(pool: &PgPool, actor: &Access, username: &str) -> UserId {
 
 async fn member(pool: &PgPool, actor: &Access, username: &str, of: ProjectId) -> Access {
     let user = create_user(pool, actor, username).await;
-    let role = trackflow_store::roles::builtin_id(pool, PredefinedRole::ProjectMember.key())
+    let role = taskmaster_store::roles::builtin_id(pool, PredefinedRole::ProjectMember.key())
         .await
         .unwrap()
         .unwrap();

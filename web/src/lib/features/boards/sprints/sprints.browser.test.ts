@@ -307,7 +307,7 @@ describe('BRD-081: the header filter', () => {
     const calls = server();
     const screen = await render(BoardPage, { board: SCRUM, now: LAST_DAY });
     const bar = screen.getByRole('search', { name: 'Card filter' });
-    await bar.getByRole('textbox').fill('for: me');
+    await bar.getByRole('combobox').fill('for: me');
     await bar.getByRole('button', { name: 'Find' }).click();
 
     await expect.poll(() => views(calls).at(-1)?.query.get('q')).toBe('for: me');

@@ -1,4 +1,4 @@
-//! `trackflow-bench`: generates the dataset when it is missing or outdated, runs the
+//! `taskmaster-bench`: generates the dataset when it is missing or outdated, runs the
 //! load scenarios and prints the report against the performance budget (architecture.md §7).
 
 use std::io::{self, Write};
@@ -7,22 +7,22 @@ use std::time::{Duration, Instant};
 
 use anyhow::Context;
 use sqlx::{AssertSqlSafe, Connection, PgConnection};
-use trackflow_bench::breakdown;
-use trackflow_bench::catalog::Catalog;
-use trackflow_bench::dataset::{self, Plan};
-use trackflow_bench::http::Node;
-use trackflow_bench::report::{self, Environment, Timing};
-use trackflow_bench::runner::{self, RunOptions};
-use trackflow_bench::scenarios::Scenario;
-use trackflow_bench::scenarios::live::{self, LiveOptions};
-use trackflow_store::PgConnectOptions;
+use taskmaster_bench::breakdown;
+use taskmaster_bench::catalog::Catalog;
+use taskmaster_bench::dataset::{self, Plan};
+use taskmaster_bench::http::Node;
+use taskmaster_bench::report::{self, Environment, Timing};
+use taskmaster_bench::runner::{self, RunOptions};
+use taskmaster_bench::scenarios::Scenario;
+use taskmaster_bench::scenarios::live::{self, LiveOptions};
+use taskmaster_store::PgConnectOptions;
 
-const DEFAULT_URL: &str = "postgres://trackflow:trackflow@127.0.0.1:5450/trackflow_bench";
+const DEFAULT_URL: &str = "postgres://taskmaster:taskmaster@127.0.0.1:5450/taskmaster_bench";
 
 const USAGE: &str = "\
-trackflow-bench — the datasets and load scenarios of the performance budget
+taskmaster-bench — the datasets and load scenarios of the performance budget
 
-Usage: trackflow-bench [options]          (or: make bench BENCH_ARGS=\"options\")
+Usage: taskmaster-bench [options]          (or: make bench BENCH_ARGS=\"options\")
 
   --scale X        Dataset size: 0.1 is the target dataset (100k issues, the default),
                    1 the stress dataset (1M issues, `make bench-stress`).
@@ -31,7 +31,8 @@ Usage: trackflow-bench [options]          (or: make bench BENCH_ARGS=\"options\"
   --only LIST      Scenarios, comma-separated: list, board, search, issue, change, live.
   --live-connections N
                    Sockets the live scenario opens. Default 5000.
-  --iterations N   Measured operations per scenario. Default 200.
+  --iterations N   Measured operations per scenario. Default 200; the command scenario caps at
+                   40 whatever N is (its bulk operations are whole jobs over ≈50 issues).
   --warmup N       Unmeasured passes over the operations before the measured one. Default 1.
   --clients N      Concurrent clients. Default 1.
   --explain        Print the executed plan of each main query instead of measuring
@@ -39,12 +40,13 @@ Usage: trackflow-bench [options]          (or: make bench BENCH_ARGS=\"options\"
   --breakdown      List the SQL statements of each scenario by time per operation.
                    Needs --clients 1 (the default).
 
-The database is TRACKFLOW_BENCH_DATABASE_URL, by default the one `make bench` starts:
-  postgres://trackflow:trackflow@127.0.0.1:5450/trackflow_bench
+The database is TASKMASTER_BENCH_DATABASE_URL, by default the one `make bench` starts:
+  postgres://taskmaster:taskmaster@127.0.0.1:5450/taskmaster_bench
 The dataset is generated there when it is missing or was made by another generator, schema,
 scale or seed; that drops and recreates the database. Exit status 1: a scenario is over budget
 and not a known miss (see the report), or the benchmark took longer than its own budget
-(3 min, 5 min when it generated the dataset).
+(3 min, 5 min when it generated the dataset, plus the measured scenarios' time allowances —
+the command scenario adds 4 min for its whole jobs).
 ";
 
 #[derive(Debug)]
@@ -133,8 +135,8 @@ async fn main() -> anyhow::Result<()> {
     // `install` also carries the statements layer of `--breakdown`; it is idempotent, and the
     // runner calls it again when it measures with the breakdown.
     breakdown::install();
-    let url = std::env::var("TRACKFLOW_BENCH_DATABASE_URL").unwrap_or_else(|_| DEFAULT_URL.into());
-    let options = trackflow_store::connect_options(&url)?;
+    let url = std::env::var("TASKMASTER_BENCH_DATABASE_URL").unwrap_or_else(|_| DEFAULT_URL.into());
+    let options = taskmaster_store::connect_options(&url)?;
 
     let mut timing = Timing::default();
     let started = Instant::now();
@@ -176,6 +178,7 @@ async fn main() -> anyhow::Result<()> {
         .phases
         .push(("prewarm and node start".to_owned(), started.elapsed()));
     let mut measurements = Vec::new();
+    timing.allowance = args.only.iter().map(|s| s.time_allowance()).sum();
     for scenario in &args.only {
         progress(&format!("measuring: {}", scenario.title()));
         let m = runner::measure(&options, &catalog, &node, *scenario, &args.run).await?;
@@ -243,7 +246,7 @@ async fn ensure_dataset(
         plan.scale, plan.seed
     ));
     recreate_database(options).await?;
-    trackflow_store::migrate(options)
+    taskmaster_store::migrate(options)
         .await
         .context("cannot migrate the benchmark database")?;
     let started = Instant::now();

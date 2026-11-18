@@ -24,13 +24,13 @@ use base64::Engine as _;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use sha2::{Digest, Sha256};
 use sqlx::{AssertSqlSafe, Connection, PgConnection};
-use trackflow_domain::access::permission::PermissionSet;
-use trackflow_domain::auth::Scopes;
-use trackflow_domain::projects::Template;
-use trackflow_domain::rank;
-use trackflow_domain::rules::{self, Rule};
-use trackflow_service::secrets::TOKEN_PREFIX;
-use trackflow_store::PgConnectOptions;
+use taskmaster_domain::access::permission::PermissionSet;
+use taskmaster_domain::auth::Scopes;
+use taskmaster_domain::projects::Template;
+use taskmaster_domain::rank;
+use taskmaster_domain::rules::{self, Rule};
+use taskmaster_service::secrets::TOKEN_PREFIX;
+use taskmaster_store::PgConnectOptions;
 
 use self::copy::{CopyBuf, execute, execute_built};
 use self::issues::END;
@@ -202,7 +202,7 @@ impl Plan {
     pub fn fingerprint(&self) -> String {
         let mut hash = Sha256::new();
         hash.update(GENERATOR_VERSION.to_le_bytes());
-        for migration in trackflow_store::MIGRATOR.iter() {
+        for migration in taskmaster_store::MIGRATOR.iter() {
             hash.update(migration.version.to_le_bytes());
             hash.update(&*migration.checksum);
         }

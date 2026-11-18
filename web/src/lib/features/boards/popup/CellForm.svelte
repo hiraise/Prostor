@@ -188,15 +188,7 @@
     </button>
     <div id="{id}-fields" hidden={!fieldsOpen}>
       {#if fieldsOpen}
-        <FieldPanel
-          {issue}
-          collapsed={false}
-          side="end"
-          ontoggle={() => undefined}
-          fixed
-          {invalid}
-          locked={{ ids: locked, label: m.setByCell() }}
-        />
+        <FieldPanel {issue} {invalid} locked={{ ids: locked, label: m.setByCell() }} />
       {/if}
     </div>
     {#if problem}<Notice tone="danger">{problem}</Notice>{/if}

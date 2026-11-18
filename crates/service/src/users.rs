@@ -4,25 +4,27 @@
 //! that confirm an address or test it.
 
 use serde_json::json;
-use time::OffsetDateTime;
-use trackflow_domain::access::Access;
-use trackflow_domain::access::identity::{self, Tier};
-use trackflow_domain::access::permission::Permission;
-use trackflow_domain::accounts::{
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::identity::{self, Tier};
+use taskmaster_domain::access::permission::Permission;
+use taskmaster_domain::accounts::{
     DisabledLabel, Email, FullName, Username, check_new_password, disable_reason,
     full_name_from_email, numbered_username, split_emails, username_from_email,
 };
-use trackflow_domain::auth::LinkPurpose;
-use trackflow_domain::validation::{Problem, Problems, Rejection};
-use trackflow_domain::{GroupId, ProjectId, UserId};
-use trackflow_store::fields as store_fields;
-use trackflow_store::groups::{self, Group};
-use trackflow_store::projects::Project;
-use trackflow_store::users::{self, DirectoryFilter, IdentityChange, NewUser, PasswordState, User};
-use trackflow_store::{
+use taskmaster_domain::auth::LinkPurpose;
+use taskmaster_domain::validation::{Problem, Problems, Rejection};
+use taskmaster_domain::{GroupId, ProjectId, UserId};
+use taskmaster_store::fields as store_fields;
+use taskmaster_store::groups::{self, Group};
+use taskmaster_store::projects::Project;
+use taskmaster_store::users::{
+    self, DirectoryFilter, IdentityChange, NewUser, PasswordState, User,
+};
+use taskmaster_store::{
     PgPool, access as assignments, account_links, api_tokens, audit, projects, sessions, teams,
     value_sets,
 };
+use time::OffsetDateTime;
 
 use crate::access::{changed, keep_an_administrator};
 use crate::links::{issue, send_verification};
@@ -283,7 +285,7 @@ pub async fn invite(
     let mut tx = pool.begin().await?;
     let inviter = users::get(&mut *tx, actor.user())
         .await?
-        .map_or_else(|| "trackflow".to_owned(), |user| user.full_name);
+        .map_or_else(|| "taskmaster".to_owned(), |user| user.full_name);
     let mut problems = Problems::new();
     for email in &parsed {
         if users::find_by_email(&mut tx, email.as_str())
@@ -362,7 +364,7 @@ pub async fn resend_invitation(
     };
     let inviter = users::get(&mut *tx, actor.user())
         .await?
-        .map_or_else(|| "trackflow".to_owned(), |user| user.full_name);
+        .map_or_else(|| "taskmaster".to_owned(), |user| user.full_name);
     let secret = issue(&mut tx, &user, LinkPurpose::Invitation, &email, now).await?;
     let message = mail::invitation(letters, base, &email, &inviter, &secret.value);
     mail::queue(&mut tx, &message, actor_of(actor)).await?;
@@ -746,22 +748,22 @@ pub async fn delete(
     // user values, stars, votes, unshared tags and drafts go; shared tags pass to
     // the heir (D-038). Authorship stays.
     if let Some(heir) = heir {
-        trackflow_store::issues::replace_audience_users(&mut tx, &ids, heir).await?;
-        trackflow_store::comments::replace_audience_users(&mut tx, &ids, heir).await?;
-        trackflow_store::attachments::replace_audience_users(&mut tx, &ids, heir).await?;
+        taskmaster_store::issues::replace_audience_users(&mut tx, &ids, heir).await?;
+        taskmaster_store::comments::replace_audience_users(&mut tx, &ids, heir).await?;
+        taskmaster_store::attachments::replace_audience_users(&mut tx, &ids, heir).await?;
     }
-    trackflow_store::issue_values::replace_users(&mut tx, &ids, heir).await?;
-    trackflow_store::issues::forget_users(&mut tx, &ids).await?;
+    taskmaster_store::issue_values::replace_users(&mut tx, &ids, heir).await?;
+    taskmaster_store::issues::forget_users(&mut tx, &ids).await?;
     // Files (D-033): avatars, staged uploads and the files of drafts leave the file store.
-    let drafts = trackflow_store::issues::draft_ids_of(&mut *tx, &ids).await?;
-    let mut keys = trackflow_store::attachments::keys_of_issues(&mut *tx, &drafts).await?;
+    let drafts = taskmaster_store::issues::draft_ids_of(&mut *tx, &ids).await?;
+    let mut keys = taskmaster_store::attachments::keys_of_issues(&mut *tx, &drafts).await?;
     keys.extend(users::take_avatars(&mut tx, &ids).await?);
-    keys.extend(trackflow_store::uploads::delete_of_owners(&mut tx, &ids).await?);
+    keys.extend(taskmaster_store::uploads::delete_of_owners(&mut tx, &ids).await?);
     crate::files::queue_removal(&mut tx, keys).await?;
-    trackflow_store::issues::delete_drafts_of(&mut tx, &ids).await?;
-    trackflow_store::tags::pass_from_deleted(&mut tx, &ids, heir).await?;
-    trackflow_store::saved_searches::pass_from_deleted(&mut tx, &ids, heir).await?;
-    trackflow_store::boards::pass_from_deleted(&mut tx, &ids, heir).await?;
+    taskmaster_store::issues::delete_drafts_of(&mut tx, &ids).await?;
+    taskmaster_store::tags::pass_from_deleted(&mut tx, &ids, heir).await?;
+    taskmaster_store::saved_searches::pass_from_deleted(&mut tx, &ids, heir).await?;
+    taskmaster_store::boards::pass_from_deleted(&mut tx, &ids, heir).await?;
     value_sets::remove_users_everywhere(&mut tx, &ids).await?;
     store_fields::replace_default_users(&mut tx, &ids, heir).await?;
     projects::remove_favorites_of(&mut tx, &ids).await?;
@@ -876,8 +878,8 @@ fn bulk(ids: &[UserId]) -> Result<Vec<UserId>> {
     Ok(ids)
 }
 
-fn actor_of(access: &Access) -> trackflow_domain::Actor {
-    trackflow_domain::Actor::User(access.user())
+fn actor_of(access: &Access) -> taskmaster_domain::Actor {
+    taskmaster_domain::Actor::User(access.user())
 }
 
 async fn reload(pool: &PgPool, id: UserId) -> Result<User> {

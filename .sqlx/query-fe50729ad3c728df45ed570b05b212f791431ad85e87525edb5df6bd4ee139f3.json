@@ -1,0 +1,28 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select author_id from issue_history where issue_id = $1 limit 1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "author_id",
+        "type_info": "Int8",
+        "origin": {
+          "Table": {
+            "table": "issue_history",
+            "name": "author_id"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "fe50729ad3c728df45ed570b05b212f791431ad85e87525edb5df6bd4ee139f3"
+}

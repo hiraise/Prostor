@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use axum::http::{Method, StatusCode, header};
 use serde_json::{Value, json};
-use trackflow_server::throttle::{Limits, Throttle};
+use taskmaster_server::throttle::{Limits, Throttle};
 
 mod common;
 

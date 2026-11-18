@@ -5,6 +5,7 @@
   // to (set in «Настройки», plan step 1.11) is marked in the chooser.
   import { knownBootstrap } from '#lib/api/system.ts';
   import { preferences } from '#lib/session/index.ts';
+  import Checkbox from '#lib/ui/Checkbox.svelte';
   import RadioGroup from '#lib/ui/RadioGroup.svelte';
 
   import * as m from './messages.ts';
@@ -26,6 +27,7 @@
       hint: knownBootstrap()?.default_home === 'boards' ? m.instanceDefault() : undefined,
     },
   ]);
+  const bulkSilent = $derived(preferences.chosen('commands_silent_prompt') === 'silent');
 </script>
 
 <p class="about">{m.interfaceAbout()}</p>
@@ -95,6 +97,26 @@
       }
     }
   />
+  <div class="switches">
+    <Checkbox
+      label={m.commandsOnTyping()}
+      hint={m.commandsOnTypingAbout()}
+      checked={preferences.value('commands_on_typing')}
+      onchange={(event: Event) => {
+        const box = event.currentTarget as HTMLInputElement;
+        preferences.set({ commands_on_typing: box.checked });
+      }}
+    />
+    <Checkbox
+      label={m.commandsBulkSilent()}
+      hint={m.commandsBulkSilentAbout()}
+      checked={bulkSilent}
+      onchange={(event: Event) => {
+        const box = event.currentTarget as HTMLInputElement;
+        preferences.set({ commands_silent_prompt: box.checked ? 'silent' : 'dismissed' });
+      }}
+    />
+  </div>
 </div>
 
 <style>
@@ -106,5 +128,12 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
     gap: var(--space-6);
+  }
+
+  .switches {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
   }
 </style>

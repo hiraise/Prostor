@@ -1,5 +1,5 @@
 //! Who is on the other end of a connection: the client's IP address, also behind reverse proxies
-//! the administrator trusts (`TRACKFLOW_TRUSTED_PROXIES`). Used for sign-in throttling and the
+//! the administrator trusts (`TASKMASTER_TRUSTED_PROXIES`). Used for sign-in throttling and the
 //! session list.
 
 use std::fmt;

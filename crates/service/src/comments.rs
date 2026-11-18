@@ -6,21 +6,21 @@
 //! "not found": the issue rule first, then the comment rule, so an audience only narrows (CNT-003).
 
 use sqlx::PgConnection;
-use trackflow_domain::access::Access;
-use trackflow_domain::access::visibility::Audience;
-use trackflow_domain::attachments as attachment_rules;
-use trackflow_domain::comments::{self as rules, Facts, Refusal};
-use trackflow_domain::issues::history::{CommentEvent, Origin, Record};
-use trackflow_domain::live::Change;
-use trackflow_domain::{CommentId, GroupId, IssueId, UploadId, UserId};
-use trackflow_markup::Profile;
-use trackflow_store::attachments::{self, Attachment};
-use trackflow_store::comments::{self as store, Comment, NewComment as StoredNew};
-use trackflow_store::groups::{self, Group};
-use trackflow_store::issues::Issue;
-use trackflow_store::projects::Project;
-use trackflow_store::users::{self, User};
-use trackflow_store::{PgPool, issues as store_issues};
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::visibility::Audience;
+use taskmaster_domain::attachments as attachment_rules;
+use taskmaster_domain::comments::{self as rules, Facts, Refusal};
+use taskmaster_domain::issues::history::{CommentEvent, Origin, Record};
+use taskmaster_domain::live::Change;
+use taskmaster_domain::{CommentId, GroupId, IssueId, UploadId, UserId};
+use taskmaster_markup::Profile;
+use taskmaster_store::attachments::{self, Attachment};
+use taskmaster_store::comments::{self as store, Comment, NewComment as StoredNew};
+use taskmaster_store::groups::{self, Group};
+use taskmaster_store::issues::Issue;
+use taskmaster_store::projects::Project;
+use taskmaster_store::users::{self, User};
+use taskmaster_store::{PgPool, issues as store_issues};
 
 use crate::attachments::AttachmentView;
 use crate::issues::{self, AudienceInput};
@@ -246,19 +246,29 @@ pub struct NewComment {
     pub uploads: Vec<UploadId>,
 }
 
-/// Posts a comment on a published issue the actor sees (CNT-001): `comment.create`, an active
-/// project, a text that is not empty, an audience of accounts and groups the actor may name.
-pub async fn create(
-    pool: &PgPool,
+/// What posting a comment planted for the caller's change: its records and mentions join the
+/// change the caller writes with [`issues::finish_change`], and the behaviors' records go to
+/// [`crate::rules::finish`] (plan §3.5).
+pub(crate) struct Planted {
+    pub id: CommentId,
+    pub records: Vec<Record>,
+    pub mentions: Vec<UserId>,
+    pub rule_records: Vec<Record>,
+}
+
+/// The comment itself on the caller's connection: the checks, the rendering, the insert and the
+/// project's behaviors, without the transaction and the history write — commands apply (step
+/// 2.1, plan §4.3) reuses this inside its per-issue change. The issue is locked.
+pub(crate) async fn create_conn(
+    conn: &mut PgConnection,
+    batch: &mut Batch,
+    ctx: &mut crate::rules::Ctx<'_>,
     actor: &Access,
-    origin: Origin,
-    issue: IssueId,
+    issue: &Issue,
     input: NewComment,
-) -> Result<crate::rules::Answer<One>> {
+) -> Result<Planted> {
     let text_value = rules::text(&input.text, !input.uploads.is_empty())
         .map_err(|r| Error::rejected("text", r))?;
-    let mut tx = pool.begin().await?;
-    let (issue, _) = issues::lock_for_change(&mut tx, actor, issue).await?;
     match rules::may_comment(actor, issue.project_id, issue.is_draft()) {
         Err(Refusal::Draft) => return Err(Error::Conflict("a draft takes no comments")),
         Err(Refusal::Denied(denied)) => return Err(denied.into()),
@@ -267,17 +277,16 @@ pub async fn create(
     if !input.uploads.is_empty() {
         attachment_rules::may_attach_to_comment(actor, issue.project_id)?;
     }
-    let who = issues::author(actor, origin, input.silent, issue.project_id)?;
     let (audience_users, audience_groups) = match &input.audience {
-        Some(audience) => issues::check_audience(&mut tx, actor, audience).await?,
+        Some(audience) => issues::check_audience(&mut *conn, actor, audience).await?,
         None => (Vec::new(), Vec::new()),
     };
-    let rendered = text::prepare(&mut tx, &text_value, Profile::Full).await?;
+    let rendered = text::prepare(&mut *conn, &text_value, Profile::Full).await?;
     // Auto-watch (ISS-030): the first comment on the issue makes its author a watcher by their
     // own switch's word; later comments never re-add a star they took off.
-    if !store::authored(&mut *tx, issue.id, actor.user()).await? {
+    if !store::authored(&mut *conn, issue.id, actor.user()).await? {
         crate::notifications::auto_watch(
-            &mut tx,
+            &mut *conn,
             actor.user(),
             issue.id,
             crate::notifications::AutoWatch::Commented,
@@ -285,7 +294,7 @@ pub async fn create(
         .await?;
     }
     let id = store::insert(
-        &mut tx,
+        &mut *conn,
         &StoredNew {
             issue: issue.id,
             author: actor.user(),
@@ -296,13 +305,12 @@ pub async fn create(
         },
     )
     .await?;
-    let mut batch = Batch::new();
     batch.comment(id, Change::Created);
     let added = crate::attachments::attach_locked(
-        &mut tx,
-        &mut batch,
+        &mut *conn,
+        batch,
         actor,
-        &issue,
+        issue,
         Some(id),
         &input.uploads,
     )
@@ -310,23 +318,54 @@ pub async fn create(
     let mut records = vec![Record::comment(CommentEvent::Posted, id)];
     records.extend(crate::attachments::added_record(&added));
     // The behaviors hear the comment before its records (§3.5); a `+1` becomes a vote (AUT-079).
-    let mut ctx = crate::rules::Ctx::new(actor);
     let rule_records = crate::rules::on(
-        &mut tx,
-        &mut batch,
-        &mut ctx,
+        &mut *conn,
+        batch,
+        ctx,
         crate::rules::Event::CommentAdded {
-            issue: &issue,
+            issue,
             text: &text_value,
         },
     )
     .await?;
+    Ok(Planted {
+        id,
+        records,
+        mentions: rendered.users,
+        rule_records,
+    })
+}
+
+/// Posts a comment on a published issue the actor sees (CNT-001): `comment.create`, an active
+/// project, a text that is not empty, an audience of accounts and groups the actor may name.
+pub async fn create(
+    pool: &PgPool,
+    actor: &Access,
+    origin: Origin,
+    issue: IssueId,
+    input: NewComment,
+) -> Result<crate::rules::Answer<One>> {
+    let mut tx = pool.begin().await?;
+    let (issue, _) = issues::lock_for_change(&mut tx, actor, issue).await?;
+    let silent = input.silent;
+    let mut batch = Batch::new();
+    let mut ctx = crate::rules::Ctx::new(actor);
+    let planted = create_conn(&mut tx, &mut batch, &mut ctx, actor, &issue, input).await?;
+    let who = issues::author(actor, origin, silent, issue.project_id)?;
     // The comment's mentions ride its event (NTF-035).
-    issues::finish_change(&mut tx, &mut batch, &issue, who, &records, &rendered.users).await?;
-    crate::rules::finish(&mut tx, &mut batch, &ctx, &issue, &rule_records).await?;
+    issues::finish_change(
+        &mut tx,
+        &mut batch,
+        &issue,
+        who,
+        &planted.records,
+        &planted.mentions,
+    )
+    .await?;
+    crate::rules::finish(&mut tx, &mut batch, &ctx, &issue, &planted.rule_records).await?;
     batch.publish(&mut tx).await?;
     tx.commit().await?;
-    let done = get(pool, actor, id).await?;
+    let done = get(pool, actor, planted.id).await?;
     Ok(crate::rules::Answer {
         done,
         messages: ctx.messages,
@@ -402,7 +441,7 @@ pub async fn update(
     {
         return Err(Error::field(
             "text",
-            trackflow_domain::validation::Problem::Required,
+            taskmaster_domain::validation::Problem::Required,
             "the comment is empty",
         ));
     }
@@ -444,7 +483,7 @@ pub async fn update(
     }
     if let Some(record) = record {
         let rendered = if text_value == comment.text {
-            trackflow_store::content::Rendered {
+            taskmaster_store::content::Rendered {
                 html: comment.html.clone(),
                 users: comment.mentioned_users.clone(),
                 issue_tokens: comment.issue_tokens.clone(),

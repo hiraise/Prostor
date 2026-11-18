@@ -7,7 +7,7 @@
   let { data }: { data: PageData } = $props();
 </script>
 
-<svelte:head><title>{m.forgotTitle()} · trackflow</title></svelte:head>
+<svelte:head><title>{m.forgotTitle()} · TaskMaster</title></svelte:head>
 
 <PublicFrame title={m.forgotTitle()}>
   <ForgotPasswordForm emailEnabled={data.emailEnabled} />

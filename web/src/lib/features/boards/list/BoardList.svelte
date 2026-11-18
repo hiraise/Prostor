@@ -121,7 +121,7 @@
   }
 </script>
 
-<svelte:head><title>{m.boards()} · trackflow</title></svelte:head>
+<svelte:head><title>{m.boards()} · TaskMaster</title></svelte:head>
 
 <PageHeader title={m.boards()}>
   {#snippet actions()}

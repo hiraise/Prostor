@@ -9,6 +9,7 @@
   import { refusalText } from '#lib/features/fields/index.ts';
   import { announce } from '#lib/ui/announce.svelte.ts';
   import Button from '#lib/ui/Button.svelte';
+  import IconButton from '#lib/ui/IconButton.svelte';
   import OptionList from '#lib/ui/OptionList.svelte';
   import Popover from '#lib/ui/Popover.svelte';
   import { describeError } from '#lib/ui/toast.svelte.ts';
@@ -19,11 +20,13 @@
   interface Props {
     issue: Issue;
     open?: boolean;
-    /** Without its own button: «Ещё» opens it (phones). */
+    /** Without its own trigger: «Ещё» opens it. */
     bare?: boolean;
+    /** The trigger is an icon button (the issue page's title row). */
+    icon?: boolean;
   }
 
-  let { issue, open = $bindable(false), bare = false }: Props = $props();
+  let { issue, open = $bindable(false), bare = false, icon = false }: Props = $props();
 
   let query = $state('');
   let found = $state<TagRef[]>([]);
@@ -108,7 +111,11 @@
 
 <Popover label={m.addTag()} bind:open>
   {#snippet trigger(props)}
-    {#if !bare}<Button icon={Tag} {...props}>{m.addTag()}</Button>{/if}
+    {#if icon}
+      <IconButton icon={Tag} label={m.addTag()} {...props} />
+    {:else if !bare}
+      <Button icon={Tag} {...props}>{m.addTag()}</Button>
+    {/if}
   {/snippet}
   <OptionList
     label={m.tags()}

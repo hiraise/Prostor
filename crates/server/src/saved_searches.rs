@@ -1,21 +1,21 @@
 //! `/saved-searches`: queries under a name, shared like tags (QRY-063…QRY-068). Rules live in
-//! `trackflow_service::saved_searches`.
+//! `taskmaster_service::saved_searches`.
 
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use trackflow_api::error::ErrorBody;
-use trackflow_api::page::{Page, PageQuery};
-use trackflow_api::saved_searches::{
+use taskmaster_api::error::ErrorBody;
+use taskmaster_api::page::{Page, PageQuery};
+use taskmaster_api::saved_searches::{
     BuiltinSearchKey, NewSavedSearch, SavedSearch, SavedSearchPatch, SearchSharing,
 };
-use trackflow_api::sharing::ScopeQuery;
-use trackflow_domain::access::Access;
-use trackflow_domain::auth::Scope;
-use trackflow_domain::settings::SYSTEM_LANGUAGE;
-use trackflow_service::saved_searches::{self as service, SearchChange, Sharing};
-use trackflow_service::tags;
-use trackflow_store::saved_searches::SavedSearchId;
+use taskmaster_api::sharing::ScopeQuery;
+use taskmaster_domain::access::Access;
+use taskmaster_domain::auth::Scope;
+use taskmaster_domain::settings::SYSTEM_LANGUAGE;
+use taskmaster_service::saved_searches::{self as service, SearchChange, Sharing};
+use taskmaster_service::tags;
+use taskmaster_store::saved_searches::SavedSearchId;
 
 use crate::AppState;
 use crate::access::Viewer;
@@ -80,7 +80,7 @@ async fn one(
         .await?
         .pop()
         .ok_or_else(|| {
-            trackflow_service::Error::Internal("the search is missing".to_owned()).into()
+            taskmaster_service::Error::Internal("the search is missing".to_owned()).into()
         })
 }
 

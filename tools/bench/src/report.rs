@@ -22,6 +22,9 @@ pub struct Timing {
     pub phases: Vec<(String, Duration)>,
     /// Whether the run generated the dataset.
     pub generated: bool,
+    /// Wall-time allowance of the measured scenarios beyond the base budget
+    /// (`Scenario::time_allowance`): the command scenario's whole jobs run minutes by design.
+    pub allowance: Duration,
 }
 
 impl Timing {
@@ -30,11 +33,12 @@ impl Timing {
     }
 
     pub fn budget(&self) -> Duration {
-        if self.generated {
-            TIME_BUDGET_GENERATING
-        } else {
-            TIME_BUDGET
-        }
+        self.allowance
+            + if self.generated {
+                TIME_BUDGET_GENERATING
+            } else {
+                TIME_BUDGET
+            }
     }
 
     pub fn within_budget(&self) -> bool {
@@ -179,10 +183,24 @@ pub fn write(
         env.round_trip.1.as_secs_f64() * 1e3,
         ROUND_TRIP_PAUSE.as_millis()
     )?;
+    let overrides: Vec<String> = measurements
+        .iter()
+        .map(|m| m.scenario)
+        .filter(|s| s.iterations(run) != run.iterations)
+        .map(|s| format!("{}: {}", s.title(), s.iterations(run)))
+        .collect();
+    let overrides = overrides.join(", ");
     writeln!(
         out,
-        "{} client(s) · {} operations per scenario, measured after {} warm-up pass(es) over them · server time from the client",
-        run.clients, run.iterations, run.warmup
+        "{} client(s) · {} operations per scenario{}, measured after {} warm-up pass(es) over them · server time from the client",
+        run.clients,
+        run.iterations,
+        if overrides.is_empty() {
+            String::new()
+        } else {
+            format!(" ({overrides})")
+        },
+        run.warmup
     )?;
     writeln!(
         out,

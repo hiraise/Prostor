@@ -7,16 +7,16 @@
 use std::sync::Arc;
 
 use sqlx::{AssertSqlSafe, Connection, PgConnection};
-use trackflow_bench::catalog::Catalog;
-use trackflow_bench::dataset::{self, Plan};
-use trackflow_bench::http::Node;
-use trackflow_bench::report::{self, Environment, Timing};
-use trackflow_bench::runner::{self, RunOptions};
-use trackflow_bench::scenarios::live::{self, LiveOptions};
-use trackflow_bench::scenarios::{Mode, Scenario};
-use trackflow_domain::access::Projects;
-use trackflow_domain::access::permission::Permission;
-use trackflow_testkit::TestDb;
+use taskmaster_bench::catalog::Catalog;
+use taskmaster_bench::dataset::{self, Plan};
+use taskmaster_bench::http::Node;
+use taskmaster_bench::report::{self, Environment, Timing};
+use taskmaster_bench::runner::{self, RunOptions};
+use taskmaster_bench::scenarios::live::{self, LiveOptions};
+use taskmaster_bench::scenarios::{Mode, Scenario};
+use taskmaster_domain::access::Projects;
+use taskmaster_domain::access::permission::Permission;
+use taskmaster_testkit::TestDb;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn a_small_dataset_runs_every_scenario() {
@@ -187,7 +187,7 @@ async fn a_small_dataset_runs_every_scenario() {
         connections: 50,
         changes: 8,
         seed: 7,
-        clients: env!("CARGO_BIN_EXE_trackflow-bench").into(),
+        clients: env!("CARGO_BIN_EXE_taskmaster-bench").into(),
     };
     let delivered = live::measure(&catalog, &node, &options).await.unwrap();
     assert_eq!(delivered.opened, 50);
@@ -201,6 +201,7 @@ async fn a_small_dataset_runs_every_scenario() {
     let timing = Timing {
         phases: vec![("measuring".to_owned(), std::time::Duration::from_secs(1))],
         generated: false,
+        ..Timing::default()
     };
     report::write(
         &mut out,
@@ -259,7 +260,7 @@ async fn viewers_match_the_server(pool: &sqlx::PgPool, catalog: &Catalog) {
         .step_by(catalog.users.len() / 20)
         .copied()
     {
-        let access = trackflow_service::access::load(pool, user).await.unwrap();
+        let access = taskmaster_service::access::load(pool, user).await.unwrap();
         let viewer = catalog.viewer(user);
         let read = only(access.projects_with(Permission::IssueRead));
         let create_only: Vec<i64> = only(access.projects_with(Permission::IssueCreate))

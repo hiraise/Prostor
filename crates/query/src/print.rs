@@ -139,7 +139,7 @@ fn push_atom(atom: &Atom, role: Role, before_dots: bool, out: &mut String) {
 }
 
 /// The text reads back as exactly one word.
-fn is_bare_word(text: &str) -> bool {
+pub(crate) fn is_bare_word(text: &str) -> bool {
     let tokens = lex(text);
     matches!(tokens.as_slice(), [t] if t.kind == TokenKind::Word && t.span.start == 0 && t.span.end == text.len())
 }

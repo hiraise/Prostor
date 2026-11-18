@@ -1,9 +1,9 @@
 //! Personal interface settings (UI-018, D-041): one JSON object per account. Keys and their rules:
-//! `trackflow_domain::preferences`.
+//! `taskmaster_domain::preferences`.
 
 use serde_json::Value;
 use sqlx::{PgConnection, PgExecutor};
-use trackflow_domain::UserId;
+use taskmaster_domain::UserId;
 
 /// What a person has set; `None` before their first change.
 pub async fn get(db: impl PgExecutor<'_>, user: UserId) -> Result<Option<Value>, sqlx::Error> {

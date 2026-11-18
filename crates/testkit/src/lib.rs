@@ -14,7 +14,7 @@
 //! `authentication_timeout`, a minute), so one stuck test would slow down all others.
 //!
 //! The server is the one in `DATABASE_URL` (default: the dev database of `make db-up`); its
-//! database name is ignored. `TRACKFLOW_TEST_KEEP_DB=1` keeps the databases for inspection.
+//! database name is ignored. `TASKMASTER_TEST_KEEP_DB=1` keeps the databases for inspection.
 
 // A test helper that cannot set up its database must fail the test right there.
 #![allow(clippy::expect_used, clippy::panic)]
@@ -23,14 +23,14 @@ use std::hash::{DefaultHasher, Hash, Hasher};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use sqlx::{AssertSqlSafe, Connection, Executor, PgConnection, PgPool};
-use trackflow_store::{MIGRATOR, PgConnectOptions};
+use taskmaster_store::{MIGRATOR, PgConnectOptions};
 
-const DEFAULT_SERVER: &str = "postgres://trackflow:trackflow@127.0.0.1:5433/postgres";
+const DEFAULT_SERVER: &str = "postgres://taskmaster:taskmaster@127.0.0.1:5433/postgres";
 const HINT: &str = "cannot reach the test PostgreSQL server; is it running (`make db-up`)?";
-/// Template names: `trackflow_tpl_<migrations hash>_<unix seconds>`.
-const TEMPLATE_PREFIX: &str = "trackflow_tpl_";
-/// Test database names: `trackflow_t_<unix seconds>_<random>`.
-const TEST_PREFIX: &str = "trackflow_t_";
+/// Template names: `taskmaster_tpl_<migrations hash>_<unix seconds>`.
+const TEMPLATE_PREFIX: &str = "taskmaster_tpl_";
+/// Test database names: `taskmaster_t_<unix seconds>_<random>`.
+const TEST_PREFIX: &str = "taskmaster_t_";
 /// Serializes template work across test processes.
 const LOCK_KEY: i64 = 0x7472_6163_6b66_6c77;
 /// Test databases of crashed runs and templates of other migration sets older than this go away.
@@ -70,7 +70,7 @@ impl TestDb {
     fn open(server: PgConnectOptions, name: String) -> Self {
         let options = server.clone().database(&name);
         // Small: tests run in parallel processes against one server.
-        let pool = trackflow_store::pool(&options, 6);
+        let pool = taskmaster_store::pool(&options, 6);
         Self {
             pool,
             options,
@@ -95,7 +95,7 @@ impl TestDb {
 
 impl Drop for TestDb {
     fn drop(&mut self) {
-        if std::env::var_os("TRACKFLOW_TEST_KEEP_DB").is_some() {
+        if std::env::var_os("TASKMASTER_TEST_KEEP_DB").is_some() {
             return;
         }
         let server = self.server.clone();
@@ -129,7 +129,7 @@ impl Drop for TestDb {
 
 fn server_options() -> PgConnectOptions {
     let url = std::env::var("DATABASE_URL").unwrap_or_else(|_| DEFAULT_SERVER.to_owned());
-    trackflow_store::connect_options(&url).expect("DATABASE_URL is not a valid postgres:// URL")
+    taskmaster_store::connect_options(&url).expect("DATABASE_URL is not a valid postgres:// URL")
 }
 
 async fn admin_connection(server: &PgConnectOptions) -> PgConnection {
@@ -182,7 +182,7 @@ async fn ensure_template(admin: &mut PgConnection, server: &PgConnectOptions) ->
 
     let name = format!("{prefix}{}", unix_seconds());
     run(admin, format!(r#"create database "{name}""#)).await;
-    trackflow_store::migrate(&server.clone().database(&name))
+    taskmaster_store::migrate(&server.clone().database(&name))
         .await
         .unwrap_or_else(|error| panic!("migrations fail on an empty database: {error}"));
     run(

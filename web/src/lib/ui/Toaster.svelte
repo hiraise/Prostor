@@ -82,7 +82,7 @@
     position: fixed;
     z-index: var(--z-toast);
     inset-inline-end: calc(var(--space-4) + var(--safe-right));
-    inset-block-end: calc(var(--space-4) + var(--safe-bottom));
+    inset-block-end: calc(var(--space-4) + var(--safe-bottom) + var(--toast-lift, 0px));
     width: min(26rem, calc(100vw - 2 * var(--space-4)));
   }
 
@@ -157,7 +157,7 @@
   @media (width < 48rem) {
     .toaster {
       inset-inline: calc(var(--space-2) + var(--safe-left)) calc(var(--space-2) + var(--safe-right));
-      inset-block-end: calc(var(--space-2) + var(--safe-bottom));
+      inset-block-end: calc(var(--space-2) + var(--safe-bottom) + var(--toast-lift, 0px));
       width: auto;
     }
   }

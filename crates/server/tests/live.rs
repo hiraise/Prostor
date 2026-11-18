@@ -8,11 +8,11 @@ use std::net::SocketAddr;
 
 use axum::http::{Method, StatusCode};
 use serde_json::{Value, json};
+use taskmaster_api::live::close;
+use taskmaster_server::lifecycle::Phase;
+use taskmaster_server::live::Config;
+use taskmaster_server::throttle::Throttle;
 use tokio_tungstenite::tungstenite;
-use trackflow_api::live::close;
-use trackflow_server::lifecycle::Phase;
-use trackflow_server::live::Config;
-use trackflow_server::throttle::Throttle;
 
 mod common;
 
@@ -351,9 +351,13 @@ async fn adm_002_a_setting_change_reaches_open_connections() {
     let head = answer[0]["head"].as_i64().unwrap();
 
     let mut conn = world.node.state.db.acquire().await.unwrap();
-    trackflow_store::bus::notify(&mut conn, trackflow_store::bus::SETTINGS, "system_language")
-        .await
-        .unwrap();
+    taskmaster_store::bus::notify(
+        &mut conn,
+        taskmaster_store::bus::SETTINGS,
+        "system_language",
+    )
+    .await
+    .unwrap();
     assert_eq!(
         bob.next().await,
         json!({
@@ -512,7 +516,7 @@ async fn live_shutdown_closes_with_restart() {
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let address = listener.local_addr().unwrap();
     let stop = tokio_util::sync::CancellationToken::new();
-    let app = trackflow_server::router(world.node.state.clone())
+    let app = taskmaster_server::router(world.node.state.clone())
         .into_make_service_with_connect_info::<SocketAddr>();
     let server = tokio::spawn(
         axum::serve(listener, app)
@@ -744,7 +748,7 @@ async fn live_limit_oversized_message_closes() {
     let mut bob = world.live(&world.bob).await;
     let topics: Vec<String> = (0..2000).map(|n| format!("issue:{n}")).collect();
     let text = json!({ "type": "subscribe", "topics": topics }).to_string();
-    assert!(text.len() > trackflow_server::live::MESSAGE_MAX);
+    assert!(text.len() > taskmaster_server::live::MESSAGE_MAX);
     bob.send_text(&text).await;
     assert_eq!(bob.closed().await, close::POLICY);
 }

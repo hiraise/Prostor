@@ -4,10 +4,10 @@ import { expect, test } from '@playwright/test';
 
 import { ADMIN, SETUP_CODE } from './accounts.ts';
 
-test('ADM-047: the first visitor sets trackflow up and is signed in', async ({ page }) => {
+test('ADM-047: the first visitor sets taskmaster up and is signed in', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveURL(/\/setup$/);
-  await expect(page.getByRole('heading', { level: 1, name: 'Set up trackflow' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Set up taskmaster' })).toBeVisible();
 
   await page.getByLabel(/^Setup code/).fill(SETUP_CODE.toLowerCase());
   await page.getByLabel(/^Full name/).fill(ADMIN.fullName);

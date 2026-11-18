@@ -106,7 +106,7 @@
   }
 </script>
 
-<svelte:head><title>{project.name} · trackflow</title></svelte:head>
+<svelte:head><title>{project.name} · TaskMaster</title></svelte:head>
 
 <PageHeader title={project.name}>
   {#snippet actions()}

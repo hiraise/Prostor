@@ -1,6 +1,6 @@
 [package]
-name = "trackflow-markup"
-description = "trackflow rich text: Markdown to safe HTML with mentions, issue IDs and file references"
+name = "taskmaster-markup"
+description = "taskmaster rich text: Markdown to safe HTML with mentions, issue IDs and file references"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

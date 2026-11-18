@@ -4,7 +4,7 @@
 import { api } from '#lib/api/client.ts';
 import type { FieldRef } from '#lib/api/schema.gen.ts';
 
-import { queryWord } from './list-state.ts';
+import { queryWord } from './list-state.svelte.ts';
 import * as m from './messages.ts';
 
 export const BUILTIN_COLUMNS = [

@@ -4,15 +4,15 @@
 
 use serde_json::json;
 use sqlx::PgConnection;
-use trackflow_domain::access::Access;
-use trackflow_domain::boards::columns::{Wip, may_add};
-use trackflow_domain::rank;
-use trackflow_domain::validation::Problem;
-use trackflow_domain::{Actor, BoardId, ColumnId, SetId, ValueId};
-use trackflow_store::boards::{self as store, Column};
-use trackflow_store::fields as store_fields;
-use trackflow_store::value_sets;
-use trackflow_store::{PgPool, audit, unique_violation};
+use taskmaster_domain::access::Access;
+use taskmaster_domain::boards::columns::{Wip, may_add};
+use taskmaster_domain::rank;
+use taskmaster_domain::validation::Problem;
+use taskmaster_domain::{Actor, BoardId, ColumnId, SetId, ValueId};
+use taskmaster_store::boards::{self as store, Column};
+use taskmaster_store::fields as store_fields;
+use taskmaster_store::value_sets;
+use taskmaster_store::{PgPool, audit, unique_violation};
 
 use super::{BoardRow, load, lock_edited};
 use crate::seed::internal;
@@ -272,8 +272,8 @@ pub async fn delete(
     if !columns.iter().any(|c| c.id == column) {
         return Err(Error::NotFound("no such column"));
     }
-    if trackflow_domain::boards::Mode::parse(&board.mode)
-        == Some(trackflow_domain::boards::Mode::Query)
+    if taskmaster_domain::boards::Mode::parse(&board.mode)
+        == Some(taskmaster_domain::boards::Mode::Query)
     {
         // New issues of a query board must land in a column (BRD-028).
         let left: Vec<i64> = columns

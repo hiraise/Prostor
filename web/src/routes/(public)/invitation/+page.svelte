@@ -17,7 +17,7 @@
   }
 </script>
 
-<svelte:head><title>{m.invitationTitle()} · trackflow</title></svelte:head>
+<svelte:head><title>{m.invitationTitle()} · TaskMaster</title></svelte:head>
 
 <PublicFrame title={m.invitationTitle()}>
   <InvitationForm ondone={done} />

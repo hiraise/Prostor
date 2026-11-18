@@ -1,6 +1,6 @@
 # The deployment image: one binary with the web app inside (README.md «Поставка»).
 # Build for the server's platform from the repository root:
-#   docker buildx build --platform linux/amd64 -f deploy/Dockerfile -t trackflow:1.12c --load .
+#   docker buildx build --platform linux/amd64 -f deploy/Dockerfile -t taskmaster:1.12c --load .
 # The stages follow the Makefile: `wasm` -> `web` -> `build` (docs/conventions.md).
 
 # 1. The query language's WebAssembly module (Makefile `wasm`).
@@ -9,7 +9,7 @@ FROM rust:1.99.1 AS wasm
 WORKDIR /work
 COPY . .
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
-    cargo build --locked -p trackflow-query-wasm --target wasm32-unknown-unknown --profile wasm
+    cargo build --locked -p taskmaster-query-wasm --target wasm32-unknown-unknown --profile wasm
 
 # 2. The web app into web/build (Makefile `web`). Playwright's browsers are not needed here.
 FROM node:24.22.1-bookworm-slim AS web
@@ -19,7 +19,7 @@ COPY web/package.json web/package-lock.json ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci
 COPY web/ .
-COPY --from=wasm /work/target/wasm32-unknown-unknown/wasm/trackflow_query_wasm.wasm \
+COPY --from=wasm /work/target/wasm32-unknown-unknown/wasm/taskmaster_query_wasm.wasm \
      src/lib/query/query.wasm
 RUN npm run -s build
 
@@ -32,8 +32,8 @@ COPY --from=web /web/build web/build
 ENV SQLX_OFFLINE=true
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/work/target \
-    cargo build --release --locked -p trackflow-server \
-    && cp target/release/trackflow /trackflow
+    cargo build --release --locked -p taskmaster-server \
+    && cp target/release/taskmaster /taskmaster
 
 # 4. Runtime. Time zones are compiled into the binary (jiff tzdb-bundle-always);
 #    ca-certificates are for outbound TLS (mail, Gravatar).
@@ -41,11 +41,11 @@ FROM debian:bookworm-slim
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
-    && useradd --system --home /data --create-home trackflow
-COPY --from=server /trackflow /usr/local/bin/trackflow
-USER trackflow
+    && useradd --system --home /data --create-home taskmaster
+COPY --from=server /taskmaster /usr/local/bin/taskmaster
+USER taskmaster
 # In a container the server must listen on all interfaces; files live on the /data volume.
-ENV TRACKFLOW_LISTEN=0.0.0.0:7700 \
-    TRACKFLOW_FILES_DIR=/data/files
+ENV TASKMASTER_LISTEN=0.0.0.0:7700 \
+    TASKMASTER_FILES_DIR=/data/files
 EXPOSE 7700
-ENTRYPOINT ["/usr/local/bin/trackflow"]
+ENTRYPOINT ["/usr/local/bin/taskmaster"]

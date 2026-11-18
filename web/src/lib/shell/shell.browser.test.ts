@@ -98,6 +98,36 @@ describe('AppShell', () => {
     await expect.element(screen.getByText('Boards')).not.toHaveClass('sr-only');
   });
 
+  it.skipIf(isPhone())('UI-001: the rail stands at the width the person chose', async () => {
+    setPreferencesForTests({ rail_width: 300 });
+    const screen = await render(AppShell, { pathname: '/issues', children: content });
+    const shell = screen.container.querySelector<HTMLElement>('.shell');
+    expect(shell?.style.getPropertyValue('--rail-expanded')).toBe('30rem');
+
+    // The keyboard works beside the drag: focus the handle and jump to a limit.
+    const handle = screen.getByRole('separator', { name: 'Width of the navigation panel' });
+    await expect.element(handle).toHaveAttribute('aria-valuenow', '300');
+    await handle.click();
+    await userEvent.keyboard('{End}');
+    expect(preferences.value('rail_width')).toBe(400);
+    expect(shell?.style.getPropertyValue('--rail-expanded')).toBe('40rem');
+
+    // Collapsed to icons the rail keeps its fixed width and the handle goes away.
+    await screen.getByRole('button', { name: 'Collapse navigation' }).click();
+    expect(
+      screen.getByRole('separator', { name: 'Width of the navigation panel' }).query(),
+    ).toBeNull();
+    expect(preferences.value('rail_width')).toBe(400);
+  });
+
+  it.runIf(isPhone())('UI-001: the drawer on a phone has no width handle', async () => {
+    const screen = await render(AppShell, { pathname: '/issues', children: content });
+    await screen.getByRole('button', { name: 'Main navigation' }).click();
+    const drawer = page.getByRole('dialog', { name: 'Main navigation' });
+    await expect.element(drawer).toBeVisible();
+    expect(page.getByRole('separator').query()).toBeNull();
+  });
+
   it('UI-033: on a phone the navigation is a drawer with large touch targets', async () => {
     if (!isPhone()) return;
     const screen = await render(AppShell, { pathname: '/issues', children: content });

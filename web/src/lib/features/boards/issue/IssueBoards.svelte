@@ -31,7 +31,6 @@
 
   let { issue, project, editable, boards: given }: Props = $props();
 
-  const id = $props.id();
   let loaded = $state<IssueBoard[] | null>(null);
   let problem = $state<string | null>(null);
   let adding = $state(false);
@@ -88,60 +87,62 @@
   }
 </script>
 
-<section class="boards" aria-labelledby="{id}-title">
-  <div class="head">
-    <h3 id="{id}-title">{m.issueBoards()}</h3>
+<section class="boards" aria-label={m.issueBoards()}>
+  <div class="label">
+    {m.issueBoards()}
     {#if editable}
       <IconButton icon={Plus} size="sm" label={m.addToBoard()} onclick={() => (adding = true)} />
     {/if}
   </div>
-  {#if problem}
-    <p class="problem">{problem}</p>
-  {:else if rows.length === 0}
-    <p class="empty">{m.noIssueBoards()}</p>
-  {:else}
-    <ul>
-      {#each rows as row (row.board.id)}
-        <li class={{ skipped: row.skipped }}>
-          <!-- Hrefs come from boardHref, which resolves them. -->
-          <!-- eslint-disable svelte/no-navigation-without-resolve -->
-          <span class="names">
-            <a href={boardHref.board(row.board.id)}>{row.board.name}</a>
-            {#if row.sprint && row.sprints_on}
-              <span aria-hidden="true">·</span>
-              <a href={boardHref.sprint(row.board.id, row.sprint.id)}>{row.sprint.name}</a>
+  <div class="list">
+    {#if problem}
+      <p class="problem">{problem}</p>
+    {:else if rows.length === 0}
+      <p class="empty">{m.noIssueBoards()}</p>
+    {:else}
+      <ul>
+        {#each rows as row (row.board.id)}
+          <li class={{ skipped: row.skipped }}>
+            <!-- Hrefs come from boardHref, which resolves them. -->
+            <!-- eslint-disable svelte/no-navigation-without-resolve -->
+            <span class="names">
+              <a href={boardHref.board(row.board.id)}>{row.board.name}</a>
+              {#if row.sprint && row.sprints_on}
+                <span aria-hidden="true">·</span>
+                <a href={boardHref.sprint(row.board.id, row.sprint.id)}>{row.sprint.name}</a>
+              {/if}
+              {#if row.skipped}
+                <span class="mark">{m.skippedBoard()}</span>
+              {:else if row.auto}
+                <span class="mark" {@attach tooltip(m.autoBoardHint())}>{m.autoBoard()}</span>
+              {/if}
+            </span>
+            <!-- eslint-enable svelte/no-navigation-without-resolve -->
+            {#if editable}
+              {#if row.skipped}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  icon={Undo2}
+                  aria-label={m.putBack({ name: row.board.name })}
+                  disabled={busy !== null}
+                  onclick={() => void putBack(row)}>{m.putBackShort()}</Button
+                >
+              {:else}
+                <IconButton
+                  icon={X}
+                  size="sm"
+                  label={m.removeFromBoardOf({ name: row.board.name })}
+                  disabled={busy !== null}
+                  onclick={() => void remove(row)}
+                />
+              {/if}
             {/if}
-            {#if row.skipped}
-              <span class="mark">{m.skippedBoard()}</span>
-            {:else if row.auto}
-              <span class="mark" {@attach tooltip(m.autoBoardHint())}>{m.autoBoard()}</span>
-            {/if}
-          </span>
-          <!-- eslint-enable svelte/no-navigation-without-resolve -->
-          {#if editable}
-            {#if row.skipped}
-              <Button
-                variant="ghost"
-                size="sm"
-                icon={Undo2}
-                aria-label={m.putBack({ name: row.board.name })}
-                disabled={busy !== null}
-                onclick={() => void putBack(row)}>{m.putBackShort()}</Button
-              >
-            {:else}
-              <IconButton
-                icon={X}
-                size="sm"
-                label={m.removeFromBoardOf({ name: row.board.name })}
-                disabled={busy !== null}
-                onclick={() => void remove(row)}
-              />
-            {/if}
-          {/if}
-        </li>
-      {/each}
-    </ul>
-  {/if}
+          </li>
+        {/each}
+      </ul>
+    {/if}
+  </div>
 </section>
 
 {#if editable}
@@ -149,25 +150,29 @@
 {/if}
 
 <style>
+  /* One row of the field panel: the label in the name column, the boards beside it. */
   .boards {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-1);
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: var(--space-1) var(--space-3);
     min-width: 0;
   }
 
-  .head {
+  .label {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-2);
+    gap: var(--space-0_5);
     min-height: var(--control-md);
-  }
-
-  h3 {
     color: var(--color-text-muted);
     font-size: var(--text-sm);
-    font-weight: var(--weight-regular);
+  }
+
+  .list {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--space-1);
+    min-width: 0;
   }
 
   ul {
@@ -182,7 +187,7 @@
   li {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-start;
     gap: var(--space-2);
     min-height: var(--control-md);
   }

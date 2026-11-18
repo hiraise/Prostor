@@ -1,22 +1,23 @@
 //! Searching issues with the query language (QRY): `GET /issues`, the counts and the query check.
-//! Rules live in `trackflow_service::search`; here byte spans become UTF-16 offsets.
+//! Rules live in `taskmaster_service::search`; here byte spans become UTF-16 offsets.
 
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::Response;
-use trackflow_api::error::ErrorBody;
-use trackflow_api::fields::{IssueFields, IssueFieldsQuery};
-use trackflow_api::issues::{Issue, IssueCount};
-use trackflow_api::search::{
-    CountItem, CountsAnswer, CountsRequest, IssueSearchPage, IssueSearchQuery, QueryCheck,
-    QueryCheckQuery, QueryProblem, QueryProblemCode, QuerySeverity, QueryToken, SortDirection,
-    SortKeyName, SortUsed, TokenClass,
+use taskmaster_api::error::ErrorBody;
+use taskmaster_api::fields::{IssueFields, IssueFieldsQuery};
+use taskmaster_api::issues::{Issue, IssueCount};
+use taskmaster_api::search::{
+    CountItem, CountsAnswer, CountsRequest, IssueSearchPage, IssueSearchQuery, QueryAssist,
+    QueryAssistQuery, QueryCheck, QueryCheckQuery, QueryProblem, QueryProblemCode, QuerySeverity,
+    QueryToken, SortDirection, SortKeyName, SortUsed, TokenClass,
 };
-use trackflow_domain::auth::Scope;
-use trackflow_domain::search::{SortBy, SortSpec};
-use trackflow_query::{Class, Direction, Problem, ProblemCode, Severity, Span, utf16};
-use trackflow_service::Error;
-use trackflow_service::search::{self, SearchInput};
+use taskmaster_domain::auth::Scope;
+use taskmaster_domain::search::{SortBy, SortSpec};
+use taskmaster_query::{Class, Direction, Problem, ProblemCode, Severity, Span, utf16};
+use taskmaster_service::Error;
+use taskmaster_service::assist;
+use taskmaster_service::search::{self, SearchInput};
 
 use crate::AppState;
 use crate::access::Viewer;
@@ -48,7 +49,7 @@ pub async fn fields(
 ) -> Result<Response, ApiError> {
     require_scope(&viewer.principal, Scope::TrackerRead)?;
     let found =
-        trackflow_service::fields::of_readable(&state.db, &viewer.access, query.project).await?;
+        taskmaster_service::fields::of_readable(&state.db, &viewer.access, query.project).await?;
     Ok(json(
         StatusCode::OK,
         IssueFields {
@@ -91,7 +92,7 @@ pub async fn list(
 /// A page of issues on the wire; `text` is the query its notes point into.
 pub(crate) fn search_page(
     state: &AppState,
-    viewer: &trackflow_domain::access::Access,
+    viewer: &taskmaster_domain::access::Access,
     text: &str,
     page: search::SearchPage,
 ) -> IssueSearchPage {
@@ -240,6 +241,62 @@ pub async fn check(
         QueryCheck {
             tokens,
             problems: problems(&text, &found.problems),
+        },
+    ))
+}
+
+/// Completion for the query bar (QRY-056…QRY-058, plan §5): the check — tokens and problems
+/// for the highlighting and markers — plus the suggestions at the caret, the same contract the
+/// command dialog answers with (D-061).
+#[utoipa::path(
+    get,
+    path = "/queries/assist",
+    operation_id = "assist_query",
+    tag = "issues",
+    security(("session" = []), ("token" = [])),
+    params(QueryAssistQuery),
+    responses(
+        (status = OK, description = "Tokens, problems and suggestions", body = QueryAssist),
+        (status = NOT_FOUND, description = "No such project", body = ErrorBody),
+    ),
+)]
+pub async fn assist(
+    State(state): State<AppState>,
+    viewer: Viewer,
+    QueryParams(query): QueryParams<QueryAssistQuery>,
+) -> Result<Response, ApiError> {
+    require_scope(&viewer.principal, Scope::TrackerRead)?;
+    let text = query.q.unwrap_or_default();
+    let caret = utf16::from_units(&text, query.caret.unwrap_or_default() as usize);
+    let found = assist::query(
+        &state.db,
+        &viewer.access,
+        &text,
+        caret,
+        query.project,
+        query.time_zone,
+    )
+    .await?;
+    let spans: Vec<Span> = found.check.tokens.iter().map(|(span, _)| *span).collect();
+    let tokens = utf16::offsets(&text, &spans)
+        .into_iter()
+        .zip(&found.check.tokens)
+        .map(|(span, (_, class))| QueryToken {
+            from: offset(span.start),
+            to: offset(span.end),
+            class: token_class(*class),
+        })
+        .collect();
+    Ok(json(
+        StatusCode::OK,
+        QueryAssist {
+            tokens,
+            problems: problems(&text, &found.check.problems),
+            suggestions: found
+                .suggestions
+                .iter()
+                .map(|suggestion| crate::commands::suggestion(suggestion, &text))
+                .collect(),
         },
     ))
 }

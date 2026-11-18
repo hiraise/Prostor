@@ -129,6 +129,15 @@ impl Access {
         Self::compile(user, [], Vec::new(), CapabilitySet::default())
     }
 
+    /// The same rights recorded as another person (plan step 2.1 §4.6, run-as): permission
+    /// checks answer as `self`, while history and notifications name `user` — the acting user.
+    pub fn reattributed(&self, user: UserId) -> Self {
+        Self {
+            user,
+            ..self.clone()
+        }
+    }
+
     pub fn user(&self) -> UserId {
         self.user
     }

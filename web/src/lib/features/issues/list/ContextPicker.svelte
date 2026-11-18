@@ -20,7 +20,7 @@
   import OptionList from '#lib/ui/OptionList.svelte';
   import Popover from '#lib/ui/Popover.svelte';
 
-  import type { ListContext, ResolvedContext } from './list-state.ts';
+  import type { ListContext, ResolvedContext } from './list-state.svelte.ts';
   import * as m from './messages.ts';
 
   interface Props {

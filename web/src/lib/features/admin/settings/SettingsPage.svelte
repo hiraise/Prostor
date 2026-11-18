@@ -294,7 +294,7 @@
   }
 </script>
 
-<svelte:head><title>{m.settingsTitle()} · trackflow</title></svelte:head>
+<svelte:head><title>{m.settingsTitle()} · TaskMaster</title></svelte:head>
 
 <div class="settings-page">
   <PageHeader title={m.settingsTitle()} />

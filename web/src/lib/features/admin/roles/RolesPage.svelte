@@ -109,7 +109,7 @@
   }
 </script>
 
-<svelte:head><title>{m.rolesTitle()} · trackflow</title></svelte:head>
+<svelte:head><title>{m.rolesTitle()} · TaskMaster</title></svelte:head>
 
 {#if !roles || !canSeeRoles()}
   <ForbiddenState {home} />

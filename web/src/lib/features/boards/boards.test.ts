@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 import type { BoardSummary, UserRef } from '#lib/api/schema.gen.ts';
 
-import { boardAddress, underBoards } from './board/header-filter.svelte.ts';
+import { boardAddress, cardAddress, underBoards } from './board/header-filter.svelte.ts';
 import { boardHref, columnQuery, nameTaken, orderBoards, sprintPhase } from './boards.ts';
 import { newBoardHref } from './list/open.svelte.ts';
 import { INTERNAL, OPEN, board, column } from './test-data.ts';
@@ -107,6 +107,13 @@ describe('BRD-017: sprint and filter addresses', () => {
     expect(boardHref.sprint(7, 3)).toBe('/boards/7/sprints/3');
     expect(boardAddress(7, null, '')).toBe('/boards/7');
     expect(boardAddress(7, 3, 'for: me')).toBe('/boards/7/sprints/3?q=for%3A%20me');
+    // The open card joins the same address as `issue` (2026-11-15): a reload reopens the popup.
+    expect(cardAddress('/boards/7', null)).toBe('/boards/7');
+    expect(cardAddress('/boards/7', 12)).toBe('/boards/7?issue=12');
+    expect(cardAddress('/boards/7/sprints/3?q=for%3A%20me', 12)).toBe(
+      '/boards/7/sprints/3?q=for%3A%20me&issue=12',
+    );
+    expect(cardAddress('/boards/7', 0)).toBe('/boards/7?issue=0');
   });
 
   it('BRD-070: keeps the filter only under /boards', () => {

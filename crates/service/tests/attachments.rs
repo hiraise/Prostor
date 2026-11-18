@@ -15,33 +15,33 @@ use axum::routing::get;
 use bytes::Bytes;
 use image::{DynamicImage, ImageFormat, Rgb, RgbImage};
 use serde_json::json;
+use taskmaster_domain::access::capability::CapabilitySet;
+use taskmaster_domain::access::role::PredefinedRole;
+use taskmaster_domain::access::{Access, Grant, Scope};
+use taskmaster_domain::files::ui_link_expiry;
+use taskmaster_domain::issues::history::Origin;
+use taskmaster_domain::projects::Template;
+use taskmaster_domain::settings::Language;
+use taskmaster_domain::{IssueId, ProjectId, UploadId, UserId};
+use taskmaster_files::FileStore;
+use taskmaster_service::auth::SignedIn;
+use taskmaster_service::comments::{self, CommentChange, NewComment};
+use taskmaster_service::files::{self, LinkQuery, Signer};
+use taskmaster_service::issues::activity::{self, Item, Query};
+use taskmaster_service::issues::{self, AudienceInput, NewIssue};
+use taskmaster_service::people::Names;
+use taskmaster_service::pictures::{self, Gravatar};
+use taskmaster_service::projects::{self, NewProjectInput};
+use taskmaster_service::setup::{self, Setup};
+use taskmaster_service::users::{self, NewAccount};
+use taskmaster_service::{Error, Passwords, access, attachments, groups, roles, uploads};
+use taskmaster_store::PgPool;
+use taskmaster_store::access::Holder;
+use taskmaster_store::issue_history::Direction;
+use taskmaster_store::sessions::Origin as SessionOrigin;
+use taskmaster_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::datetime;
-use trackflow_domain::access::capability::CapabilitySet;
-use trackflow_domain::access::role::PredefinedRole;
-use trackflow_domain::access::{Access, Grant, Scope};
-use trackflow_domain::files::ui_link_expiry;
-use trackflow_domain::issues::history::Origin;
-use trackflow_domain::projects::Template;
-use trackflow_domain::settings::Language;
-use trackflow_domain::{IssueId, ProjectId, UploadId, UserId};
-use trackflow_files::FileStore;
-use trackflow_service::auth::SignedIn;
-use trackflow_service::comments::{self, CommentChange, NewComment};
-use trackflow_service::files::{self, LinkQuery, Signer};
-use trackflow_service::issues::activity::{self, Item, Query};
-use trackflow_service::issues::{self, AudienceInput, NewIssue};
-use trackflow_service::people::Names;
-use trackflow_service::pictures::{self, Gravatar};
-use trackflow_service::projects::{self, NewProjectInput};
-use trackflow_service::setup::{self, Setup};
-use trackflow_service::users::{self, NewAccount};
-use trackflow_service::{Error, Passwords, access, attachments, groups, roles, uploads};
-use trackflow_store::PgPool;
-use trackflow_store::access::Holder;
-use trackflow_store::issue_history::Direction;
-use trackflow_store::sessions::Origin as SessionOrigin;
-use trackflow_testkit::TestDb;
 
 const T0: OffsetDateTime = datetime!(2026-10-01 09:00 UTC);
 const WEB: Origin = Origin::Web;
@@ -123,7 +123,7 @@ async fn person(
     of: &[ProjectId],
 ) -> Access {
     let user = create_user(pool, actor, username).await;
-    let role = trackflow_store::roles::builtin_id(pool, role.key())
+    let role = taskmaster_store::roles::builtin_id(pool, role.key())
         .await
         .unwrap()
         .unwrap();
@@ -228,7 +228,7 @@ async fn attach(
     issue: IssueId,
     name: &str,
     bytes: &[u8],
-) -> trackflow_store::attachments::Attachment {
+) -> taskmaster_store::attachments::Attachment {
     let id = upload(pool, files, actor, name, bytes).await;
     let listed = attachments::attach(pool, actor, WEB, issue, &[id], false)
         .await
@@ -610,7 +610,7 @@ async fn cnt_022_pictures_get_sizes_and_thumbnails() {
         .unwrap();
     }
     let get = |id| async move {
-        trackflow_store::attachments::get(pool, id)
+        taskmaster_store::attachments::get(pool, id)
             .await
             .unwrap()
             .unwrap()
@@ -636,7 +636,7 @@ fn link_of(
     signer: &Signer,
     viewer: &Access,
     secret: &[u8],
-    file: &trackflow_store::attachments::Attachment,
+    file: &taskmaster_store::attachments::Attachment,
 ) -> LinkQuery {
     let link = signer.link(
         viewer.user(),
@@ -758,7 +758,7 @@ async fn cnt_024_cnt_026_links_follow_the_person_and_the_file() {
         &admin,
         &[member.user()],
         "",
-        trackflow_domain::accounts::DisabledLabel::Left,
+        taskmaster_domain::accounts::DisabledLabel::Left,
     )
     .await
     .unwrap();
@@ -1104,7 +1104,7 @@ async fn acc_006_acc_032_prj_064_deletions_take_files_along() {
         .unwrap()
         .unwrap();
     let staged = upload(pool, &files, &leaver, "later.txt", b"later").await;
-    let staged_key = trackflow_store::uploads::get(pool, staged)
+    let staged_key = taskmaster_store::uploads::get(pool, staged)
         .await
         .unwrap()
         .unwrap()
@@ -1137,7 +1137,7 @@ async fn acc_006_acc_032_prj_064_deletions_take_files_along() {
     groups::delete(pool, &admin, &[old.id], new.id)
         .await
         .unwrap();
-    let row = trackflow_store::attachments::get(pool, file.id)
+    let row = taskmaster_store::attachments::get(pool, file.id)
         .await
         .unwrap()
         .unwrap();

@@ -8,22 +8,22 @@
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::PgConnection;
-use trackflow_domain::access::permission::Permission;
-use trackflow_domain::access::role::PredefinedRole;
-use trackflow_domain::access::{Access, Projects, Scope};
-use trackflow_domain::projects::{
+use taskmaster_domain::access::permission::Permission;
+use taskmaster_domain::access::role::PredefinedRole;
+use taskmaster_domain::access::{Access, Projects, Scope};
+use taskmaster_domain::projects::{
     KEY_MIN, ProjectKey, Template, first_number, project_description, project_name, suggest_key,
 };
-use trackflow_domain::settings::Language;
-use trackflow_domain::validation::{FieldProblem, Problem, Problems};
-use trackflow_domain::{Actor, GroupId, ProjectId, RoleId, UserId};
-use trackflow_store::access::{self as assignments, Holder};
-use trackflow_store::fields as store_fields;
-use trackflow_store::groups::{self, Group};
-use trackflow_store::jobs::{self, Enqueue, Job, JobError, JobKind};
-use trackflow_store::projects::{self, ListCursor, NewProject, Project, Section};
-use trackflow_store::users::{self, User};
-use trackflow_store::{PgPool, audit, roles, rules, teams, unique_violation, value_sets};
+use taskmaster_domain::settings::Language;
+use taskmaster_domain::validation::{FieldProblem, Problem, Problems};
+use taskmaster_domain::{Actor, GroupId, ProjectId, RoleId, UserId};
+use taskmaster_store::access::{self as assignments, Holder};
+use taskmaster_store::fields as store_fields;
+use taskmaster_store::groups::{self, Group};
+use taskmaster_store::jobs::{self, Enqueue, Job, JobError, JobKind};
+use taskmaster_store::projects::{self, ListCursor, NewProject, Project, Section};
+use taskmaster_store::users::{self, User};
+use taskmaster_store::{PgPool, audit, roles, rules, teams, unique_violation, value_sets};
 
 use crate::access::changed;
 use crate::seed::{self, NewProjectFields};
@@ -278,7 +278,7 @@ pub async fn check(
         if projects::with_name(&mut *conn, &name).await?.is_some() {
             problems.add(
                 "name",
-                trackflow_domain::validation::Rejection::new(
+                taskmaster_domain::validation::Rejection::new(
                     Problem::Taken,
                     "another project has this name",
                 ),
@@ -294,7 +294,7 @@ pub async fn check(
     {
         problems.add(
             "key",
-            trackflow_domain::validation::Rejection::new(
+            taskmaster_domain::validation::Rejection::new(
                 Problem::Taken,
                 "another project has or had this key",
             ),
@@ -349,7 +349,7 @@ pub async fn create(
         None => suggestion(&mut tx, &name).await?,
     };
     let rendered =
-        crate::text::prepare(&mut tx, &description, trackflow_markup::Profile::Basic).await?;
+        crate::text::prepare(&mut tx, &description, taskmaster_markup::Profile::Basic).await?;
     let id = projects::insert(
         &mut tx,
         &NewProject {
@@ -441,8 +441,8 @@ async fn template_board(
     team: GroupId,
     language: Language,
 ) -> Result<()> {
-    use trackflow_domain::boards::Preset;
-    use trackflow_domain::sharing::Audience;
+    use taskmaster_domain::boards::Preset;
+    use taskmaster_domain::sharing::Audience;
     let preset = match template {
         Template::Scrum => Preset::Scrum,
         Template::Kanban => Preset::Kanban,
@@ -450,7 +450,7 @@ async fn template_board(
     };
     let name: String = name
         .chars()
-        .take(trackflow_domain::boards::NAME_MAX)
+        .take(taskmaster_domain::boards::NAME_MAX)
         .collect();
     let team = Audience {
         users: Vec::new(),
@@ -540,7 +540,7 @@ pub async fn update(
         // The project description has the basic profile (PRJ-006, CNT-039).
         let rendered = match &description {
             Some(text) => {
-                Some(crate::text::prepare(&mut tx, text, trackflow_markup::Profile::Basic).await?)
+                Some(crate::text::prepare(&mut tx, text, taskmaster_markup::Profile::Basic).await?)
             }
             None => None,
         };
@@ -777,16 +777,16 @@ pub async fn run_deletion(pool: &PgPool, job: ProjectDeletion) -> Result<(), Job
                 "the project is not marked for deletion".to_owned(),
             ));
         }
-        let batch = trackflow_store::issues::ids_of_project(&mut *tx, project.id, 0, 500).await?;
+        let batch = taskmaster_store::issues::ids_of_project(&mut *tx, project.id, 0, 500).await?;
         if batch.is_empty() {
             break;
         }
         // The batch's files leave the file store after the rows (D-033).
-        let keys = trackflow_store::attachments::keys_of_issues(&mut *tx, &batch).await?;
+        let keys = taskmaster_store::attachments::keys_of_issues(&mut *tx, &batch).await?;
         crate::files::queue_removal(&mut tx, keys)
             .await
             .map_err(|e| JobError::Retry(e.to_string()))?;
-        trackflow_store::issues::delete_ids(&mut tx, &batch).await?;
+        taskmaster_store::issues::delete_ids(&mut tx, &batch).await?;
         tx.commit().await?;
     }
     let mut tx = pool.begin().await?;
@@ -812,7 +812,7 @@ pub async fn run_deletion(pool: &PgPool, job: ProjectDeletion) -> Result<(), Job
         json!({ "key": project.key, "name": project.name }),
     )
     .await?;
-    trackflow_store::bus::notify(&mut tx, trackflow_store::bus::ACCESS, "").await?;
+    taskmaster_store::bus::notify(&mut tx, taskmaster_store::bus::ACCESS, "").await?;
     tx.commit().await?;
     Ok(())
 }

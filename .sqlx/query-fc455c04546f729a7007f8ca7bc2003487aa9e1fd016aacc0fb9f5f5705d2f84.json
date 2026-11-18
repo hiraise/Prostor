@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "delete from command_history\n         where user_id = $1 and command in (\n           select command from command_history\n           where user_id = $1\n           order by used_at desc, command\n           offset $2\n         )",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "fc455c04546f729a7007f8ca7bc2003487aa9e1fd016aacc0fb9f5f5705d2f84"
+}

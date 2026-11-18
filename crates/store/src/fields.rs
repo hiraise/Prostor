@@ -1,9 +1,9 @@
 //! Custom fields of the instance (FLD-015…FLD-023) and their attachments to projects
-//! (FLD-051…FLD-060). Rules: `trackflow_domain::fields`.
+//! (FLD-051…FLD-060). Rules: `taskmaster_domain::fields`.
 
 use sqlx::{PgConnection, PgExecutor};
+use taskmaster_domain::{FieldId, ProjectId, SetId, UserId, ValueId};
 use time::OffsetDateTime;
-use trackflow_domain::{FieldId, ProjectId, SetId, UserId, ValueId};
 
 /// Name space of the advisory locks taken here (`'fld'`).
 const LOCK_SPACE: i32 = 0x0066_6c64;
@@ -21,7 +21,7 @@ pub async fn lock_templates(conn: &mut PgConnection) -> Result<(), sqlx::Error> 
 pub struct Field {
     pub id: FieldId,
     pub name: String,
-    /// `trackflow_domain::fields::FieldKind` key.
+    /// `taskmaster_domain::fields::FieldKind` key.
     pub kind: String,
     pub multi: bool,
     pub aliases: Vec<String>,

@@ -17,5 +17,10 @@ export {
   type BoardEntry,
   type OpenedBoard,
 } from './boards.ts';
-export { boardAddress, headerFilter, underBoards } from './board/header-filter.svelte.ts';
+export {
+  boardAddress,
+  cardAddress,
+  headerFilter,
+  underBoards,
+} from './board/header-filter.svelte.ts';
 export { newBoardHref, openNewBoard } from './list/open.svelte.ts';

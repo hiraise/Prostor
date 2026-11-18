@@ -8,31 +8,31 @@ use std::time::Duration;
 
 use serde_json::{Value as Json, json};
 use sqlx::PgConnection;
-use time::OffsetDateTime;
-use trackflow_domain::access::Access;
-use trackflow_domain::access::permission::Permission;
-use trackflow_domain::issues::history::{ChangeKind, LoggedLink, Record};
-use trackflow_domain::issues::rights;
-use trackflow_domain::live::{Change, EntityKind, Guard, NewEvent, Patch};
-use trackflow_domain::notifications::{
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::permission::Permission;
+use taskmaster_domain::issues::history::{ChangeKind, LoggedLink, Record};
+use taskmaster_domain::issues::rights;
+use taskmaster_domain::live::{Change, EntityKind, Guard, NewEvent, Patch};
+use taskmaster_domain::notifications::{
     Content, Folder, IssueRef, Kind, Line, Payload, Reason, Settings, Source, SystemReport, Words,
     words,
 };
-use trackflow_domain::search::Filter;
-use trackflow_domain::settings::{
+use taskmaster_domain::search::Filter;
+use taskmaster_domain::settings::{
     BASE_URL, DEFAULT_DATE_FORMAT, DEFAULT_TIME_ZONE, DateFormat, Language,
 };
-use trackflow_domain::validation::{FieldProblem, Problem};
-use trackflow_domain::{
+use taskmaster_domain::validation::{FieldProblem, Problem};
+use taskmaster_domain::{
     CommentId, FieldId, IssueId, ProjectId, SavedSearchId, SubscriptionId, TagId, UserId,
 };
-use trackflow_store::users::{self, User};
-use trackflow_store::visibility::Visibility;
-use trackflow_store::{
+use taskmaster_store::users::{self, User};
+use taskmaster_store::visibility::Visibility;
+use taskmaster_store::{
     PgPool, comments as comments_store, issues, links, live as live_store, notifications as store,
     projects, saved_searches, search as search_store, settings as settings_store, tags,
     unique_violation,
 };
+use time::OffsetDateTime;
 
 use crate::{Error, Result};
 
@@ -241,7 +241,7 @@ pub async fn set_watchers(
 pub(crate) async fn subscribe_unassigned(
     conn: &mut PgConnection,
     creator: UserId,
-    search: trackflow_domain::SavedSearchId,
+    search: taskmaster_domain::SavedSearchId,
 ) -> Result<()> {
     store::subscribe(conn, creator, Source::Search(search), &[Kind::Created]).await?;
     Ok(())
@@ -684,8 +684,8 @@ async fn link_names(
         .map(|end| {
             let word = match types.get(&end.link_type) {
                 Some((source, target)) => match end.side {
-                    trackflow_domain::links::Side::Source => source.clone(),
-                    trackflow_domain::links::Side::Target => target.clone(),
+                    taskmaster_domain::links::Side::Source => source.clone(),
+                    taskmaster_domain::links::Side::Target => target.clone(),
                 },
                 None => String::new(),
             };
@@ -723,7 +723,7 @@ async fn readable_refs(
         .map(|r| {
             (
                 r.id,
-                trackflow_domain::issues::readable_id(&r.key, r.number),
+                taskmaster_domain::issues::readable_id(&r.key, r.number),
             )
         })
         .collect())
@@ -1233,7 +1233,10 @@ async fn fire(
         return Ok(0);
     }
     let brief = IssueRef {
-        readable_id: trackflow_domain::issues::readable_id(&project.key, issue.number.unwrap_or(0)),
+        readable_id: taskmaster_domain::issues::readable_id(
+            &project.key,
+            issue.number.unwrap_or(0),
+        ),
         summary: issue.summary.clone(),
     };
     let candidates = candidates(conn, batch, &facts, searches).await?;
@@ -1358,7 +1361,7 @@ async fn fire(
                         words,
                         threading,
                     });
-                    crate::mail::queue(conn, &mail, trackflow_domain::Actor::System).await?;
+                    crate::mail::queue(conn, &mail, taskmaster_domain::Actor::System).await?;
                 }
             }
             written += 1;
@@ -1795,8 +1798,8 @@ fn reason_keys(reasons: &[Reason]) -> Vec<String> {
 
 #[cfg(test)]
 mod tests {
+    use taskmaster_domain::settings::{DateFormat, Language};
     use time::OffsetDateTime;
-    use trackflow_domain::settings::{DateFormat, Language};
 
     use super::zoned;
 

@@ -1,4 +1,4 @@
-# trackflow
+# TaskMaster
 
 Трекер задач и проектов: проекты с настраиваемыми полями, задачи с комментариями, вложениями, связями и тегами, свой язык запросов, доски со спринтами и бэклогом, обновления в реальном времени, уведомления с почтой, тонкая настройка прав. Реализация самостоятельная: своё API, своя модель данных, свой дизайн и тексты. Отдельная цель — высокая скорость работы.
 
@@ -59,7 +59,7 @@ make setup
 make dev
 ```
 
-Откройте http://localhost:5173. При первом запуске откроется мастер настройки: он попросит код установки — его сервер пишет в свой журнал (строка «trackflow is not set up yet … setup code …»). После настройки вы войдёте как администратор. Письма, которые отправит trackflow, видны на http://127.0.0.1:8025.
+Откройте http://localhost:5173. При первом запуске откроется мастер настройки: он попросит код установки — его сервер пишет в свой журнал (строка «TaskMaster is not set up yet … setup code …»). После настройки вы войдёте как администратор. Письма, которые отправит TaskMaster, видны на http://127.0.0.1:8025.
 
 Для разработчиков: описание API — http://localhost:5173/api/v1/openapi.json, проверки для балансировщика — `/api/v1/health/live` и `/api/v1/health/ready`.
 
@@ -68,7 +68,7 @@ make dev
 Один Docker-образ с сервером и интерфейсом внутри плюс PostgreSQL:
 
 ```bash
-docker buildx build --platform linux/amd64 -f deploy/Dockerfile -t trackflow:latest --load .
+docker buildx build --platform linux/amd64 -f deploy/Dockerfile -t TaskMaster:latest --load .
 ```
 
 Затем `deploy/compose.server.yaml` — подробно, включая обновление и резервные копии, — в [deploy/README.server.md](deploy/README.server.md). Установка, вход и восстановление доступа администратора — в [docs/guide/admin.md](docs/guide/admin.md).

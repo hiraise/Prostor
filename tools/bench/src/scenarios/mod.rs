@@ -5,6 +5,8 @@
 //! Boards are over HTTP since step 1.8a; no scenario is `[sql]` now.
 
 mod board;
+mod command;
+mod export;
 mod issue;
 mod list;
 pub mod live;
@@ -46,15 +48,19 @@ pub enum Scenario {
     Search,
     Open,
     Change,
+    Command,
+    Export,
 }
 
 impl Scenario {
-    pub const ALL: [Self; 5] = [
+    pub const ALL: [Self; 7] = [
         Self::List,
         Self::Board,
         Self::Search,
         Self::Open,
         Self::Change,
+        Self::Command,
+        Self::Export,
     ];
 
     /// Name on the command line.
@@ -65,6 +71,8 @@ impl Scenario {
             Self::Search => "search",
             Self::Open => "issue",
             Self::Change => "change",
+            Self::Command => "command",
+            Self::Export => "export",
         }
     }
 
@@ -79,6 +87,8 @@ impl Scenario {
             Self::Search => "Full-text query",
             Self::Open => "Open issue",
             Self::Change => "Field change commit",
+            Self::Command => "Command apply",
+            Self::Export => "Issue export of 500",
         }
     }
 
@@ -88,29 +98,60 @@ impl Scenario {
             Self::List => 50,
             Self::Board => 80,
             Self::Search => 150,
-            Self::Open | Self::Change => 30,
+            Self::Export => 300,
+            Self::Open | Self::Change | Self::Command => 30,
         })
     }
 
     /// Why the scenario may stay over budget for now, when what it measures is being replaced;
-    /// none since step 1.5a (D-035) but two: the change scenario's rule variants (owner,
+    /// none since step 1.5a (D-035) but three: the change scenario's rule variants (owner,
     /// 2026-11-06, still, D-049) — the walk's writes are batched since 1.9b-7 and the variants
-    /// came down with it, yet a few milliseconds over the 30 stay; and since the real-server run
+    /// came down with it, yet a few milliseconds over the 30 stay; since the real-server run
     /// of 1.12a the list scenario's «fixed bugs in all projects» tail for viewers whose early
     /// positions do not fill a page (owner, 2026-11-11, D-054: the union by position lifted
     /// every other variant and the medians; the deep branches are D-035's «three large sets»,
-    /// whose answers — the covering visibility index, Tantivy — move to P2).
+    /// whose answers — the covering visibility index, Tantivy — move to P2); and since 2.1a-3
+    /// the command scenario's two — the bulk variant's p95 is a whole job's (step 2.1 §8), and
+    /// the one-issue apply sits a few ms over
+    /// the change budget (p95 34.9 of 30 ms on the quiet server; ~3× on the loaded dev Mac).
     pub fn known_miss(self) -> Option<&'static str> {
         match self {
             Self::List => Some("the «fixed bugs in all projects» tail, D-054"),
-            Self::Board | Self::Search | Self::Open => None,
+            Self::Board | Self::Search | Self::Open | Self::Export => None,
             Self::Change => Some("the rule variants (state cascade, card move), D-049"),
+            Self::Command => Some(
+                "the bulk variant is one whole job over ≈50 issues — its p95 is the job's, \
+                 not one apply's (step 2.1 §8) — and the one-issue variant sits a few ms \
+                 over the change budget even on the quiet server (p95 34.9 of 30 ms, \
+                 2.1a-3: several writes and a comment, not one field change) — the D-049 \
+                 pattern; the loaded dev Mac showed ~3×",
+            ),
         }
     }
 
     /// Part of the benchmark gate of D-022.
     pub fn gate(self) -> bool {
         matches!(self, Self::List | Self::Board | Self::Search)
+    }
+
+    /// Measured operations of this scenario, from `--iterations`. The command scenario caps at
+    /// 40 (step 2.1 §8): one bulk operation is a whole job over ≈50 issues and takes seconds, so
+    /// the default 200 would hold the bench for many minutes for samples it does not need.
+    pub fn iterations(self, run: &crate::runner::RunOptions) -> usize {
+        match self {
+            Self::Command => run.iterations.min(40),
+            _ => run.iterations,
+        }
+    }
+
+    /// Wall time this scenario may take beyond the bench's base budget (`report::Timing`):
+    /// the command scenario's 40 operations plus their warm-up pass are expected to run for
+    /// minutes — whole jobs, not milliseconds — and the base budget (D-032) watches the rest.
+    pub fn time_allowance(self) -> Duration {
+        match self {
+            Self::Command => Duration::from_secs(4 * 60),
+            _ => Duration::ZERO,
+        }
     }
 
     /// Names of the query variants, used in turn.
@@ -126,13 +167,21 @@ impl Scenario {
                 "assignee warning",
                 "card move",
             ],
+            Self::Command => &["one issue", "bulk job"],
+            Self::Export => &["csv", "xlsx"],
         }
     }
 
     /// How variant `variant` is measured.
     pub fn mode(self, _variant: usize) -> Mode {
         match self {
-            Self::List | Self::Board | Self::Search | Self::Open | Self::Change => Mode::Http,
+            Self::List
+            | Self::Board
+            | Self::Search
+            | Self::Open
+            | Self::Change
+            | Self::Command
+            | Self::Export => Mode::Http,
         }
     }
 
@@ -165,6 +214,9 @@ impl Scenario {
             Self::Change if variant == 1 => issue::state_cascade(catalog, node, conn, rng).await,
             Self::Change if variant == 2 => issue::assignee_warning(catalog, node, conn, rng).await,
             Self::Change if variant == 3 => board::move_card(catalog, node, conn, rng).await,
+            Self::Command if variant == 1 => command::bulk(catalog, node, conn, rng).await,
+            Self::Command => command::one(catalog, node, conn, rng).await,
+            Self::Export => export::run(catalog, node, rng, variant).await,
             Self::Change => issue::change(catalog, node, rng).await,
         }
     }

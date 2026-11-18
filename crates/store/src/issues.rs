@@ -1,9 +1,9 @@
 //! Issues and drafts (ISS), their former IDs, watchers and votes. Field values:
-//! `issue_values`; history: `issue_history`; tags: `tags`. Rules: `trackflow_domain::issues`.
+//! `issue_values`; history: `issue_history`; tags: `tags`. Rules: `taskmaster_domain::issues`.
 
 use sqlx::{PgConnection, PgExecutor};
+use taskmaster_domain::{GroupId, IssueId, ProjectId, UserId};
 use time::OffsetDateTime;
-use trackflow_domain::{GroupId, IssueId, ProjectId, UserId};
 
 use crate::content::Rendered;
 

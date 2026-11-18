@@ -29,3 +29,10 @@ export function boardAddress(id: number, sprint: number | null, q: string): stri
   const base = sprint === null ? boardHref.board(id) : boardHref.sprint(id, sprint);
   return q === '' ? base : `${base}?q=${encodeURIComponent(q)}`;
 }
+
+/** The open card joins the board's address as `issue` (the owner's report of 2026-11-15): a
+ * reload or a shared link reopens the popup. `null` writes the address without the card. */
+export function cardAddress(base: string, issue: number | null): string {
+  if (issue === null) return base;
+  return `${base}${base.includes('?') ? '&' : '?'}issue=${String(issue)}`;
+}

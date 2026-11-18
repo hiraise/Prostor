@@ -7,6 +7,7 @@
 
 pub mod activity;
 pub mod audience;
+pub mod export;
 pub mod jobs;
 pub mod moves;
 pub mod options;
@@ -16,27 +17,27 @@ pub mod values;
 use std::collections::BTreeMap;
 
 use sqlx::PgConnection;
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::visibility::Audience;
+use taskmaster_domain::fields::FieldKind;
+use taskmaster_domain::issues::history::{ChangeKind, Origin, Record};
+use taskmaster_domain::issues::rights::{self, Facts, VoteRefusal};
+use taskmaster_domain::issues::values::{self as rules, Input, Value};
+use taskmaster_domain::issues::{self as domain, ReadableId};
+use taskmaster_domain::live::Change;
+use taskmaster_domain::validation::{Problem, Problems};
+use taskmaster_domain::{FieldId, GroupId, IssueId, ProjectId, TagId, UploadId, UserId};
+use taskmaster_markup::Profile;
+use taskmaster_store::PgPool;
+use taskmaster_store::content::{self, TextValueHtml};
+use taskmaster_store::groups::{self, Group};
+use taskmaster_store::issue_history::{self, Author};
+use taskmaster_store::issues::{self, Issue, NewDraft};
+use taskmaster_store::projects::{self, Project};
+use taskmaster_store::tags::{self as store_tags, Tag};
+use taskmaster_store::users::{self, User};
+use taskmaster_store::value_sets::{self, Value as SetValue};
 use time::OffsetDateTime;
-use trackflow_domain::access::Access;
-use trackflow_domain::access::visibility::Audience;
-use trackflow_domain::fields::FieldKind;
-use trackflow_domain::issues::history::{ChangeKind, Origin, Record};
-use trackflow_domain::issues::rights::{self, Facts, VoteRefusal};
-use trackflow_domain::issues::values::{self as rules, Input, Value};
-use trackflow_domain::issues::{self as domain, ReadableId};
-use trackflow_domain::live::Change;
-use trackflow_domain::validation::{Problem, Problems};
-use trackflow_domain::{FieldId, GroupId, IssueId, ProjectId, TagId, UploadId, UserId};
-use trackflow_markup::Profile;
-use trackflow_store::content::{self, TextValueHtml};
-use trackflow_store::groups::{self, Group};
-use trackflow_store::issue_history::{self, Author};
-use trackflow_store::issues::{self, Issue, NewDraft};
-use trackflow_store::projects::{self, Project};
-use trackflow_store::tags::{self as store_tags, Tag};
-use trackflow_store::users::{self, User};
-use trackflow_store::value_sets::{self, Value as SetValue};
-use trackflow_store::{PgPool, Postgres, Transaction};
 
 use self::values::{ProjectField, ProjectFields};
 use crate::live::Batch;
@@ -93,7 +94,7 @@ pub struct IssueView {
     /// Its subtasks the viewer may see (LNK-014).
     pub subtasks: crate::issue_links::Subtasks,
     /// Its parent, when the viewer may see it (LNK-013); filled for one issue in full.
-    pub parent: Option<(trackflow_store::links::Linked, Project)>,
+    pub parent: Option<(taskmaster_store::links::Linked, Project)>,
 }
 
 impl IssueView {
@@ -427,16 +428,26 @@ pub async fn get(pool: &PgPool, viewer: &Access, id: IssueId) -> Result<One> {
 /// any key the project ever had, or a number the issue had before it moved. Answers the issue's
 /// internal ID and whether the ID given is its current one.
 pub async fn resolve(pool: &PgPool, viewer: &Access, readable: &str) -> Result<(IssueId, bool)> {
-    let id = ReadableId::parse(readable).ok_or(Error::NotFound("no such issue"))?;
     let mut conn = pool.acquire().await?;
-    let project = projects::key_owner(&mut conn, &id.key)
+    resolve_conn(&mut conn, viewer, readable).await
+}
+
+/// The conn half of [`resolve`] (step 2.1 §4.5): a command's link and duplicate targets read
+/// this way inside the issue's own transaction.
+pub(crate) async fn resolve_conn(
+    conn: &mut PgConnection,
+    viewer: &Access,
+    readable: &str,
+) -> Result<(IssueId, bool)> {
+    let id = ReadableId::parse(readable).ok_or(Error::NotFound("no such issue"))?;
+    let project = projects::key_owner(&mut *conn, &id.key)
         .await?
         .ok_or(Error::NotFound("no such issue"))?;
-    let issue = issues::by_number(&mut conn, project, id.number)
+    let issue = issues::by_number(&mut *conn, project, id.number)
         .await?
         .ok_or(Error::NotFound("no such issue"))?;
     let found = issues::get(&mut *conn, issue).await?;
-    let (issue, project) = checked(&mut conn, viewer, found).await?;
+    let (issue, project) = checked(&mut *conn, viewer, found).await?;
     let current = issue.number == Some(id.number) && project.key == id.key;
     Ok((issue.id, current))
 }
@@ -504,7 +515,7 @@ pub async fn delete_drafts(pool: &PgPool, viewer: &Access) -> Result<()> {
     let mut tx = pool.begin().await?;
     let me = [viewer.user()];
     let drafts = issues::draft_ids_of(&mut *tx, &me).await?;
-    let keys = trackflow_store::attachments::keys_of_issues(&mut *tx, &drafts).await?;
+    let keys = taskmaster_store::attachments::keys_of_issues(&mut *tx, &drafts).await?;
     crate::files::queue_removal(&mut tx, keys).await?;
     issues::delete_drafts_of(&mut tx, &me).await?;
     tx.commit().await?;
@@ -526,7 +537,7 @@ pub async fn sweep_drafts(pool: &PgPool, idle: std::time::Duration) -> Result<u6
 }
 
 /// An audience as given: accounts and groups (ISS-041).
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct AudienceInput {
     pub users: Vec<UserId>,
     pub groups: Vec<GroupId>,
@@ -571,6 +582,26 @@ pub(crate) async fn check_audience(
         ));
     }
     Ok((users_list, groups_list))
+}
+
+/// Sets an issue's audience inside the caller's transaction (ISS-041, step 2.1 §4.3): the
+/// checks and the write of [`update`]'s audience half, the record joining the caller's change.
+/// `None`: the audience is this already.
+pub(crate) async fn set_visibility_conn(
+    conn: &mut PgConnection,
+    actor: &Access,
+    issue: &Issue,
+    audience: &AudienceInput,
+) -> Result<Option<Record>> {
+    let (users_list, groups_list) = check_audience(&mut *conn, actor, audience).await?;
+    if let Some(record) = Record::visibility(
+        (&issue.audience_users, &issue.audience_groups),
+        (&users_list, &groups_list),
+    ) {
+        issues::set_audience(&mut *conn, issue.id, &users_list, &groups_list).await?;
+        return Ok(Some(record));
+    }
+    Ok(None)
 }
 
 /// A field value on a new issue or draft.
@@ -618,13 +649,13 @@ async fn initial_values(
             out.insert(f.id(), value);
         }
     }
-    let schedule = trackflow_domain::duration::Schedule::default();
+    let schedule = taskmaster_domain::duration::Schedule::default();
     for input in given {
         let path = format!("fields.{}", input.field);
         let Some(f) = fields.get(input.field) else {
             problems.add(
                 &path,
-                trackflow_domain::validation::Rejection::new(
+                taskmaster_domain::validation::Rejection::new(
                     Problem::Invalid,
                     "the project has no such field",
                 ),
@@ -634,7 +665,7 @@ async fn initial_values(
         if (f.private() && !private_update) || !rules::editable(f.field.builtin.as_deref()) {
             problems.add(
                 &path,
-                trackflow_domain::validation::Rejection::new(
+                taskmaster_domain::validation::Rejection::new(
                     Problem::Invalid,
                     "you may not set this field",
                 ),
@@ -684,7 +715,7 @@ fn check_required(
 /// `created` is the creation record to write: [`Record::created`], or one naming the original
 /// for a clone (AUT-066).
 pub(crate) async fn publish_locked(
-    tx: &mut Transaction<'_, Postgres>,
+    tx: &mut PgConnection,
     batch: &mut Batch,
     actor: &Access,
     origin: Origin,
@@ -725,7 +756,7 @@ pub(crate) async fn publish_locked(
             }
         }
     }
-    let published = issues::get(&mut **tx, issue.id)
+    let published = issues::get(&mut *tx, issue.id)
         .await?
         .ok_or(Error::NotFound("no such issue"))?;
     let now = published.created_at;
@@ -761,7 +792,7 @@ pub(crate) async fn publish_locked(
     crate::issue_links::record_published(tx, batch, author, issue.id).await?;
     batch.issue(issue.id, Change::Created);
     // A draft's files were hidden with it: now they are new to everyone else.
-    for file in trackflow_store::attachments::of_issue(&mut **tx, issue.id).await? {
+    for file in taskmaster_store::attachments::of_issue(&mut *tx, issue.id).await? {
         batch.attachment(file.id, Change::Created);
     }
     Ok(())
@@ -777,10 +808,10 @@ pub async fn create(
     input: NewIssue,
 ) -> Result<crate::rules::Answer<One>> {
     let mut problems = Problems::new();
-    if input.links.len() > trackflow_domain::links::ADD_MAX {
+    if input.links.len() > taskmaster_domain::links::ADD_MAX {
         problems.add(
             "links",
-            trackflow_domain::validation::Rejection::new(
+            taskmaster_domain::validation::Rejection::new(
                 Problem::TooLong,
                 "too many links for one issue at once",
             ),
@@ -848,7 +879,7 @@ pub async fn create(
         let draft = issues::get(&mut *tx, id)
             .await?
             .ok_or(Error::NotFound("no such issue"))?;
-        trackflow_domain::attachments::may_attach(actor, &facts(&draft))?;
+        taskmaster_domain::attachments::may_attach(actor, &facts(&draft))?;
         // Files of a draft have no history; publishing records the issue as it is.
         crate::attachments::attach_locked(&mut tx, &mut batch, actor, &draft, None, &input.uploads)
             .await?;
@@ -1064,15 +1095,10 @@ pub async fn update(
         }
         description_mentions = new_mentions;
     }
-    if let Some(audience) = &change.audience {
-        let (users_list, groups_list) = check_audience(&mut tx, actor, audience).await?;
-        if let Some(record) = Record::visibility(
-            (&issue.audience_users, &issue.audience_groups),
-            (&users_list, &groups_list),
-        ) {
-            issues::set_audience(&mut tx, id, &users_list, &groups_list).await?;
-            records.push(record);
-        }
+    if let Some(audience) = &change.audience
+        && let Some(record) = set_visibility_conn(&mut tx, actor, &issue, audience).await?
+    {
+        records.push(record);
     }
     let mentions = description_mentions.unwrap_or_default();
     let mut batch = Batch::new();
@@ -1200,7 +1226,7 @@ pub(crate) async fn set_field_locked(
         FieldChange::Set(input) => rules::parse(
             f.kind,
             input,
-            trackflow_domain::duration::Schedule::default(),
+            taskmaster_domain::duration::Schedule::default(),
         )
         .map_err(|r| Error::rejected("value", r))?,
         FieldChange::Add(ids) | FieldChange::Remove(ids) if !f.kind.multi => {
@@ -1245,25 +1271,40 @@ pub(crate) async fn set_field_locked(
 pub async fn delete(pool: &PgPool, actor: &Access, origin: Origin, id: IssueId) -> Result<()> {
     let mut tx = pool.begin().await?;
     let (issue, _) = lock_for_change(&mut tx, actor, id).await?;
+    let mut batch = Batch::new();
+    delete_conn(&mut tx, &mut batch, actor, origin, &issue).await?;
+    if !batch.is_empty() {
+        batch.publish(&mut tx).await?;
+    }
+    tx.commit().await?;
+    Ok(())
+}
+
+/// Deletes a locked issue inside the caller's transaction (step 2.1 §4.3): both halves of
+/// [`delete`], the live event joining the caller's `batch`.
+pub(crate) async fn delete_conn(
+    conn: &mut PgConnection,
+    batch: &mut Batch,
+    actor: &Access,
+    origin: Origin,
+    issue: &Issue,
+) -> Result<()> {
     if issue.is_draft() {
-        let keys = trackflow_store::attachments::keys_of_issues(&mut *tx, &[id]).await?;
-        crate::files::queue_removal(&mut tx, keys).await?;
-        issues::delete_draft(&mut tx, id).await?;
+        let keys = taskmaster_store::attachments::keys_of_issues(&mut *conn, &[issue.id]).await?;
+        crate::files::queue_removal(&mut *conn, keys).await?;
+        issues::delete_draft(&mut *conn, issue.id).await?;
     } else {
-        rights::may_delete(actor, &facts(&issue))?;
-        issues::mark_deleted(&mut tx, id, actor.user()).await?;
+        rights::may_delete(actor, &facts(issue))?;
+        issues::mark_deleted(&mut *conn, issue.id, actor.user()).await?;
         issue_history::record(
-            &mut tx,
-            id,
+            &mut *conn,
+            issue.id,
             author(actor, origin, false, issue.project_id)?,
             &[Record::deleted()],
         )
         .await?;
-        let mut batch = Batch::new();
-        batch.issue(id, Change::Deleted);
-        batch.publish(&mut tx).await?;
+        batch.issue(issue.id, Change::Deleted);
     }
-    tx.commit().await?;
     Ok(())
 }
 
@@ -1280,15 +1321,28 @@ pub async fn set_star(pool: &PgPool, viewer: &Access, id: IssueId, on: bool) -> 
     let mut tx = pool.begin().await?;
     let found = issues::get(&mut *tx, id).await?;
     let (issue, _) = checked(&mut tx, viewer, found).await?;
+    set_star_conn(&mut tx, &issue, on, viewer.user()).await?;
+    tx.commit().await?;
+    Ok(())
+}
+
+/// The star write of a checked issue inside the caller's transaction (step 2.1 §4.3): a
+/// command stars for itself (any signed-in reader) or names another account, which the apply
+/// checks `issue.watchers.update` for before it gets here.
+pub(crate) async fn set_star_conn(
+    conn: &mut PgConnection,
+    issue: &Issue,
+    on: bool,
+    user: UserId,
+) -> Result<()> {
     let changed = if on {
-        issues::watch(&mut tx, issue.id, &[viewer.user()]).await? > 0
+        issues::watch(&mut *conn, issue.id, &[user]).await? > 0
     } else {
-        issues::unwatch(&mut tx, issue.id, viewer.user()).await?
+        issues::unwatch(&mut *conn, issue.id, user).await?
     };
     if changed {
-        bump(&mut tx, issue.id).await?;
+        bump(conn, issue.id).await?;
     }
-    tx.commit().await?;
     Ok(())
 }
 
@@ -1304,25 +1358,37 @@ pub async fn set_vote(pool: &PgPool, viewer: &Access, id: IssueId, on: bool) -> 
         Err(VoteRefusal::Draft) => return Err(Error::Conflict("a draft takes no votes")),
         Ok(()) => {}
     }
+    set_vote_conn(&mut tx, viewer, &issue, on).await?;
+    tx.commit().await?;
+    Ok(())
+}
+
+/// The vote write of a checked issue inside the caller's transaction (step 2.1 §4.3); the
+/// apply runs `may_vote` itself so its refusal can name the reason (`cmd_own_issue_vote`).
+pub(crate) async fn set_vote_conn(
+    conn: &mut PgConnection,
+    viewer: &Access,
+    issue: &Issue,
+    on: bool,
+) -> Result<()> {
     let changed = if on {
-        issues::vote(&mut tx, id, viewer.user()).await?
+        issues::vote(&mut *conn, issue.id, viewer.user()).await?
     } else {
-        issues::unvote(&mut tx, id, viewer.user()).await?
+        issues::unvote(&mut *conn, issue.id, viewer.user()).await?
     };
     if changed {
-        bump(&mut tx, id).await?;
-        crate::notifications::record_vote(&mut tx, &issue, viewer.user(), on).await?;
+        bump(conn, issue.id).await?;
+        crate::notifications::record_vote(conn, issue, viewer.user(), on).await?;
         // Auto-watch (ISS-030): a vote makes the voter a watcher by their own switch's word.
         if on {
             crate::notifications::auto_watch(
-                &mut tx,
+                conn,
                 viewer.user(),
-                id,
+                issue.id,
                 crate::notifications::AutoWatch::Voted,
             )
             .await?;
         }
     }
-    tx.commit().await?;
     Ok(())
 }

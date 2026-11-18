@@ -1,7 +1,7 @@
 // Texts of the application shell: navigation, preferences, notices (UI-001, UI-035).
 import { msg } from '#lib/i18n/message.ts';
 
-export const homeLink = msg({ en: 'trackflow, home page', ru: 'trackflow, главная страница' });
+export const homeLink = msg({ en: 'TaskMaster, home page', ru: 'TaskMaster, главная страница' });
 export const skipToContent = msg({
   en: 'Skip to main content',
   ru: 'Перейти к основному содержимому',
@@ -9,6 +9,10 @@ export const skipToContent = msg({
 export const mainNavigation = msg({ en: 'Main navigation', ru: 'Основная навигация' });
 export const collapseNavigation = msg({ en: 'Collapse navigation', ru: 'Свернуть панель' });
 export const expandNavigation = msg({ en: 'Expand navigation', ru: 'Развернуть панель' });
+export const railWidth = msg({
+  en: 'Width of the navigation panel',
+  ru: 'Ширина панели навигации',
+});
 
 export const sectionIssues = msg({ en: 'Issues', ru: 'Задачи' });
 export const sectionBoards = msg({ en: 'Boards', ru: 'Доски' });
@@ -27,13 +31,13 @@ export const sectionInProgress = msg({
   ru: 'Раздел в разработке',
 });
 export const sectionInProgressText = msg({
-  en: 'It will appear in one of the next versions of trackflow.',
-  ru: 'Он появится в одной из следующих версий trackflow.',
+  en: 'It will appear in one of the next versions of TaskMaster.',
+  ru: 'Он появится в одной из следующих версий TaskMaster.',
 });
 
 export const oldBrowser = msg({
-  en: 'Your browser is older than trackflow supports, so some things may not work. Update it to the latest version.',
-  ru: 'Ваш браузер старее, чем поддерживает trackflow, поэтому что-то может не работать. Обновите его до последней версии.',
+  en: 'Your browser is older than TaskMaster supports, so some things may not work. Update it to the latest version.',
+  ru: 'Ваш браузер старее, чем поддерживает TaskMaster, поэтому что-то может не работать. Обновите его до последней версии.',
 });
 export const serverUnavailable = msg({
   en: 'The server is not available yet',
@@ -50,3 +54,21 @@ export const accountMenu = msg<{ name: string }>({
 });
 export const account = msg({ en: 'Account', ru: 'Учётная запись' });
 export const signOut = msg({ en: 'Sign out', ru: 'Выйти' });
+
+// The shortcut reference (UI-020, step 2.2 §5). The labels of the bindings themselves live in
+// `lib/shortcuts/messages.ts`.
+export const shortcutsTitle = msg({ en: 'Keyboard shortcuts', ru: 'Горячие клавиши' });
+export const shortcutsFilterLabel = msg({ en: 'Filter the reference', ru: 'Фильтр справки' });
+export const shortcutsFilterPlaceholder = msg({
+  en: 'Action name or key',
+  ru: 'Название действия или клавиша',
+});
+export const shortcutsNoMatches = msg({ en: 'Nothing found', ru: 'Ничего не найдено' });
+export const shortcutsPlatform = msg({ en: 'Key glyphs for', ru: 'Клавиши для' });
+export const shortcutsPlatformMac = msg({ en: 'macOS', ru: 'macOS' });
+export const shortcutsPlatformPc = msg({ en: 'Windows and Linux', ru: 'Windows и Linux' });
+export const shortcutsPrint = msg({ en: 'Print', ru: 'Печать' });
+export const shortcutsCaption = msg({
+  en: 'Keys are given as Latin-letter positions: on any keyboard layout, the same physical key acts. Two-key rows are pressed in order, one after the other.',
+  ru: 'Клавиши указаны как позиции латинских букв: на любой раскладке клавиатуры срабатывает та же клавиша. Строки из двух клавиш нажимаются по очереди.',
+});

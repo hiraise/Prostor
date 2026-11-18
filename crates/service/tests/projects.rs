@@ -3,28 +3,28 @@
 //! does to projects.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::permission::{Permission, PermissionSet};
+use taskmaster_domain::access::role::PredefinedRole;
+use taskmaster_domain::projects::Template;
+use taskmaster_domain::settings::Language;
+use taskmaster_domain::validation::Problem;
+use taskmaster_domain::{ProjectId, RoleId, UserId};
+use taskmaster_service::access;
+use taskmaster_service::auth::SignedIn;
+use taskmaster_service::groups::{self, NewGroup};
+use taskmaster_service::projects::{self, NewProjectInput, ProjectChange};
+use taskmaster_service::roles::{self, NewRole};
+use taskmaster_service::setup::{self, Setup};
+use taskmaster_service::users::{self, NewAccount};
+use taskmaster_service::{Error, Passwords, project_fields, teams};
+use taskmaster_store::access::Holder;
+use taskmaster_store::projects::Section;
+use taskmaster_store::sessions::Origin;
+use taskmaster_store::{PgPool, value_sets};
+use taskmaster_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::datetime;
-use trackflow_domain::access::Access;
-use trackflow_domain::access::permission::{Permission, PermissionSet};
-use trackflow_domain::access::role::PredefinedRole;
-use trackflow_domain::projects::Template;
-use trackflow_domain::settings::Language;
-use trackflow_domain::validation::Problem;
-use trackflow_domain::{ProjectId, RoleId, UserId};
-use trackflow_service::access;
-use trackflow_service::auth::SignedIn;
-use trackflow_service::groups::{self, NewGroup};
-use trackflow_service::projects::{self, NewProjectInput, ProjectChange};
-use trackflow_service::roles::{self, NewRole};
-use trackflow_service::setup::{self, Setup};
-use trackflow_service::users::{self, NewAccount};
-use trackflow_service::{Error, Passwords, project_fields, teams};
-use trackflow_store::access::Holder;
-use trackflow_store::projects::Section;
-use trackflow_store::sessions::Origin;
-use trackflow_store::{PgPool, value_sets};
-use trackflow_testkit::TestDb;
 
 const T0: OffsetDateTime = datetime!(2026-10-01 09:00 UTC);
 
@@ -77,7 +77,7 @@ async fn create_user(pool: &PgPool, actor: &Access, username: &str) -> UserId {
 }
 
 async fn role_id(pool: &PgPool, role: PredefinedRole) -> RoleId {
-    trackflow_store::roles::builtin_id(pool, role.key())
+    taskmaster_store::roles::builtin_id(pool, role.key())
         .await
         .unwrap()
         .unwrap()
@@ -130,7 +130,7 @@ async fn fld_070_setup_creates_the_default_field_set_in_the_instance_language() 
     let pool = db.pool();
     let admin = set_up(pool, "ru").await.user;
     let access = access_of(pool, admin.id).await;
-    let all = trackflow_service::fields::list(pool, &access, "", None, None, 100)
+    let all = taskmaster_service::fields::list(pool, &access, "", None, None, 100)
         .await
         .unwrap();
     let names: Vec<&str> = all.iter().map(|row| row.field.name.as_str()).collect();
@@ -158,7 +158,7 @@ async fn fld_070_setup_creates_the_default_field_set_in_the_instance_language() 
     assert_eq!(all[5].field.set_id, all[6].field.set_id);
     // Startup on an instance that has it already changes nothing.
     assert!(
-        !trackflow_service::seed::ensure_default_fields(pool, Language::En)
+        !taskmaster_service::seed::ensure_default_fields(pool, Language::En)
             .await
             .unwrap()
     );
@@ -226,7 +226,7 @@ async fn prj_019_prj_022_a_blank_project_gets_its_team_roles_and_the_default_fie
     );
     let fields = project_fields::list(pool, &access, id).await.unwrap();
     // Priorities are shared; versions belong to the project, one list for both version fields.
-    let global = trackflow_service::fields::list(pool, &access, "", None, None, 100)
+    let global = taskmaster_service::fields::list(pool, &access, "", None, None, 100)
         .await
         .unwrap();
     assert_eq!(fields[0].attached.set_id, global[0].field.set_id);
@@ -275,14 +275,14 @@ async fn prj_023_prj_024_scrum_and_kanban_templates_bring_their_fields() {
     let fields = project_fields::list(pool, &access, scrum).await.unwrap();
     // The scrum types are the project's own set with Task by default.
     let types =
-        trackflow_service::value_sets::get(pool, &access, fields[1].attached.set_id.unwrap())
+        taskmaster_service::value_sets::get(pool, &access, fields[1].attached.set_id.unwrap())
             .await
             .unwrap();
     let names: Vec<&str> = types.values.iter().map(|v| v.name.as_str()).collect();
     assert_eq!(names, ["Epic", "User story", "Task", "Bug"]);
     assert_eq!(fields[1].default_values[0].name, "Task");
     let states =
-        trackflow_service::value_sets::get(pool, &access, fields[2].attached.set_id.unwrap())
+        taskmaster_service::value_sets::get(pool, &access, fields[2].attached.set_id.unwrap())
             .await
             .unwrap();
     assert_eq!(states.values.iter().filter(|v| v.resolved).count(), 2);
@@ -439,13 +439,13 @@ async fn prj_009_prj_010_prj_048_prj_056_projects_are_private_to_their_people() 
         .unwrap();
     assert_eq!(list.len(), 1);
     // ACC-061: the role comes through the team.
-    let bob_user = trackflow_store::users::get(pool, bob)
+    let bob_user = taskmaster_store::users::get(pool, bob)
         .await
         .unwrap()
         .unwrap();
     let effective = access::effective_roles(pool, &bob_user).await.unwrap();
     assert!(effective.iter().any(|role| role.scope
-        == trackflow_domain::access::Scope::Project(id)
+        == taskmaster_domain::access::Scope::Project(id)
         && matches!(&role.sources[..], [access::Source::Group { .. }])));
     // A member cannot change the team or see the people page.
     assert!(matches!(
@@ -797,7 +797,7 @@ async fn prj_064_prj_065_deletion_runs_in_the_background() {
         .await
         .unwrap();
     assert!(
-        trackflow_store::projects::get(pool, id)
+        taskmaster_store::projects::get(pool, id)
             .await
             .unwrap()
             .is_none()
@@ -888,7 +888,7 @@ async fn acc_022_prj_009_teams_of_hidden_projects_stay_hidden() {
     .await
     .unwrap();
     let pat_access = access_of(pool, pat).await;
-    let teams = trackflow_store::groups::Kinds {
+    let teams = taskmaster_store::groups::Kinds {
         groups: false,
         teams: true,
     };

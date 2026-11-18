@@ -3,6 +3,6 @@
   import ForbiddenState from '#lib/ui/ForbiddenState.svelte';
 </script>
 
-<svelte:head><title>{m.administration()} · trackflow</title></svelte:head>
+<svelte:head><title>{m.administration()} · TaskMaster</title></svelte:head>
 
 <ForbiddenState />

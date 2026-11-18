@@ -32,7 +32,7 @@ impl BuiltinGroup {
         Self::ALL.into_iter().find(|group| group.key() == key)
     }
 
-    /// Names in the languages trackflow speaks (English first).
+    /// Names in the languages taskmaster speaks (English first).
     pub fn names(self) -> [&'static str; 2] {
         match self {
             BuiltinGroup::Everyone => ["Everyone", "Все"],

@@ -138,7 +138,7 @@ export function initSession(): () => void {
     }
   });
   if (typeof BroadcastChannel !== 'undefined') {
-    channel = new BroadcastChannel('trackflow.session');
+    channel = new BroadcastChannel('taskmaster.session');
     channel.onmessage = (event: MessageEvent<Message>) => {
       if (event.data.type === 'signed-out' && current) ended('signed-out');
       if (event.data.type === 'signed-in') {

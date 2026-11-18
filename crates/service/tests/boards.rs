@@ -2,34 +2,34 @@
 //! database. Cards are put on sprints with SQL until moves come (1.8a-3).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use time::OffsetDateTime;
-use time::macros::datetime;
-use trackflow_domain::access::Access;
-use trackflow_domain::access::role::PredefinedRole;
-use trackflow_domain::boards::Preset;
-use trackflow_domain::boards::columns::WipState;
-use trackflow_domain::issues::history::Origin;
-use trackflow_domain::projects::Template;
-use trackflow_domain::settings::Language;
-use trackflow_domain::sharing::Audience;
-use trackflow_domain::validation::Problem;
-use trackflow_domain::{BoardId, GroupId, IssueId, ProjectId, SprintId, UserId};
-use trackflow_service::boards::cards;
-use trackflow_service::boards::columns::{self, ColumnChange, NewColumn};
-use trackflow_service::boards::view::{self, CELL_CAP};
-use trackflow_service::boards::{
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::role::PredefinedRole;
+use taskmaster_domain::boards::Preset;
+use taskmaster_domain::boards::columns::WipState;
+use taskmaster_domain::issues::history::Origin;
+use taskmaster_domain::projects::Template;
+use taskmaster_domain::settings::Language;
+use taskmaster_domain::sharing::Audience;
+use taskmaster_domain::validation::Problem;
+use taskmaster_domain::{BoardId, GroupId, IssueId, ProjectId, SprintId, UserId};
+use taskmaster_service::boards::cards;
+use taskmaster_service::boards::columns::{self, ColumnChange, NewColumn};
+use taskmaster_service::boards::view::{self, CELL_CAP};
+use taskmaster_service::boards::{
     self as boards, BoardChange, BoardRow, NewBoard, ProfileChange, Sharing,
 };
-use trackflow_service::groups::NewGroup;
-use trackflow_service::issues::{self, AudienceInput, NewIssue};
-use trackflow_service::projects::{self, NewProjectInput};
-use trackflow_service::setup::{self, Setup};
-use trackflow_service::users::{self, NewAccount};
-use trackflow_service::{Error, Passwords, access, groups, roles};
-use trackflow_store::PgPool;
-use trackflow_store::access::Holder;
-use trackflow_store::sessions::Origin as SessionOrigin;
-use trackflow_testkit::TestDb;
+use taskmaster_service::groups::NewGroup;
+use taskmaster_service::issues::{self, AudienceInput, NewIssue};
+use taskmaster_service::projects::{self, NewProjectInput};
+use taskmaster_service::setup::{self, Setup};
+use taskmaster_service::users::{self, NewAccount};
+use taskmaster_service::{Error, Passwords, access, groups, roles};
+use taskmaster_store::PgPool;
+use taskmaster_store::access::Holder;
+use taskmaster_store::sessions::Origin as SessionOrigin;
+use taskmaster_testkit::TestDb;
+use time::OffsetDateTime;
+use time::macros::datetime;
 
 const T0: OffsetDateTime = datetime!(2026-10-01 09:00 UTC);
 
@@ -97,7 +97,7 @@ async fn member(pool: &PgPool, admin: &Access, username: &str, of: &[ProjectId])
     .unwrap()
     .id;
     if !of.is_empty() {
-        let role = trackflow_store::roles::builtin_id(pool, PredefinedRole::ProjectMember.key())
+        let role = taskmaster_store::roles::builtin_id(pool, PredefinedRole::ProjectMember.key())
             .await
             .unwrap()
             .unwrap();
@@ -217,7 +217,7 @@ async fn shown_sprint(pool: &PgPool, who: &Access, board: BoardId) -> SprintId {
 
 /// Puts issues on a sprint with ranks in the given order (moves are 1.8a-3).
 async fn put(pool: &PgPool, sprint: SprintId, issues: &[IssueId]) {
-    let ranks = trackflow_domain::rank::sequence(issues.len());
+    let ranks = taskmaster_domain::rank::sequence(issues.len());
     sqlx::query(
         "insert into sprint_issues (sprint_id, issue_id, rank)
          select $1, i, r from unnest($2::bigint[], $3::text[]) as t(i, r)",
@@ -921,9 +921,9 @@ async fn brd_068_view_visibility() {
     // ISS-024: cards count the files of the issue each viewer sees.
     for (key, audience) in [("a", Vec::new()), ("b", vec![mia.user()])] {
         let mut conn = pool.acquire().await.unwrap();
-        let file = trackflow_store::attachments::insert(
+        let file = taskmaster_store::attachments::insert(
             &mut conn,
-            &trackflow_store::attachments::NewAttachment {
+            &taskmaster_store::attachments::NewAttachment {
                 issue: open,
                 comment: None,
                 author: mia.user(),

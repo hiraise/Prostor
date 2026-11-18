@@ -201,7 +201,7 @@
   }
 </script>
 
-<svelte:head><title>{pm.people()} · {project.name} · trackflow</title></svelte:head>
+<svelte:head><title>{pm.people()} · {project.name} · TaskMaster</title></svelte:head>
 
 {#snippet holder(assignment: Assignment)}
   {#if assignment.holder.kind === 'user'}

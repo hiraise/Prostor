@@ -109,7 +109,7 @@ fn shell(bytes: Cow<'static, [u8]>) -> Response {
 fn not_built() -> Response {
     (
         StatusCode::SERVICE_UNAVAILABLE,
-        Html("<!doctype html><title>trackflow</title><p>The web app is not built. Run <code>make web</code>.</p>"),
+        Html("<!doctype html><title>TaskMaster</title><p>The web app is not built. Run <code>make web</code>.</p>"),
     )
         .into_response()
 }

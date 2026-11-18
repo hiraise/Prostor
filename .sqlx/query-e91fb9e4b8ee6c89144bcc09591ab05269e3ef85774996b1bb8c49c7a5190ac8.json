@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select audience_users, audience_groups from issues where id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "audience_users",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "audience_users"
+          }
+        }
+      },
+      {
+        "ordinal": 1,
+        "name": "audience_groups",
+        "type_info": "Int8Array",
+        "origin": {
+          "Table": {
+            "table": "issues",
+            "name": "audience_groups"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "e91fb9e4b8ee6c89144bcc09591ab05269e3ef85774996b1bb8c49c7a5190ac8"
+}

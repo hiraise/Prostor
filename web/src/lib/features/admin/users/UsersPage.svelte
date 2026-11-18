@@ -253,7 +253,7 @@
   }
 </script>
 
-<svelte:head><title>{admin.users()} · trackflow</title></svelte:head>
+<svelte:head><title>{admin.users()} · TaskMaster</title></svelte:head>
 
 {#if !canSeeDirectory()}
   <ForbiddenState />

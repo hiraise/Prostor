@@ -1,7 +1,7 @@
 # The small server of the performance budget (architecture.md §7, D-032) for `make bench`: the
-# PostgreSQL part of 2 vCPU / 4 GB that a team of up to 50 people runs, with trackflow beside it.
+# PostgreSQL part of 2 vCPU / 4 GB that a team of up to 50 people runs, with taskmaster beside it.
 # Port 5450 on loopback (BENCH_PORT of `make bench` changes it). `make bench` stops it after each run; the dataset stays in the volume.
-name: trackflow-bench
+name: taskmaster-bench
 
 services:
   postgres:
@@ -34,21 +34,21 @@ services:
       - -c
       - track_io_timing=on
     cpus: 2
-    # What is left of 4 GB after trackflow and the system.
+    # What is left of 4 GB after taskmaster and the system.
     mem_limit: 3g
     stop_grace_period: 1m
     # Parallel queries share memory through /dev/shm; Docker gives 64 MB by default.
     shm_size: 256m
     environment:
-      POSTGRES_USER: trackflow
-      POSTGRES_PASSWORD: trackflow
-      POSTGRES_DB: trackflow_bench
+      POSTGRES_USER: taskmaster
+      POSTGRES_PASSWORD: taskmaster
+      POSTGRES_DB: taskmaster_bench
     ports:
-      - "127.0.0.1:${TRACKFLOW_BENCH_PORT:-5450}:5432"
+      - "127.0.0.1:${TASKMASTER_BENCH_PORT:-5450}:5432"
     volumes:
       - benchdata:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U trackflow -d trackflow_bench"]
+      test: ["CMD-SHELL", "pg_isready -U taskmaster -d taskmaster_bench"]
       interval: 2s
       timeout: 3s
       retries: 30

@@ -368,8 +368,8 @@ describe('BRD-024…BRD-029: sprints and how issues join («Основное»)'
       .element(screen.getByText(/the board shows no cards until it is fixed/))
       .toBeVisible();
     const bar = screen.getByRole('search', { name: 'Board query' });
-    await expect.element(bar.getByRole('textbox')).toHaveValue('Assignee: me');
-    await bar.getByRole('textbox').fill('Assignee: boris');
+    await expect.element(bar.getByRole('combobox')).toHaveValue('Assignee: me');
+    await bar.getByRole('combobox').fill('Assignee: boris');
     await bar.getByRole('button', { name: 'Find' }).click();
     await expect
       .poll(() => calls.find((call) => call.method === 'PATCH')?.body)

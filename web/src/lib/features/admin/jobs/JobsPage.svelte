@@ -131,7 +131,7 @@
   }
 </script>
 
-<svelte:head><title>{m.jobsTitle()} · trackflow</title></svelte:head>
+<svelte:head><title>{m.jobsTitle()} · TaskMaster</title></svelte:head>
 
 <div class="jobs-page">
   {#if !canSeeJobs()}

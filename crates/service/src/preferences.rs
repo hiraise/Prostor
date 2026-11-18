@@ -1,8 +1,8 @@
 //! Personal interface settings (UI-018, D-041): each person reads and changes only their own.
 
-use trackflow_domain::UserId;
-use trackflow_domain::preferences::{self as rules, Patch, Preferences};
-use trackflow_store::{PgPool, preferences};
+use taskmaster_domain::UserId;
+use taskmaster_domain::preferences::{self as rules, Patch, Preferences};
+use taskmaster_store::{PgPool, preferences};
 
 use crate::{Error, Result};
 

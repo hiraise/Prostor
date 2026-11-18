@@ -3,12 +3,14 @@
 //! and notifications, and commits. HTTP stays in the server; SQL stays in the store.
 
 pub mod access;
+pub mod assist;
 pub mod attachments;
 
 pub mod account;
 pub mod auth;
 pub mod boards;
 pub mod capabilities;
+pub mod commands;
 pub mod comments;
 mod error;
 pub mod fields;

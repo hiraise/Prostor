@@ -116,7 +116,7 @@
   }
 </script>
 
-<svelte:head><title>{m.mailTitle()} · trackflow</title></svelte:head>
+<svelte:head><title>{m.mailTitle()} · TaskMaster</title></svelte:head>
 
 <div class="mail-page">
   <PageHeader title={m.mailTitle()} />
@@ -188,7 +188,7 @@
         <TextField
           label={m.fromLabel()}
           hint={m.fromHint()}
-          placeholder="trackflow <tracker@example.com>"
+          placeholder="TaskMaster <tracker@example.com>"
           bind:value={mailFrom}
         />
         <TextField label={m.replyToLabel()} hint={m.replyToHint()} bind:value={mailReplyTo} />

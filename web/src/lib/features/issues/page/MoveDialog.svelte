@@ -22,7 +22,12 @@
   import { issueHref } from '../issues.ts';
   import * as m from '../messages.ts';
 
-  let { open = $bindable(false), issue }: { open?: boolean; issue: Issue } = $props();
+  let {
+    open = $bindable(false),
+    issue,
+    /** The project the panel's dropdown already chose: the dialog starts at its preview. */
+    preset = null,
+  }: { open?: boolean; issue: Issue; preset?: Project | null } = $props();
 
   let query = $state('');
   let projects = $state<Project[]>([]);
@@ -41,6 +46,10 @@
       return;
     }
     if (target) return;
+    if (preset) {
+      void choose(preset);
+      return;
+    }
     const text = query;
     const timer = setTimeout(
       () => {

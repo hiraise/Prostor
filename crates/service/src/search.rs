@@ -1,5 +1,5 @@
 //! Searching issues (QRY-*, plan `docs/plans/step-1.5.md` §3–§4): a query's text is parsed
-//! (`trackflow_query`), its names resolved against a catalog loaded for this viewer
+//! (`taskmaster_query`), its names resolved against a catalog loaded for this viewer
 //! (`domain::search`), and the result compiled to SQL (`store::search`).
 //!
 //! A query with an error does not run (`Error::InvalidQuery` lists every problem with its span):
@@ -11,20 +11,20 @@ use base64::Engine as _;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
 use serde::{Deserialize, Serialize};
 use sqlx::PgConnection;
-use time::OffsetDateTime;
-use trackflow_domain::access::permission::Permission;
-use trackflow_domain::access::{Access, Projects};
-use trackflow_domain::search::{
+use taskmaster_domain::access::permission::Permission;
+use taskmaster_domain::access::{Access, Projects};
+use taskmaster_domain::search::{
     self as domain, Binding, Catalog, Clock, Ctx, Filter, SortSpec, Stored,
 };
-use trackflow_domain::validation::Problem as InputProblem;
-use trackflow_domain::{BoardId, IssueId, ProjectId, TagId};
-use trackflow_query::{Class, Problem, ProblemCode, Query, Severity, Span};
-use trackflow_store::saved_searches::SavedSearchId;
-use trackflow_store::search::catalog::{self, ProjectRow};
-use trackflow_store::search::{self as store, SortValue};
-use trackflow_store::visibility::{Visibility, holds};
-use trackflow_store::{PgPool, issues as store_issues, settings, tags};
+use taskmaster_domain::validation::Problem as InputProblem;
+use taskmaster_domain::{BoardId, IssueId, ProjectId, TagId};
+use taskmaster_query::{Class, Problem, ProblemCode, Query, Severity, Span};
+use taskmaster_store::saved_searches::SavedSearchId;
+use taskmaster_store::search::catalog::{self, ProjectRow};
+use taskmaster_store::search::{self as store, SortValue};
+use taskmaster_store::visibility::{Visibility, holds};
+use taskmaster_store::{PgPool, issues as store_issues, settings, tags};
+use time::OffsetDateTime;
 
 use crate::issues::{Described, describe};
 use crate::{Error, Result};
@@ -173,7 +173,7 @@ pub async fn search(pool: &PgPool, viewer: &Access, input: SearchInput) -> Resul
         next_cursor,
         notes: prepared.notes,
         sort: prepared.sort,
-        live_topic: trackflow_domain::live::list_topic(
+        live_topic: taskmaster_domain::live::list_topic(
             &prepared.scope.projects,
             prepared.scope.narrowed,
         )
@@ -188,6 +188,30 @@ pub async fn count(pool: &PgPool, viewer: &Access, input: SearchInput) -> Result
     let mut conn = pool.acquire().await?;
     let prepared = prepare(&mut conn, viewer, &input).await?;
     Ok(store::count(&mut conn, &prepared.filter, &prepared.vis).await?)
+}
+
+/// The first `limit` issues a query matches, in its order, and how many it matches in all: what
+/// an export takes (QRY-084). Unlike a page, `limit` may exceed [`LIMIT_MAX`]; a manual board
+/// order (BRD-093) is not followed — exports come from lists, which have none.
+pub async fn matching(
+    conn: &mut PgConnection,
+    viewer: &Access,
+    input: SearchInput,
+    limit: u32,
+) -> Result<(Vec<IssueId>, i64)> {
+    let prepared = prepare(conn, viewer, &input).await?;
+    let total = store::count(conn, &prepared.filter, &prepared.vis).await?.0;
+    let hits = store::page(
+        conn,
+        &prepared.filter,
+        &prepared.sort,
+        &prepared.vis,
+        None,
+        None,
+        i64::from(limit),
+    )
+    .await?;
+    Ok((hits.into_iter().map(|h| h.id).collect(), total))
 }
 
 /// Counts of up to [`COUNTS_MAX`] queries on one connection; an invalid query gets its problems
@@ -235,7 +259,7 @@ pub async fn check(
         time_zone,
         ..SearchInput::default()
     };
-    let mut q = trackflow_query::parse(text);
+    let mut q = taskmaster_query::parse(text);
     let problems = match prepare_parsed(&mut conn, viewer, &input, &q).await {
         Ok(prepared) => prepared.notes,
         Err(Error::InvalidQuery(problems)) => problems,
@@ -243,7 +267,7 @@ pub async fn check(
     };
     q.problems.clone_from(&problems);
     Ok(Check {
-        tokens: trackflow_query::classes(&q, text),
+        tokens: taskmaster_query::classes(&q, text),
         problems,
     })
 }
@@ -253,7 +277,7 @@ async fn prepare(
     viewer: &Access,
     input: &SearchInput,
 ) -> Result<Prepared> {
-    let q = trackflow_query::parse(&input.text);
+    let q = taskmaster_query::parse(&input.text);
     if q.problems.iter().any(|p| p.severity == Severity::Error) {
         return Err(Error::InvalidQuery(q.problems));
     }
@@ -363,7 +387,7 @@ pub(crate) async fn unranked_until(
         saved_search: Some(id),
         ..SearchInput::default()
     };
-    let p = prepare_parsed(conn, viewer, &input, &trackflow_query::parse("")).await?;
+    let p = prepare_parsed(conn, viewer, &input, &taskmaster_query::parse("")).await?;
     let hits = store::page(conn, &p.filter, &p.sort, &p.vis, None, Some(id), max).await?;
     Ok(hits
         .iter()
@@ -373,7 +397,7 @@ pub(crate) async fn unranked_until(
 
 /// The stored form of a query resolved with the viewer's names (QRY-063).
 pub(crate) async fn bind(conn: &mut PgConnection, viewer: &Access, text: &str) -> Result<Stored> {
-    let q = trackflow_query::parse(text);
+    let q = taskmaster_query::parse(text);
     if q.problems.iter().any(|p| p.severity == Severity::Error) {
         return Err(Error::InvalidQuery(q.problems));
     }
@@ -425,7 +449,7 @@ async fn query_board(
     id: BoardId,
     now: Option<OffsetDateTime>,
 ) -> Result<Filter> {
-    let Some(board) = trackflow_store::boards::get(&mut *conn, id).await? else {
+    let Some(board) = taskmaster_store::boards::get(&mut *conn, id).await? else {
         return Ok(Filter::False);
     };
     let Some(stored) = &board.query else {
@@ -463,7 +487,7 @@ pub(crate) async fn resolve_within(
     now: Option<OffsetDateTime>,
     query_boards: QueryBoards,
 ) -> Result<Within> {
-    let q = trackflow_query::parse(text);
+    let q = taskmaster_query::parse(text);
     if q.problems.iter().any(|p| p.severity == Severity::Error) {
         return Err(Error::InvalidQuery(q.problems));
     }
@@ -566,7 +590,7 @@ pub(crate) async fn resolve_parsed(
     cat.link_sides = catalog::link_sides(&mut *conn).await?;
     if needs.all_boards || !needs.boards.is_empty() {
         let read = viewer.projects_with(Permission::IssueRead);
-        let reader = trackflow_store::boards::Viewer {
+        let reader = taskmaster_store::boards::Viewer {
             me: viewer.user(),
             groups: viewer.groups(),
             read: &read,
@@ -629,7 +653,7 @@ pub(crate) async fn resolve_parsed(
         sort: resolved.sort,
         vis,
         notes: resolved.notes,
-        canonical: trackflow_query::print(q),
+        canonical: taskmaster_query::print(q),
         single_id: resolved.single_id,
         concerns_resolution: resolved.concerns_resolution,
         bindings: resolved.bindings,
@@ -658,7 +682,7 @@ fn within_one(filter: Filter, vis: &mut Visibility) -> Filter {
 }
 
 /// The request's zone, else the instance's.
-async fn clock(conn: &mut PgConnection, input: &SearchInput) -> Result<Clock> {
+pub(crate) async fn clock(conn: &mut PgConnection, input: &SearchInput) -> Result<Clock> {
     let name = match &input.time_zone {
         Some(name) => name.clone(),
         None => settings::value(&mut *conn, "default_time_zone")
@@ -690,7 +714,7 @@ fn union(a: Projects, b: Projects) -> Projects {
 }
 
 /// The viewer's access as the store's predicate needs it; projects being deleted are out.
-fn visibility(viewer: &Access, rows: &[ProjectRow]) -> Visibility {
+pub(crate) fn visibility(viewer: &Access, rows: &[ProjectRow]) -> Visibility {
     let all: Vec<ProjectId> = rows.iter().map(|r| r.entry.id).collect();
     let deleting: Vec<ProjectId> = rows
         .iter()
@@ -735,7 +759,7 @@ pub(crate) fn visibility_over(
 }
 
 /// The viewer sees some issues of the project.
-fn sees(vis: &Visibility, project: ProjectId) -> bool {
+pub(crate) fn sees(vis: &Visibility, project: ProjectId) -> bool {
     holds(&vis.read, project) || vis.create_only.contains(&project)
 }
 

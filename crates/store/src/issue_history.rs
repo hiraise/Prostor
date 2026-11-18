@@ -1,11 +1,11 @@
 //! Change history of issues (HIST): append-only records written with each change. Shapes of
-//! `removed` and `added`: `trackflow_domain::issues::history`.
+//! `removed` and `added`: `taskmaster_domain::issues::history`.
 
 use serde_json::Value as Json;
 use sqlx::{PgConnection, PgExecutor};
+use taskmaster_domain::issues::history::{Origin, Record};
+use taskmaster_domain::{CommentId, FieldId, IssueId, UserId};
 use time::OffsetDateTime;
-use trackflow_domain::issues::history::{Origin, Record};
-use trackflow_domain::{CommentId, FieldId, IssueId, UserId};
 
 /// Who made a set of changes and how.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

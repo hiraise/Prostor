@@ -9,14 +9,17 @@ import { readStored, writeStored } from '#lib/storage.ts';
 
 type Values = { [K in keyof Preferences]-?: NonNullable<Preferences[K]> };
 export type PreferenceKey = keyof Values;
+/** Keys with no default: `value()` refuses them, `chosen()` reads them. */
+type ChoiceOnly = 'last_project' | 'commands_silent_prompt';
 
-/** What an unset key reads as; `last_project` has none. */
-const DEFAULTS: Omit<Values, 'last_project'> = {
+/** What an unset key reads as; the choice-only keys have none. */
+const DEFAULTS: Omit<Values, ChoiceOnly> = {
   rail_collapsed: false,
+  rail_width: 160,
   editor_toolbar: true,
   home: 'issues',
   issue_panel_side: 'end',
-  issue_panel_width: 220,
+  issue_panel_width: 180,
   issue_panel_collapsed: false,
   activity_order: 'oldest_first',
   activity_comments: true,
@@ -30,6 +33,7 @@ const DEFAULTS: Omit<Values, 'last_project'> = {
   list_sidebar_width: 240,
   list_sidebar_folded: [],
   recent_issues: [],
+  commands_on_typing: false,
 };
 
 /**
@@ -41,13 +45,13 @@ const LEGACY: {
   storage: string;
   read: (s: string) => boolean;
 }[] = [
-  { key: 'rail_collapsed', storage: 'trackflow.nav.collapsed', read: (s) => s === 'true' },
-  { key: 'editor_toolbar', storage: 'trackflow.editor.toolbar', read: (s) => s !== 'hidden' },
+  { key: 'rail_collapsed', storage: 'taskmaster.nav.collapsed', read: (s) => s === 'true' },
+  { key: 'editor_toolbar', storage: 'taskmaster.editor.toolbar', read: (s) => s !== 'hidden' },
 ];
 
 /** Quiet time after the last change before it is sent. */
 const SEND_DELAY_MS = 400;
-const CHANNEL = 'trackflow-preferences';
+const CHANNEL = 'taskmaster-preferences';
 
 let stored = $state<Preferences>({});
 let loaded: Promise<void> | null = null;
@@ -100,7 +104,7 @@ export const preferences = {
    * page falls back to the instance's own default first (UI-004): what the administrator chose in
    * «Настройки» wins over the built-in «Задачи».
    */
-  value<K extends Exclude<PreferenceKey, 'last_project'>>(key: K): Values[K] {
+  value<K extends Exclude<PreferenceKey, ChoiceOnly>>(key: K): Values[K] {
     const own = key === 'home' ? (stored.home ?? knownBootstrap()?.default_home) : stored[key];
     return (own ?? DEFAULTS[key]) as Values[K];
   },

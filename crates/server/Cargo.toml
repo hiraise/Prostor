@@ -1,29 +1,29 @@
 [package]
-name = "trackflow-server"
-description = "trackflow server: HTTP API and the embedded web app"
+name = "taskmaster-server"
+description = "taskmaster server: HTTP API and the embedded web app"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
 [[bin]]
-name = "trackflow"
+name = "taskmaster"
 path = "src/main.rs"
 
 [dependencies]
-trackflow-api.workspace = true
-trackflow-domain.workspace = true
-trackflow-files.workspace = true
-trackflow-markup.workspace = true
-trackflow-service.workspace = true
-trackflow-store.workspace = true
+taskmaster-api.workspace = true
+taskmaster-domain.workspace = true
+taskmaster-files.workspace = true
+taskmaster-markup.workspace = true
+taskmaster-service.workspace = true
+taskmaster-store.workspace = true
 axum.workspace = true
 tokio.workspace = true
 tokio-util.workspace = true
 tower-http.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-trackflow-query.workspace = true
+taskmaster-query.workspace = true
 sqlx.workspace = true
 utoipa.workspace = true
 utoipa-axum.workspace = true
@@ -40,7 +40,7 @@ tower.workspace = true
 futures-util = { workspace = true, features = ["sink"] }
 
 [dev-dependencies]
-trackflow-testkit.workspace = true
+taskmaster-testkit.workspace = true
 tempfile.workspace = true
 tower.workspace = true
 http-body-util.workspace = true

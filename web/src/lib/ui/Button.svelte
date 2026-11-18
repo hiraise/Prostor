@@ -16,6 +16,10 @@
     href?: string;
     /** With `href`: the link saves the file under this name instead of opening it. */
     download?: string;
+    /** With `href`: open in another browsing context, e.g. `_blank`. */
+    target?: string;
+    /** With `href` and `target="_blank"`: `noopener` keeps the page out of `window.opener`. */
+    rel?: string;
     children?: Snippet;
   }
 
@@ -26,6 +30,8 @@
     loading = false,
     href,
     download,
+    target,
+    rel,
     type = 'button',
     disabled = false,
     children,
@@ -55,7 +61,9 @@
 {#if href}
   <!-- Callers pass a resolved path (`resolve()` from $app/paths), so the link is checked there. -->
   <!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-  <a {href} {download} class={['button', variant, size, className]}>{@render content()}</a>
+  <a {href} {download} {target} {rel} class={['button', variant, size, className]}>
+    {@render content()}
+  </a>
 {:else}
   <button
     {type}

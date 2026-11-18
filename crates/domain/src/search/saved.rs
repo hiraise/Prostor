@@ -108,7 +108,7 @@ fn quoted(name: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use trackflow_query::parse;
+    use taskmaster_query::parse;
 
     #[test]
     fn brd_089_backlog_name_and_query() {

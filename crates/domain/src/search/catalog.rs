@@ -3,7 +3,7 @@
 
 use std::collections::BTreeSet;
 
-use trackflow_query::{fold, fold_value};
+use taskmaster_query::{fold, fold_value};
 
 use super::filter::Filter;
 use crate::boards::sprints::SprintDates;
@@ -62,6 +62,8 @@ pub struct FieldEntry {
     pub aliases: Vec<String>,
     pub kind: FieldKind,
     pub multi: bool,
+    /// The built-in key, such as `spent_time`; `None` for a custom field.
+    pub builtin: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -69,6 +71,8 @@ pub struct Attached {
     pub project: ProjectId,
     pub field: FieldId,
     pub set: Option<SetId>,
+    /// FLD-057.
+    pub can_be_empty: bool,
     /// FLD-056; empty when not set.
     pub empty_label: String,
     pub private: bool,

@@ -2,29 +2,29 @@
 //! fields in projects, and who may change what.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::role::PredefinedRole;
+use taskmaster_domain::fields::{FieldKind, SetKind};
+use taskmaster_domain::projects::Template;
+use taskmaster_domain::settings::Language;
+use taskmaster_domain::validation::Problem;
+use taskmaster_domain::{FieldId, ProjectId, UserId};
+use taskmaster_service::access;
+use taskmaster_service::auth::SignedIn;
+use taskmaster_service::fields::{self, FieldUpdate, NewFieldInput, SetSource};
+use taskmaster_service::project_fields::{self, AttachInput, SetUse, SettingsChange};
+use taskmaster_service::projects::{self, NewProjectInput};
+use taskmaster_service::roles;
+use taskmaster_service::setup::{self, Setup};
+use taskmaster_service::users::{self, NewAccount};
+use taskmaster_service::value_sets::{self, ValueInput};
+use taskmaster_service::{Error, Passwords};
+use taskmaster_store::PgPool;
+use taskmaster_store::access::Holder;
+use taskmaster_store::sessions::Origin;
+use taskmaster_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::{date, datetime};
-use trackflow_domain::access::Access;
-use trackflow_domain::access::role::PredefinedRole;
-use trackflow_domain::fields::{FieldKind, SetKind};
-use trackflow_domain::projects::Template;
-use trackflow_domain::settings::Language;
-use trackflow_domain::validation::Problem;
-use trackflow_domain::{FieldId, ProjectId, UserId};
-use trackflow_service::access;
-use trackflow_service::auth::SignedIn;
-use trackflow_service::fields::{self, FieldUpdate, NewFieldInput, SetSource};
-use trackflow_service::project_fields::{self, AttachInput, SetUse, SettingsChange};
-use trackflow_service::projects::{self, NewProjectInput};
-use trackflow_service::roles;
-use trackflow_service::setup::{self, Setup};
-use trackflow_service::users::{self, NewAccount};
-use trackflow_service::value_sets::{self, ValueInput};
-use trackflow_service::{Error, Passwords};
-use trackflow_store::PgPool;
-use trackflow_store::access::Holder;
-use trackflow_store::sessions::Origin;
-use trackflow_testkit::TestDb;
 
 const T0: OffsetDateTime = datetime!(2026-10-01 09:00 UTC);
 
@@ -98,7 +98,7 @@ async fn project(pool: &PgPool, actor: &Access, name: &str, key: &str) -> Projec
 /// A project administrator of these projects.
 async fn project_admin(pool: &PgPool, actor: &Access, username: &str, of: &[ProjectId]) -> Access {
     let user = create_user(pool, actor, username).await;
-    let role = trackflow_store::roles::builtin_id(pool, PredefinedRole::ProjectAdmin.key())
+    let role = taskmaster_store::roles::builtin_id(pool, PredefinedRole::ProjectAdmin.key())
         .await
         .unwrap()
         .unwrap();
@@ -726,7 +726,7 @@ async fn fld_051_to_058_fields_in_a_project() {
         .await
         .unwrap();
     assert!(
-        trackflow_store::value_sets::get(pool, set)
+        taskmaster_store::value_sets::get(pool, set)
             .await
             .unwrap()
             .is_none()

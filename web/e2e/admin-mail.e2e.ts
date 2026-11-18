@@ -33,8 +33,8 @@ test('NTF-004, NTF-007, NTF-002: the transport, a test letter, the switch', asyn
   // Stored mark (NTF-004). Saving it starts the switch off, environment or not (NTF-002).
   if (await page.getByText('the transport comes from the environment').isVisible()) {
     await page.getByLabel(/^Server/).fill('smtp://127.0.0.1:1025');
-    await page.getByLabel(/^From/).fill('trackflow <tracker@trackflow.test>');
-    await page.getByLabel('Reply-To').fill('replies@trackflow.test');
+    await page.getByLabel(/^From/).fill('taskmaster <tracker@taskmaster.test>');
+    await page.getByLabel('Reply-To').fill('replies@taskmaster.test');
     await page.getByRole('button', { name: 'Save' }).click();
     await expect(notices.getByText('Mail settings saved')).toBeVisible();
     await expect(page.getByText('the transport comes from the environment')).toBeHidden();

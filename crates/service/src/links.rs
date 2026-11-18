@@ -5,14 +5,14 @@
 
 use serde_json::json;
 use sqlx::PgConnection;
+use taskmaster_domain::accounts::{FullName, Username, check_new_password};
+use taskmaster_domain::auth::{LinkPurpose, RESET_RESEND_INTERVAL};
+use taskmaster_domain::validation::{Problem, Problems};
+use taskmaster_store::account_links::{self, Link};
+use taskmaster_store::sessions::{self, Origin};
+use taskmaster_store::users::{self, IdentityChange, User};
+use taskmaster_store::{PgPool, audit};
 use time::OffsetDateTime;
-use trackflow_domain::accounts::{FullName, Username, check_new_password};
-use trackflow_domain::auth::{LinkPurpose, RESET_RESEND_INTERVAL};
-use trackflow_domain::validation::{Problem, Problems};
-use trackflow_store::account_links::{self, Link};
-use trackflow_store::sessions::{self, Origin};
-use trackflow_store::users::{self, IdentityChange, User};
-use trackflow_store::{PgPool, audit};
 
 use crate::auth::{SignedIn, start_session};
 use crate::mail::{self, Letters};
@@ -49,7 +49,7 @@ pub(crate) async fn send_verification(
     letters: &Letters,
     user: &User,
     email: &str,
-    initiator: trackflow_domain::Actor,
+    initiator: taskmaster_domain::Actor,
     now: OffsetDateTime,
 ) -> Result<()> {
     let base = letters.require()?;
@@ -130,10 +130,10 @@ pub async fn request_password_reset(
     }
     let secret = issue(&mut tx, &user, LinkPurpose::PasswordReset, &address, now).await?;
     let message = mail::password_reset(letters, base, &address, &user.username, &secret.value);
-    mail::queue(&mut tx, &message, trackflow_domain::Actor::System).await?;
+    mail::queue(&mut tx, &message, taskmaster_domain::Actor::System).await?;
     audit::record(
         &mut tx,
-        trackflow_domain::Actor::System,
+        taskmaster_domain::Actor::System,
         "user.password_reset_requested",
         &format!("user:{}", user.id),
         json!({}),
@@ -187,7 +187,7 @@ pub async fn reset_password(
     let ended = sessions::delete_for_user(&mut tx, user.id, None).await?;
     audit::record(
         &mut tx,
-        trackflow_domain::Actor::User(user.id),
+        taskmaster_domain::Actor::User(user.id),
         "user.password_reset",
         &format!("user:{}", user.id),
         json!({ "sessions_ended": ended }),
@@ -266,7 +266,7 @@ pub async fn accept_invitation(
     account_links::delete_for_user(&mut tx, user.id, Some(LinkPurpose::Invitation.key())).await?;
     audit::record(
         &mut tx,
-        trackflow_domain::Actor::User(user.id),
+        taskmaster_domain::Actor::User(user.id),
         "user.invitation_accepted",
         &format!("user:{}", user.id),
         json!({}),
@@ -294,7 +294,7 @@ pub async fn confirm_email(pool: &PgPool, token: &str, now: OffsetDateTime) -> R
     }
     audit::record(
         &mut tx,
-        trackflow_domain::Actor::User(user.id),
+        taskmaster_domain::Actor::User(user.id),
         "user.email_verified",
         &format!("user:{}", user.id),
         json!({ "email": link.email }),
@@ -304,7 +304,7 @@ pub async fn confirm_email(pool: &PgPool, token: &str, now: OffsetDateTime) -> R
     Ok(link.email)
 }
 
-async fn reload(pool: &PgPool, id: trackflow_domain::UserId) -> Result<User> {
+async fn reload(pool: &PgPool, id: taskmaster_domain::UserId) -> Result<User> {
     users::get(pool, id)
         .await?
         .ok_or(Error::NotFound("the account no longer exists"))

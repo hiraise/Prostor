@@ -3,32 +3,32 @@
 //! and drafts, the panel and its pages, hierarchies and subtask counts.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use time::OffsetDateTime;
-use time::macros::datetime;
-use trackflow_domain::access::Access;
-use trackflow_domain::access::role::PredefinedRole;
-use trackflow_domain::issues::history::{LoggedLink, Origin};
-use trackflow_domain::issues::values::Input;
-use trackflow_domain::links::{Direction, Refusal, Side};
-use trackflow_domain::projects::Template;
-use trackflow_domain::settings::Language;
-use trackflow_domain::validation::Problem;
-use trackflow_domain::{IssueId, LinkTypeId, ProjectId, UserId};
-use trackflow_service::auth::SignedIn;
-use trackflow_service::issue_links::{self, NewLinks, TypeInput, TypeUpdate};
-use trackflow_service::issues::{
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::role::PredefinedRole;
+use taskmaster_domain::issues::history::{LoggedLink, Origin};
+use taskmaster_domain::issues::values::Input;
+use taskmaster_domain::links::{Direction, Refusal, Side};
+use taskmaster_domain::projects::Template;
+use taskmaster_domain::settings::Language;
+use taskmaster_domain::validation::Problem;
+use taskmaster_domain::{IssueId, LinkTypeId, ProjectId, UserId};
+use taskmaster_service::auth::SignedIn;
+use taskmaster_service::issue_links::{self, NewLinks, TypeInput, TypeUpdate};
+use taskmaster_service::issues::{
     self, AudienceInput, FieldChange, IssueChange, IssueView, NewIssue,
 };
-use trackflow_service::projects::{self, NewProjectInput};
-use trackflow_service::search::{self, SearchInput};
-use trackflow_service::setup::{self, Setup};
-use trackflow_service::users::{self, NewAccount};
-use trackflow_service::{Error, Passwords, access, roles};
-use trackflow_store::PgPool;
-use trackflow_store::access::Holder;
-use trackflow_store::issue_history::Direction as Way;
-use trackflow_store::sessions::Origin as SessionOrigin;
-use trackflow_testkit::TestDb;
+use taskmaster_service::projects::{self, NewProjectInput};
+use taskmaster_service::search::{self, SearchInput};
+use taskmaster_service::setup::{self, Setup};
+use taskmaster_service::users::{self, NewAccount};
+use taskmaster_service::{Error, Passwords, access, roles};
+use taskmaster_store::PgPool;
+use taskmaster_store::access::Holder;
+use taskmaster_store::issue_history::Direction as Way;
+use taskmaster_store::sessions::Origin as SessionOrigin;
+use taskmaster_testkit::TestDb;
+use time::OffsetDateTime;
+use time::macros::datetime;
 
 /// A project's issues as the list shows them, newest first (the search with a project context).
 async fn list(pool: &PgPool, viewer: &Access, project: ProjectId, limit: u32) -> issues::Described {
@@ -141,7 +141,7 @@ async fn person(
     of: &[ProjectId],
 ) -> Access {
     let user = create_user(pool, actor, username).await;
-    let role = trackflow_store::roles::builtin_id(pool, role.key())
+    let role = taskmaster_store::roles::builtin_id(pool, role.key())
         .await
         .unwrap()
         .unwrap();
@@ -209,7 +209,7 @@ async fn view(pool: &PgPool, viewer: &Access, issue: IssueId) -> IssueView {
 }
 
 async fn builtin(pool: &PgPool, key: &str) -> LinkTypeId {
-    trackflow_store::links::type_by_builtin(pool, key)
+    taskmaster_store::links::type_by_builtin(pool, key)
         .await
         .unwrap()
         .unwrap()
@@ -311,7 +311,7 @@ async fn resolve(pool: &PgPool, actor: &Access, issue: IssueId) {
         .find(|f| f.field.field.name == "State")
         .unwrap();
     let set = state.field.attached.set_id.unwrap();
-    let fixed = trackflow_store::value_sets::values_of(pool, &[set])
+    let fixed = taskmaster_store::value_sets::values_of(pool, &[set])
         .await
         .unwrap()
         .into_iter()

@@ -6,8 +6,8 @@ use serde::Serialize;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 use sqlx::{PgConnection, PgPool};
+use taskmaster_domain::{Actor, UserId};
 use time::OffsetDateTime;
-use trackflow_domain::{Actor, UserId};
 
 use crate::bus;
 
@@ -222,6 +222,28 @@ pub(crate) async fn set_progress(
     )
     .fetch_optional(pool)
     .await
+}
+
+/// Merges `results` into a claimed job's payload, under `results`: what a long job gathered
+/// for its reader (step 2.1 §4.7), kept beside the payload's own input so a retry overwrites
+/// the key and keeps its work's description.
+pub(crate) async fn merge_results(
+    pool: &PgPool,
+    id: i64,
+    token: i64,
+    results: &serde_json::Value,
+) -> Result<(), sqlx::Error> {
+    sqlx::query!(
+        "update jobs
+         set payload = payload || jsonb_build_object('results', $3::jsonb), updated_at = now()
+         where id = $1 and claim_token = $2 and state = 'running'",
+        id,
+        token,
+        results,
+    )
+    .execute(pool)
+    .await?;
+    Ok(())
 }
 
 /// How a claimed job ended.
@@ -705,7 +727,7 @@ pub async fn count_by_state(pool: &PgPool) -> Result<Vec<(JobState, i64)>, sqlx:
 #[cfg(test)]
 mod tests {
     use serde::Deserialize;
-    use trackflow_testkit::TestDb;
+    use taskmaster_testkit::TestDb;
 
     use super::*;
 

@@ -1,8 +1,8 @@
 //! The resolver on a small catalog: two projects with different state sets, a private field, two
 //! fields named "Size", a field named like an attribute, people, a group, a tag, link sides.
 
+use taskmaster_query::{Direction, ProblemCode, parse};
 use time::macros::{date, datetime};
-use trackflow_query::{Direction, ProblemCode, parse};
 
 use super::catalog::{
     Attached, BoardEntry, FieldEntry, GroupEntry, IssueEntry, LinkSideEntry, ProjectEntry,
@@ -35,6 +35,7 @@ fn field(id: i64, name: &str, aliases: &[&str], kind: FieldKind, multi: bool) ->
         aliases: aliases.iter().map(|a| (*a).to_owned()).collect(),
         kind,
         multi,
+        builtin: None,
     }
 }
 
@@ -43,6 +44,7 @@ fn attach(project: i64, field: i64, set: Option<i64>, label: &str, private: bool
         project,
         field,
         set,
+        can_be_empty: true,
         empty_label: label.to_owned(),
         private,
     }
@@ -242,14 +244,14 @@ fn ctx() -> Ctx {
     }
 }
 
-fn run_with(text: &str, mut ctx: Ctx) -> Result<Resolved, Vec<trackflow_query::Problem>> {
+fn run_with(text: &str, mut ctx: Ctx) -> Result<Resolved, Vec<taskmaster_query::Problem>> {
     let cat = catalog();
     let q = parse(text);
     ctx.scope = scope(&q, &cat.projects, None).projects;
     resolve(&q, &cat, &ctx)
 }
 
-fn run(text: &str) -> Result<Resolved, Vec<trackflow_query::Problem>> {
+fn run(text: &str) -> Result<Resolved, Vec<taskmaster_query::Problem>> {
     run_with(text, ctx())
 }
 

@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "insert into command_history (user_id, command, used_at)\n         values ($1, $2, now())\n         on conflict (user_id, command) do update set used_at = now()",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "2679ef2d9f481c957a4424c606e563e61eadaaf1637cfd515d3324ed5ed5aa26"
+}

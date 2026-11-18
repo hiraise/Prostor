@@ -14,12 +14,17 @@
 </script>
 
 <svelte:head>
-  {#if !board}<title>{states.notFoundTitle()} · trackflow</title>{/if}
+  {#if !board}<title>{states.notFoundTitle()} · TaskMaster</title>{/if}
 </svelte:head>
 
 {#if board && data.sprint !== null}
   {#key `${String(board.id)}/${String(data.sprint)}`}
-    <BoardPage {board} sprint={data.sprint} q={page.url.searchParams.get('q')} />
+    <BoardPage
+      {board}
+      sprint={data.sprint}
+      q={page.url.searchParams.get('q')}
+      card={page.url.searchParams.get('issue')}
+    />
   {/key}
 {:else}
   <NotFoundState home={homeHref()} />

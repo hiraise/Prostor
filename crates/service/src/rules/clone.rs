@@ -6,20 +6,20 @@
 //! original, and the stream renders «created by cloning X».
 
 use sqlx::PgConnection;
-use trackflow_domain::IssueId;
-use trackflow_domain::access::Access;
-use trackflow_domain::issues as domain;
-use trackflow_domain::issues::history::{Origin, Record};
-use trackflow_domain::issues::rights;
-use trackflow_domain::rules::Rule;
-use trackflow_domain::settings::Language;
-use trackflow_domain::validation::Problem;
-use trackflow_markup::Profile;
-use trackflow_store::issues::{self, Issue, NewDraft};
-use trackflow_store::projects::Project;
-use trackflow_store::rules as store_rules;
-use trackflow_store::tags as store_tags;
-use trackflow_store::{PgPool, Postgres, Transaction};
+use taskmaster_domain::IssueId;
+use taskmaster_domain::access::Access;
+use taskmaster_domain::issues as domain;
+use taskmaster_domain::issues::history::{Origin, Record};
+use taskmaster_domain::issues::rights;
+use taskmaster_domain::rules::Rule;
+use taskmaster_domain::settings::Language;
+use taskmaster_domain::validation::Problem;
+use taskmaster_markup::Profile;
+use taskmaster_store::PgPool;
+use taskmaster_store::issues::{self, Issue, NewDraft};
+use taskmaster_store::projects::Project;
+use taskmaster_store::rules as store_rules;
+use taskmaster_store::tags as store_tags;
 
 use super::{Answer, Ctx, instance_language};
 use crate::issues::{self as issue_use, Described, One, values};
@@ -43,40 +43,62 @@ pub async fn clone_issue(
         .await?
         .ok_or(Error::NotFound("no such issue"))?;
     let (source, project) = issue_use::checked(&mut tx, actor, Some(found)).await?;
-    if source.is_draft() {
-        // Drafts are their reporter's alone; the clone menu lives on published issues.
-        return Err(Error::NotFound("no such issue"));
-    }
-    gate(&mut tx, actor, &project).await?;
-    let language = instance_language(&mut tx).await?;
-    let id = copy(&mut tx, actor, &source, &project, language).await?;
-    let draft = issues::get(&mut *tx, id)
-        .await?
-        .ok_or(Error::NotFound("no such issue"))?;
     let mut batch = Batch::new();
     let mut ctx = Ctx::new(actor);
-    issue_use::publish_locked(
-        &mut tx,
-        &mut batch,
-        actor,
-        origin,
-        &draft,
-        &mut ctx,
-        Record::created_of(source.id),
+    let id = clone_conn(
+        &mut tx, &mut batch, &mut ctx, actor, origin, &source, &project,
     )
     .await?;
     batch.publish(&mut tx).await?;
     tx.commit().await?;
     let done = issue_use::get(pool, actor, id).await?;
-    ctx.say(
-        Rule::CloneIssue,
-        "clone_created",
-        &[("issue", done.0.readable_id().unwrap_or_default())],
-    );
     Ok(Answer {
         done,
         messages: ctx.messages,
     })
+}
+
+/// Clones a checked issue inside the caller's transaction (step 2.1 §4.3): everything
+/// [`clone_issue`] does between its begin and its commit — the copy's publication events join
+/// the caller's `batch`, its rule message the caller's `ctx`. Answers the copy's ID.
+pub(crate) async fn clone_conn(
+    tx: &mut PgConnection,
+    batch: &mut Batch,
+    ctx: &mut Ctx<'_>,
+    actor: &Access,
+    origin: Origin,
+    source: &Issue,
+    project: &Project,
+) -> Result<IssueId> {
+    if source.is_draft() {
+        // Drafts are their reporter's alone; the clone menu lives on published issues.
+        return Err(Error::NotFound("no such issue"));
+    }
+    gate(tx, actor, project).await?;
+    let language = instance_language(tx).await?;
+    let id = copy(tx, actor, source, project, language).await?;
+    let draft = issues::get(&mut *tx, id)
+        .await?
+        .ok_or(Error::NotFound("no such issue"))?;
+    issue_use::publish_locked(
+        tx,
+        batch,
+        actor,
+        origin,
+        &draft,
+        ctx,
+        Record::created_of(source.id),
+    )
+    .await?;
+    let made = issues::get(&mut *tx, id)
+        .await?
+        .ok_or(Error::NotFound("no such issue"))?;
+    let made_id = made
+        .number
+        .map(|number| domain::readable_id(&project.key, number))
+        .unwrap_or_default();
+    ctx.say(Rule::CloneIssue, "clone_created", &[("issue", made_id)]);
+    Ok(id)
 }
 
 /// Clones issues into the actor's drafts (§3.10): the same copies without numbers, one message
@@ -160,7 +182,7 @@ async fn gate(conn: &mut PgConnection, actor: &Access, project: &Project) -> Res
 /// Makes the copy as a draft: values, audience and the actor's own tags, no watchers, files or
 /// links. Publishing it — with a creation record naming the original — is the caller's step.
 async fn copy(
-    tx: &mut Transaction<'_, Postgres>,
+    tx: &mut PgConnection,
     actor: &Access,
     source: &Issue,
     project: &Project,
@@ -175,7 +197,7 @@ async fn copy(
     let summary = domain::summary(&format!("{}{}", source.summary.trim(), suffix), true)
         .map_err(|r| Error::rejected("summary", r))?;
     // The actor's own tags on the original (ISS-037): shared ones belong to their owners.
-    let own_tags: Vec<_> = store_tags::on_issues(&mut **tx, &[source.id], actor.user(), &[])
+    let own_tags: Vec<_> = store_tags::on_issues(&mut *tx, &[source.id], actor.user(), &[])
         .await?
         .into_iter()
         .filter(|(_, tag)| tag.owner_id == actor.user())

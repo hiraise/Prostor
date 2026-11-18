@@ -51,6 +51,16 @@ pub enum SidebarSection {
     Searches,
 }
 
+/// What came of the prompt after a first bulk apply without silent (plan 2.1 §6): `silent` —
+/// bulk applies start without notifications; `dismissed`/`never` — it asked, the answer was no.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum CommandSilentPrompt {
+    Silent,
+    Dismissed,
+    Never,
+}
+
 /// Declares the keys once for the settings and their patch.
 macro_rules! keys {
     ($($(#[doc = $doc:literal])* $key:ident: $ty:ty),* $(,)?) => {
@@ -84,6 +94,8 @@ macro_rules! keys {
 keys! {
     /// The rail is folded to icons (UI-001).
     rail_collapsed: bool,
+    /// The expanded rail's width in tenths of a rem, 160…400.
+    rail_width: i32,
     /// The Markdown editor shows its toolbar.
     editor_toolbar: bool,
     /// The page after signing in (UI-004).
@@ -117,4 +129,10 @@ keys! {
     recent_issues: Vec<i64>,
     /// The project of the person's last new issue (ISS-005).
     last_project: i64,
+    /// Typing a letter or digit on the issue page opens the command dialog (plan 2.1 §6),
+    /// default off.
+    commands_on_typing: bool,
+    /// The answer of the silent-by-default prompt for bulk applies (plan 2.1 §6); unset = not
+    /// asked yet.
+    commands_silent_prompt: CommandSilentPrompt,
 }

@@ -1,35 +1,35 @@
 //! Turning service results into API shapes, with what each viewer may see (ACC-015, ACC-016).
 
-use trackflow_api::access as api;
-use trackflow_api::accounts::{
+use taskmaster_api::access as api;
+use taskmaster_api::accounts::{
     Account, AccountSummary, DisabledLabel, DisabledState, PasswordState, ProfileTier, UserRef,
     UserRefKind,
 };
-use trackflow_api::content::{IssueMention, TextRefs};
-use trackflow_api::files::{self as api_files, FileKind, FileRef};
-use trackflow_api::projects::ProjectRef;
-use trackflow_api::rules;
-use trackflow_domain::access::Access;
-use trackflow_domain::access::group::BuiltinGroup;
-use trackflow_domain::access::identity::{Tier, tier};
-use trackflow_domain::access::permission::{Entity, Operation, Permission, PermissionSet};
-use trackflow_domain::access::role::PredefinedRole;
-use trackflow_domain::accounts;
-use trackflow_domain::files::{Kind, ui_link_expiry};
-use trackflow_service::attachments::AttachmentView;
-use trackflow_service::files::Signer;
-use trackflow_service::people::{Names, Shown};
-use trackflow_service::pictures;
-use trackflow_service::text::Refs;
-use trackflow_store::attachments::Attachment;
-use trackflow_store::groups::Group;
-use trackflow_store::projects::Project;
-use trackflow_store::roles::Role;
-use trackflow_store::uploads::Upload;
-use trackflow_store::users::User;
+use taskmaster_api::content::{IssueMention, TextRefs};
+use taskmaster_api::files::{self as api_files, FileKind, FileRef};
+use taskmaster_api::projects::ProjectRef;
+use taskmaster_api::rules;
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::group::BuiltinGroup;
+use taskmaster_domain::access::identity::{Tier, tier};
+use taskmaster_domain::access::permission::{Entity, Operation, Permission, PermissionSet};
+use taskmaster_domain::access::role::PredefinedRole;
+use taskmaster_domain::accounts;
+use taskmaster_domain::files::{Kind, ui_link_expiry};
+use taskmaster_service::attachments::AttachmentView;
+use taskmaster_service::files::Signer;
+use taskmaster_service::people::{Names, Shown};
+use taskmaster_service::pictures;
+use taskmaster_service::text::Refs;
+use taskmaster_store::attachments::Attachment;
+use taskmaster_store::groups::Group;
+use taskmaster_store::projects::Project;
+use taskmaster_store::roles::Role;
+use taskmaster_store::uploads::Upload;
+use taskmaster_store::users::User;
 
 /// What the project's rules said, as the answer carries it (AUT-023, step 1.9).
-pub fn rule_messages(messages: &[trackflow_service::rules::Message]) -> Vec<rules::Message> {
+pub fn rule_messages(messages: &[taskmaster_service::rules::Message]) -> Vec<rules::Message> {
     messages
         .iter()
         .map(|message| rules::Message {
@@ -127,7 +127,7 @@ pub fn account_summary(
 }
 
 /// A profile (ACC-015).
-pub fn account(viewer: &Access, profile: &trackflow_service::users::Profile) -> Account {
+pub fn account(viewer: &Access, profile: &taskmaster_service::users::Profile) -> Account {
     let groups = profile.groups.as_deref().unwrap_or_default();
     Account {
         summary: account_summary(viewer, &profile.user, groups, &profile.projects),
@@ -234,7 +234,7 @@ pub fn permission_info(permission: Permission) -> Option<api::PermissionInfo> {
     })
 }
 
-pub fn role(row: &trackflow_service::roles::RoleRow) -> api::Role {
+pub fn role(row: &taskmaster_service::roles::RoleRow) -> api::Role {
     api::Role {
         id: row.role.id,
         name: row.role.name.clone(),
@@ -428,7 +428,7 @@ pub fn attachment<'a>(
         thumbnail_url,
         author: person(f.author_id).unwrap_or_else(|| crate::issues::placeholder(f.author_id)),
         created_at: f.created_at,
-        audience: trackflow_api::issues::Audience {
+        audience: taskmaster_api::issues::Audience {
             users: f
                 .audience_users
                 .iter()

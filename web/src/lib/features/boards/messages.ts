@@ -1036,7 +1036,6 @@ export const draftKept = msg({
   ru: 'Черновик остался в этой ячейке',
 });
 export const issuePopup = msg({ en: 'Issue', ru: 'Задача' });
-export const openIssuePage = msg({ en: 'Open the page', ru: 'Открыть страницей' });
 export const issueGone = msg({
   en: 'The issue is gone or hidden from you.',
   ru: 'Задачи больше нет, или она вам не видна.',

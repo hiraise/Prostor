@@ -2,8 +2,8 @@
 //! compiling a person's access needs to read.
 
 use sqlx::{PgConnection, PgExecutor};
+use taskmaster_domain::{GroupId, ProjectId, RoleId, UserId};
 use time::OffsetDateTime;
-use trackflow_domain::{GroupId, ProjectId, RoleId, UserId};
 
 /// Who holds an assignment.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

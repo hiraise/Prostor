@@ -390,8 +390,10 @@ describe('the instance home page (UI-004)', () => {
 
     const projects = screen.getByRole('radio', { name: 'Projects' });
     await expect.element(projects).toBeVisible();
-    // The mark is the hint beside the option, not part of its name.
+    // The mark is the hint beside the option, not part of its name; the command toggles below
+    // carry hints of their own, so only the chooser is counted.
     await expect.element(screen.getByText('The instance default')).toBeVisible();
-    expect(screen.container.querySelectorAll('.hint')).toHaveLength(1);
+    const chooser = screen.getByRole('group', { name: 'Home page' });
+    expect(chooser.element().querySelectorAll('.hint')).toHaveLength(1);
   });
 });

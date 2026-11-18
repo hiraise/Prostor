@@ -3,8 +3,8 @@
 
 use serde_json::Value;
 use sqlx::{PgConnection, PgPool};
+use taskmaster_domain::{Actor, UserId};
 use time::OffsetDateTime;
-use trackflow_domain::{Actor, UserId};
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct AuditEvent {

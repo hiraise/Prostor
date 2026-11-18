@@ -1,7 +1,10 @@
 // Changes of an issue from its page (ISS-018, ISS-020, ISS-028, ISS-030, ISS-032, ISS-034,
 // ISS-035, ISS-041): each shows at once in the stored row and rolls back when the server refuses.
 import { ApiError, api } from '#lib/api/client.ts';
+import { currentUser } from '#lib/session/index.ts';
+import { announce } from '#lib/ui/announce.svelte.ts';
 import { showRuleMessages } from '#lib/ui/rule-messages.ts';
+import { showError } from '#lib/ui/toast.svelte.ts';
 import type {
   Audience,
   AudienceCandidates,
@@ -11,8 +14,13 @@ import type {
   MoveResult,
   Tag,
   TagRef,
+  UserRef,
 } from '#lib/api/schema.gen.ts';
 import { store, type Changes } from '#lib/store/index.ts';
+
+import { withChoices } from './fields/field-values.ts';
+import { saveField } from './fields/save.ts';
+import * as m from './messages.ts';
 
 /** Edits that answer `204`: the saved row is the stored one with the edit applied. */
 async function quietly(id: number, changes: Changes<Issue>, send: () => Promise<unknown>) {
@@ -36,6 +44,36 @@ export function setVote(issue: Issue, on: boolean): Promise<void> {
   const path = { path: { id: issue.id } };
   return quietly(issue.id, { voted: on, votes: issue.votes + (on ? 1 : -1) }, () =>
     on ? api.put('/issues/{id}/vote', path) : api.delete('/issues/{id}/vote', path),
+  );
+}
+
+/** Assigns the issue to the signed-in person (step 2.2 §4, the `m` of the list and the page):
+ * the same field save the editors use, no API of its own. An issue without an editable single
+ * assignee field does nothing. */
+export function assignToMe(row: Issue): void {
+  const me = currentUser();
+  const entry = row.fields.find((field) => field.field.builtin === 'assignee');
+  if (me === null || entry === undefined || !entry.editable || entry.field.multi) return;
+  const person: UserRef = {
+    id: me.id,
+    username: me.username,
+    full_name: me.full_name,
+    avatar_color: me.avatar_color,
+    avatar_url: me.avatar_url,
+    disabled: false,
+    kind: 'person',
+    pseudonym: null,
+  };
+  saveField(row.id, withChoices(entry, [{ kind: 'user', user: person }]), {
+    kind: 'set',
+    value: me.id,
+  }).then(
+    () => {
+      announce(m.assignedToMe());
+    },
+    (error: unknown) => {
+      showError(error);
+    },
   );
 }
 

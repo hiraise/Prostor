@@ -8,6 +8,7 @@ import { render } from 'vitest-browser-svelte';
 import type { MarkdownPreview, Upload, UserRef } from '#lib/api/schema.gen.ts';
 import { BASE_LOCALE, setLocale } from '#lib/i18n/locale.svelte.ts';
 import { preferences, setPreferencesForTests } from '#lib/session/index.ts';
+import { active, resetShortcutsForTests } from '#lib/shortcuts/registry.svelte.ts';
 import { announcement } from '#lib/ui/announce.svelte.ts';
 
 import { expectAccessible, isPhone, smallTargets } from '../../../test/a11y.ts';
@@ -95,6 +96,7 @@ const CLIP = new File(['mp4'], 'clip.mp4', { type: 'video/mp4' });
 afterEach(() => {
   vi.unstubAllGlobals();
   setPreferencesForTests(null);
+  resetShortcutsForTests();
   setLocale(BASE_LOCALE);
 });
 
@@ -167,7 +169,7 @@ describe('MarkdownEditor', () => {
     expect(preferences.chosen('editor_toolbar')).toBeUndefined();
   });
 
-  it('CNT-029: shortcuts for bold, italic, code, link and strikethrough; Ctrl+Enter submits', async () => {
+  it('CNT-029, UI-023: bold, italic, code and strikethrough by the table, link kept; Ctrl+Enter submits', async () => {
     const onsubmit = vi.fn();
     const screen = await render(MarkdownEditor, {
       label: 'Description',
@@ -176,6 +178,7 @@ describe('MarkdownEditor', () => {
     });
     const area = field(screen);
 
+    // The combos come from the binding table (step 2.2 §4): physical keys, either primary.
     select(area, 'one');
     await userEvent.keyboard('{Control>}b{/Control}');
     select(area, 'two');
@@ -186,13 +189,27 @@ describe('MarkdownEditor', () => {
     await userEvent.keyboard('{Control>}k{/Control}');
     expect(area.selectionStart).toBe(area.value.indexOf('[four](') + '[four]('.length);
     select(area, 'five');
-    await userEvent.keyboard('{Control>}{Shift>}x{/Shift}{/Control}');
+    await userEvent.keyboard('{Control>}{Shift>}s{/Shift}{/Control}');
     expect(area.value).toBe('**one** _two_ `three` [four]() ~~five~~');
 
     expect(onsubmit).not.toHaveBeenCalled();
     await userEvent.keyboard('{Control>}{Enter}{/Control}');
     expect(onsubmit).toHaveBeenCalledOnce();
     expect(area.value).toBe('**one** _two_ `three` [four]() ~~five~~');
+  });
+
+  it('UI-023: the editor context holds while the field has the focus', async () => {
+    const screen = await render(MarkdownEditor, { label: 'Description' });
+    const area = field(screen);
+    expect(active()).toBeNull();
+    area.focus();
+    await vi.waitFor(() => {
+      expect(active()).toBe('editor');
+    });
+    area.blur();
+    await vi.waitFor(() => {
+      expect(active()).toBeNull();
+    });
   });
 
   it('CNT-029: the preview shows the text as the server renders it', async () => {

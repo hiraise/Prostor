@@ -1,5 +1,5 @@
 # Services for local development: `make db-up`. Ports are bound to loopback only.
-name: trackflow-dev
+name: taskmaster-dev
 
 services:
   postgres:
@@ -7,16 +7,16 @@ services:
     # Room for parallel test processes: each test has its own database and pool.
     command: ["postgres", "-c", "max_connections=300"]
     environment:
-      POSTGRES_USER: trackflow
-      POSTGRES_PASSWORD: trackflow
-      POSTGRES_DB: trackflow
+      POSTGRES_USER: taskmaster
+      POSTGRES_PASSWORD: taskmaster
+      POSTGRES_DB: taskmaster
     ports:
       - "127.0.0.1:5433:5432"
     volumes:
       # Since PostgreSQL 18 the image keeps data under /var/lib/postgresql/<major>/.
       - pgdata:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U trackflow -d trackflow"]
+      test: ["CMD-SHELL", "pg_isready -U taskmaster -d taskmaster"]
       interval: 2s
       timeout: 3s
       retries: 30

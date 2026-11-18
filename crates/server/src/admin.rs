@@ -7,16 +7,16 @@ use std::collections::HashMap;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::Response;
-use trackflow_api::admin::{
+use taskmaster_api::admin::{
     AdminFlag, AdminJob, AdminJobState, AdminJobs, AdminJobsQuery, AdminSetting, AdminSettings,
     AdminSettingsChange, JobProgress,
 };
-use trackflow_api::error::ErrorBody;
-use trackflow_domain::UserId;
-use trackflow_domain::access::Access;
-use trackflow_domain::auth::Scope;
-use trackflow_store::jobs::{Job, JobFilter, JobState, Term};
-use trackflow_store::users::{self as store_users, User};
+use taskmaster_api::error::ErrorBody;
+use taskmaster_domain::UserId;
+use taskmaster_domain::access::Access;
+use taskmaster_domain::auth::Scope;
+use taskmaster_store::jobs::{Job, JobFilter, JobState, Term};
+use taskmaster_store::users::{self as store_users, User};
 
 use crate::AppState;
 use crate::access::Viewer;
@@ -46,7 +46,7 @@ const JOBS_DEFAULT_LIMIT: u32 = 50;
 )]
 pub async fn settings(State(state): State<AppState>, viewer: Viewer) -> Result<Response, ApiError> {
     require_scope(&viewer.principal, Scope::AdminRead)?;
-    let view = trackflow_service::settings::admin_view(&viewer.access, &state.settings.get())?;
+    let view = taskmaster_service::settings::admin_view(&viewer.access, &state.settings.get())?;
     Ok(json(StatusCode::OK, shape(&view, state.upload_ceiling)))
 }
 
@@ -74,7 +74,7 @@ pub async fn save(
 ) -> Result<Response, ApiError> {
     require_scope(&viewer.principal, Scope::AdminWrite)?;
     let changes: Vec<(String, Option<serde_json::Value>)> = request.0.into_iter().collect();
-    trackflow_service::settings::save(
+    taskmaster_service::settings::save(
         &state.db,
         &viewer.access,
         &changes,
@@ -83,7 +83,7 @@ pub async fn save(
     .await?;
     // This node follows at once; other nodes follow the settings bus.
     state.settings.reload(&state.db).await?;
-    let view = trackflow_service::settings::admin_view(&viewer.access, &state.settings.get())?;
+    let view = taskmaster_service::settings::admin_view(&viewer.access, &state.settings.get())?;
     Ok(json(StatusCode::OK, shape(&view, state.upload_ceiling)))
 }
 
@@ -125,7 +125,7 @@ pub async fn jobs(
     };
     // One row more than the page tells whether another page follows.
     let rows =
-        trackflow_service::jobs::list(&state.db, &viewer.access, filter, query.before, limit + 1)
+        taskmaster_service::jobs::list(&state.db, &viewer.access, filter, query.before, limit + 1)
             .await?;
     let more = rows.len() as i64 > limit;
     let rows: Vec<Job> = rows.into_iter().take(limit as usize).collect();
@@ -162,7 +162,7 @@ pub async fn cancel(
     Path(id): Path<i64>,
 ) -> Result<Response, ApiError> {
     require_scope(&viewer.principal, Scope::AdminWrite)?;
-    let job = trackflow_service::jobs::cancel(&state.db, &viewer.access, id).await?;
+    let job = taskmaster_service::jobs::cancel(&state.db, &viewer.access, id).await?;
     job_answer(&state, &viewer, job).await
 }
 
@@ -189,7 +189,7 @@ pub async fn retry(
     Path(id): Path<i64>,
 ) -> Result<Response, ApiError> {
     require_scope(&viewer.principal, Scope::AdminWrite)?;
-    let job = trackflow_service::jobs::retry(&state.db, &viewer.access, id).await?;
+    let job = taskmaster_service::jobs::retry(&state.db, &viewer.access, id).await?;
     let mut response = job_answer(&state, &viewer, job).await?;
     *response.status_mut() = StatusCode::CREATED;
     Ok(response)
@@ -222,7 +222,7 @@ async fn job_answer(state: &AppState, viewer: &Viewer, job: Job) -> Result<Respo
 
 /// A job as the API shape (ADM-031).
 fn present_job(
-    names: &trackflow_service::people::Names,
+    names: &taskmaster_service::people::Names,
     viewer: &Access,
     users: &HashMap<UserId, User>,
     job: &Job,
@@ -259,7 +259,7 @@ fn present_job(
 
 /// The service view as the API shape.
 fn shape(
-    view: &trackflow_service::settings::AdminSettingsView,
+    view: &taskmaster_service::settings::AdminSettingsView,
     upload_ceiling: u64,
 ) -> AdminSettings {
     AdminSettings {

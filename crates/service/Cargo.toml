@@ -1,17 +1,17 @@
 [package]
-name = "trackflow-service"
-description = "trackflow use cases: one transaction per change, with checks, history and audit"
+name = "taskmaster-service"
+description = "taskmaster use cases: one transaction per change, with checks, history and audit"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
-trackflow-domain.workspace = true
-trackflow-files.workspace = true
-trackflow-markup.workspace = true
-trackflow-query.workspace = true
-trackflow-store.workspace = true
+taskmaster-domain.workspace = true
+taskmaster-files.workspace = true
+taskmaster-markup.workspace = true
+taskmaster-query.workspace = true
+taskmaster-store.workspace = true
 sqlx.workspace = true
 serde_json.workspace = true
 time.workspace = true
@@ -23,6 +23,7 @@ sha2.workspace = true
 getrandom.workspace = true
 base64.workspace = true
 jiff.workspace = true
+rust_xlsxwriter.workspace = true
 lettre.workspace = true
 serde.workspace = true
 url.workspace = true
@@ -36,7 +37,7 @@ hyper-rustls.workspace = true
 rustls.workspace = true
 
 [dev-dependencies]
-trackflow-testkit.workspace = true
+taskmaster-testkit.workspace = true
 tempfile.workspace = true
 axum.workspace = true
 sha2.workspace = true

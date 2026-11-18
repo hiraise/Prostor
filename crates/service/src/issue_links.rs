@@ -11,24 +11,24 @@ use std::collections::BTreeMap;
 
 use serde_json::json;
 use sqlx::PgConnection;
-use trackflow_domain::access::Access;
-use trackflow_domain::access::permission::Permission;
-use trackflow_domain::access::visibility::Audience;
-use trackflow_domain::issues::history::{LoggedLink, Origin, Record};
-use trackflow_domain::issues::rights::{self, Facts};
-use trackflow_domain::links::{
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::permission::Permission;
+use taskmaster_domain::access::visibility::Audience;
+use taskmaster_domain::issues::history::{LoggedLink, Origin, Record};
+use taskmaster_domain::issues::rights::{self, Facts};
+use taskmaster_domain::links::{
     self as domain, ADD_MAX, BuiltinType, DEPTH_MAX, Direction, LINKS_PER_ISSUE_MAX, Refusal, Side,
     TypeNames,
 };
-use trackflow_domain::live::Change;
-use trackflow_domain::settings::Language;
-use trackflow_domain::validation::{Problem, Problems};
-use trackflow_domain::{IssueId, LinkId, LinkTypeId, ProjectId};
-use trackflow_store::issue_history::{self, Author};
-use trackflow_store::issues::{self, Issue};
-use trackflow_store::links::{self, End, Link, LinkType, Linked, NewLinkType, TypeChange};
-use trackflow_store::projects::{self, Project};
-use trackflow_store::{PgPool, audit, instance, unique_violation};
+use taskmaster_domain::live::Change;
+use taskmaster_domain::settings::Language;
+use taskmaster_domain::validation::{Problem, Problems};
+use taskmaster_domain::{IssueId, LinkId, LinkTypeId, ProjectId};
+use taskmaster_store::issue_history::{self, Author};
+use taskmaster_store::issues::{self, Issue};
+use taskmaster_store::links::{self, End, Link, LinkType, Linked, NewLinkType, TypeChange};
+use taskmaster_store::projects::{self, Project};
+use taskmaster_store::{PgPool, audit, instance, unique_violation};
 
 use crate::live::Batch;
 use crate::{Error, Result};
@@ -134,7 +134,7 @@ async fn checked_names(
             None => {
                 problems.add(
                     "target_name",
-                    trackflow_domain::validation::Rejection::new(
+                    taskmaster_domain::validation::Rejection::new(
                         Problem::Required,
                         "a directed type needs a name for the target side",
                     ),
@@ -440,8 +440,8 @@ fn target(id: LinkTypeId) -> String {
     format!("link_type:{id}")
 }
 
-fn actor_of(access: &Access) -> trackflow_domain::Actor {
-    trackflow_domain::Actor::User(access.user())
+fn actor_of(access: &Access) -> taskmaster_domain::Actor {
+    taskmaster_domain::Actor::User(access.user())
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -580,6 +580,48 @@ pub async fn add(
         done: added,
         messages: ctx.messages,
     })
+}
+
+/// Adds links to an issue the caller locked and may see, inside its transaction (step 2.1
+/// §4.3): what [`add`] does between its begin and its commit — the built-in behaviors hear the
+/// links on the caller's `ctx`, their events joining `batch`.
+#[allow(clippy::too_many_arguments)]
+pub(crate) async fn add_conn(
+    conn: &mut PgConnection,
+    batch: &mut Batch,
+    ctx: &mut crate::rules::Ctx<'_>,
+    actor: &Access,
+    origin: Origin,
+    from: &Issue,
+    input: NewLinks,
+    silent: bool,
+) -> Result<()> {
+    let added = add_locked(conn, batch, actor, origin, from, input, silent).await?;
+    let mut rule_records = Vec::new();
+    if let Some((kind, issue_is_source)) = added.builtin
+        && !added.added.is_empty()
+    {
+        let others: Vec<(IssueId, bool)> = added
+            .added
+            .iter()
+            .map(|other| (*other, !issue_is_source))
+            .collect();
+        rule_records.extend(
+            crate::rules::on(
+                conn,
+                batch,
+                ctx,
+                crate::rules::Event::LinksAdded {
+                    issue: from,
+                    kind,
+                    others: &others,
+                },
+            )
+            .await?,
+        );
+        crate::rules::finish(conn, batch, ctx, from, &rule_records).await?;
+    }
+    Ok(())
 }
 
 /// Adds links from an issue the caller locked and may see, inside its transaction.
@@ -904,6 +946,59 @@ pub async fn remove(
     Ok(ctx.messages)
 }
 
+/// Unlinks `target` from `from` by one link type inside the caller's transaction (step 2.1
+/// §4.5): the unlink and the built-in behaviors of [`remove`]; `false` when no such link is
+/// there. The other end is locked the way [`remove`] locks it.
+#[allow(clippy::too_many_arguments)]
+pub(crate) async fn remove_conn(
+    conn: &mut PgConnection,
+    batch: &mut Batch,
+    ctx: &mut crate::rules::Ctx<'_>,
+    actor: &Access,
+    origin: Origin,
+    from: &Issue,
+    link_type: LinkTypeId,
+    target: IssueId,
+    silent: bool,
+) -> Result<bool> {
+    let found = links::of_issue(&mut *conn, from.id)
+        .await?
+        .into_iter()
+        .find(|end| end.type_id == link_type && end.other.id == target);
+    let Some(end) = found else {
+        return Ok(false);
+    };
+    issues::lock_many(&mut *conn, &[target]).await?;
+    let Some(link) = links::get(&mut *conn, end.link).await? else {
+        return Ok(false);
+    };
+    remove_checked(conn, batch, actor, origin, from, &link, silent).await?;
+    let mut rule_records = Vec::new();
+    if let Some(kind) = links::share_type(&mut *conn, link.type_id)
+        .await?
+        .and_then(|kind| kind.builtin)
+        .as_deref()
+        .and_then(BuiltinType::parse)
+    {
+        rule_records.extend(
+            crate::rules::on(
+                conn,
+                batch,
+                ctx,
+                crate::rules::Event::LinkRemoved {
+                    issue: from,
+                    kind,
+                    other: target,
+                    was_source: link.source_id == target,
+                },
+            )
+            .await?,
+        );
+        crate::rules::finish(conn, batch, ctx, from, &rule_records).await?;
+    }
+    Ok(true)
+}
+
 /// Removes a link of an issue the caller locked, may see and whose project is active, inside its
 /// transaction (a board re-parents a card, BRD-051): the other end is locked here.
 pub(crate) async fn remove_locked(
@@ -960,7 +1055,7 @@ async fn remove_checked(
         return Ok(());
     }
     // The facts of a removed link are taken before it goes.
-    for facts in trackflow_store::live::link_facts(&mut *tx, &[link]).await? {
+    for facts in taskmaster_store::live::link_facts(&mut *tx, &[link]).await? {
         batch.link_removed(facts);
     }
     links::delete(&mut *tx, link).await?;

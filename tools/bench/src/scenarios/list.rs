@@ -24,7 +24,7 @@ pub const VARIANTS: &[&str] = &[
 pub const PAGE: i64 = 50;
 
 /// A name as a query value: always quoted, so spaces and keywords read as the name.
-fn quoted(name: &str) -> String {
+pub(super) fn quoted(name: &str) -> String {
     format!("\"{}\"", name.replace('\\', "\\\\").replace('"', "\\\""))
 }
 

@@ -13,7 +13,6 @@ test('ISS-001, ISS-002, ISS-003, ISS-016, ISS-018, ISS-019, ISS-024, ISS-032, IS
   const suffix = `${testInfo.project.name === 'phone' ? 'P' : 'D'}${String(Date.now()).slice(-6)}`;
   const key = `I${suffix}`;
   const renamed = `J${suffix}`;
-  const phone = testInfo.project.name === 'phone';
 
   await signIn(page);
 
@@ -96,14 +95,9 @@ test('ISS-001, ISS-002, ISS-003, ISS-016, ISS-018, ISS-019, ISS-024, ISS-032, IS
   await page.reload();
   await expect(page.getByText('Mine: raise the contrast.')).toBeVisible();
 
-  // ISS-034: a new tag, put on the issue from the picker (on a phone it is under «More»).
+  // ISS-034: a new tag, put on the issue from the picker (the tag icon in the title row).
   const tag = `pale-${suffix.toLowerCase()}`;
-  if (phone) {
-    await page.getByRole('button', { name: 'More' }).click();
-    await page.getByRole('menuitem', { name: 'Add tag' }).click();
-  } else {
-    await page.getByRole('button', { name: 'Add tag' }).click();
-  }
+  await page.getByRole('button', { name: 'Add tag' }).click();
   const picker = page.getByRole('dialog', { name: 'Add tag' });
   await picker.getByRole('searchbox', { name: 'Find a tag' }).fill(tag);
   await picker.getByRole('button', { name: `Create tag “${tag}”` }).click();

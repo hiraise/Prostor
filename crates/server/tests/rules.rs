@@ -8,7 +8,7 @@ mod common;
 use axum::http::{Method, StatusCode};
 use common::Node;
 use serde_json::json;
-use trackflow_server::throttle::Throttle;
+use taskmaster_server::throttle::Throttle;
 
 /// A project's rules say nothing yet, and every mutating answer names the field (§3.11).
 #[tokio::test]

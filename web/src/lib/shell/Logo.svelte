@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The trackflow mark (three lanes of work flowing right) and the wordmark. Decorative: the link
+  // The TaskMaster mark (three lanes of work flowing right) and the wordmark. Decorative: the link
   // around it carries the accessible name.
   let { compact = false }: { compact?: boolean } = $props();
 </script>
@@ -11,7 +11,7 @@
     <rect x="11" y="15" width="14" height="4" rx="2" class="lane" opacity=".75" />
     <rect x="7" y="21" width="9" height="4" rx="2" class="lane" opacity=".5" />
   </svg>
-  {#if !compact}<span class="word">track<b>flow</b></span>{/if}
+  {#if !compact}<span class="word">Task<b>Master</b></span>{/if}
 </span>
 
 <style>

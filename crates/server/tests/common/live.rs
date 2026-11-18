@@ -5,12 +5,12 @@ use std::time::Duration;
 
 use futures_util::{SinkExt, StreamExt};
 use serde_json::{Value, json};
+use taskmaster_server::router;
 use tokio::net::TcpStream;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::http::HeaderValue;
 use tokio_tungstenite::tungstenite::{self, Message};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream};
-use trackflow_server::router;
 
 use super::{HOST, Node};
 
@@ -58,7 +58,7 @@ pub async fn try_connect(
         Some(cookie) => {
             headers.insert(
                 "cookie",
-                format!("trackflow_session={cookie}").parse().unwrap(),
+                format!("taskmaster_session={cookie}").parse().unwrap(),
             );
         }
         None => {}

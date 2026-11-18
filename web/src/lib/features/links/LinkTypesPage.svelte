@@ -107,7 +107,7 @@
   }
 </script>
 
-<svelte:head><title>{m.linkTypesTitle()} · trackflow</title></svelte:head>
+<svelte:head><title>{m.linkTypesTitle()} · TaskMaster</title></svelte:head>
 
 {#snippet details(type: LinkType)}
   <span class="details">

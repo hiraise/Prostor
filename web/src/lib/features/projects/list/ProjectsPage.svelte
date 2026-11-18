@@ -325,7 +325,7 @@
   };
 </script>
 
-<svelte:head><title>{shared.projects()} · trackflow</title></svelte:head>
+<svelte:head><title>{shared.projects()} · TaskMaster</title></svelte:head>
 
 <PageHeader title={shared.projects()}>
   {#snippet actions()}

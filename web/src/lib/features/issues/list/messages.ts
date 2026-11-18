@@ -14,6 +14,10 @@ export const find = msg({ en: 'Find', ru: 'Найти' });
 export const clear = msg({ en: 'Clear', ru: 'Очистить' });
 export const hideResolved = msg({ en: 'Hide resolved', ru: 'Скрыть решённые' });
 export const copyLink = msg({ en: 'Copy link', ru: 'Скопировать ссылку' });
+export const applyToAll = msg<{ count: number }>({
+  en: ({ count }) => `Apply a command to all ${String(count)} issues…`,
+  ru: ({ count }) => `Применить команду ко всем ${String(count)} задачам…`,
+});
 
 // The context (QRY-053).
 export const context = msg({ en: 'Search in', ru: 'Где искать' });
@@ -224,3 +228,90 @@ export const fieldsFailed = msg({
   en: 'The fields did not load.',
   ru: 'Поля не загрузились.',
 });
+
+// The keyboard (step 2.2 §6, QRY-085): the move's announcement and the assign-to-me answer.
+export const focusedRow = msg<{ id: string; summary: string }>({
+  en: ({ id, summary }) => `${id} ${summary}`,
+  ru: ({ id, summary }) => `${id} ${summary}`,
+});
+
+// The selection and its toolbar (step 2.2 §8, QRY-083, QRY-084).
+export const selectRow = msg<{ id: string }>({
+  en: ({ id }) => `Select ${id}`,
+  ru: ({ id }) => `Выбрать ${id}`,
+});
+export const selectPage = msg({
+  en: 'Select all issues on the page',
+  ru: 'Выбрать все задачи на странице',
+});
+export const selectedCount = msg<{ count: number }>({
+  en: ({ count }) => plural('en', count, { one: '# issue selected', other: '# issues selected' }),
+  ru: ({ count }) =>
+    plural('ru', count, {
+      one: 'выбрана # задача',
+      few: 'выбрано # задачи',
+      many: 'выбрано # задач',
+      other: 'выбрано # задачи',
+    }),
+});
+export const allMatchingChosen = msg<{ count: number }>({
+  en: ({ count }) =>
+    plural('en', count, { one: 'all # issue of the query', other: 'all # issues of the query' }),
+  ru: ({ count }) =>
+    plural('ru', count, {
+      one: 'все # задача по запросу',
+      few: 'все # задачи по запросу',
+      many: 'все # задач по запросу',
+      other: 'все # задачи по запросу',
+    }),
+});
+export const selectAllMatching = msg<{ count: number }>({
+  en: ({ count }) =>
+    plural('en', count, {
+      one: 'Select all # issue of the query',
+      other: 'Select all # issues of the query',
+    }),
+  ru: ({ count }) =>
+    plural('ru', count, {
+      one: 'Выбрать все # задачи по запросу',
+      few: 'Выбрать все # задачи по запросу',
+      many: 'Выбрать все # задач по запросу',
+      other: 'Выбрать все # задачи по запросу',
+    }),
+});
+export const clearSelection = msg({ en: 'Clear selection', ru: 'Снять выделение' });
+export const toolbar = msg({ en: 'Selected issues', ru: 'Выбранные задачи' });
+export const deleteSelection = msg({ en: 'Delete', ru: 'Удалить' });
+
+// The toolbar's pickers (step 2.2 §8.3, QRY-084): each choice becomes a command line the
+// dialog previews before it applies (D-064).
+export const addLinkSelection = msg({ en: 'Add link', ru: 'Добавить связь' });
+export const tagSelection = msg({ en: 'Tag', ru: 'Тег' });
+export const assigneeSelection = msg({ en: 'Assignee', ru: 'Исполнитель' });
+
+// The toolbar's export (step 2.2 §9, QRY-084): two buttons, one per format, and what the toolbar
+// says when the file holds less than everything asked — the cap, or issues the viewer may not see.
+export const exportCsv = msg({ en: 'Export CSV', ru: 'Экспорт CSV' });
+export const exportXlsx = msg({ en: 'Export XLSX', ru: 'Экспорт XLSX' });
+export const exportTruncated = msg<{ exported: number; total: number }>({
+  en: ({ exported, total }) =>
+    `The file holds ${String(exported)} of ${String(total)} issues — the export limit`,
+  ru: ({ exported, total }) =>
+    `В файле ${String(exported)} из ${String(total)} задач — лимит экспорта`,
+});
+export const tagPickerTitle = msg({
+  en: 'Add a tag to the chosen issues',
+  ru: 'Добавить тег выбранным задачам',
+});
+export const assigneePickerTitle = msg({ en: 'Choose an assignee', ru: 'Выбрать исполнителя' });
+export const linkPickerTitle = msg({
+  en: 'Link the chosen issues',
+  ru: 'Связать выбранные задачи',
+});
+export const people = msg({ en: 'People', ru: 'Люди' });
+export const findPerson = msg({ en: 'Find a person', ru: 'Найти человека' });
+/** The tag command's word, the one the person would type (§8.3). */
+export const tagVerb = msg({ en: 'tag', ru: 'тег' });
+/** The phone's list settings entry that turns selection mode on (§8.1). */
+export const chooseRows = msg({ en: 'Select', ru: 'Выбрать' });
+export const stopChoosing = msg({ en: 'Stop selecting', ru: 'Завершить выбор' });

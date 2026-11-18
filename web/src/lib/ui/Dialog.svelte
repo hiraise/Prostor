@@ -20,9 +20,15 @@
     hideTitle?: boolean;
     description?: string;
     side?: 'center' | 'start' | 'end';
-    size?: 'sm' | 'md' | 'lg';
+    size?: 'sm' | 'md' | 'lg' | 'xl';
     /** Escape, the backdrop and the close button close it; false while something must finish. */
     dismissible?: boolean;
+    /**
+     * No title row and no close button of its own: the content carries them (the board's issue
+     * popup puts its corner controls into the issue's own metadata line). The title stays for
+     * screen readers; Escape and the backdrop still close.
+     */
+    bare?: boolean;
     children: Snippet;
     footer?: Snippet;
     onclose?: () => void;
@@ -36,6 +42,7 @@
     side = 'center',
     size = 'md',
     dismissible = true,
+    bare = false,
     children,
     footer,
     onclose,
@@ -109,18 +116,22 @@
   onclick={handleClick}
 >
   <div class="panel">
-    <header class={{ 'title-hidden': hideTitle }}>
-      <h2 id="{id}-title" class={{ 'sr-only': hideTitle }}>{title}</h2>
-      {#if dismissible}
-        <IconButton
-          icon={X}
-          label={common.close()}
-          onclick={() => {
-            open = false;
-          }}
-        />
-      {/if}
-    </header>
+    {#if bare}
+      <h2 id="{id}-title" class="sr-only">{title}</h2>
+    {:else}
+      <header class={{ 'title-hidden': hideTitle }}>
+        <h2 id="{id}-title" class={{ 'sr-only': hideTitle }}>{title}</h2>
+        {#if dismissible}
+          <IconButton
+            icon={X}
+            label={common.close()}
+            onclick={() => {
+              open = false;
+            }}
+          />
+        {/if}
+      </header>
+    {/if}
     {#if description}<p id="{id}-description" class="description">{description}</p>{/if}
     <div class="body" bind:this={body}>
       {@render children()}
@@ -153,6 +164,11 @@
 
   .dialog.lg {
     width: min(48rem, calc(100vw - 2 * var(--space-4)));
+  }
+
+  /* The board's issue popup: the two-column core needs the room. */
+  .dialog.xl {
+    width: min(63.4rem, calc(100vw - 2 * var(--space-4)));
   }
 
   .dialog[open] {

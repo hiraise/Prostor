@@ -1,0 +1,29 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select command from command_history\n         where user_id = $1\n         order by used_at desc, command\n         limit $2",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "command",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "command_history",
+            "name": "command"
+          }
+        }
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "75462349af8275d04126e120852fb9b98c25a69edfe4a1a6cf6888457340a55a"
+}

@@ -3,9 +3,9 @@
 //! A query board's cards are the matching issues, ranked by the rows of its hidden sprint.
 
 use sqlx::{PgConnection, Postgres, QueryBuilder, Row};
-use trackflow_domain::boards::lanes::Bounds;
-use trackflow_domain::search::{Filter, SortSpec};
-use trackflow_domain::{FieldId, IssueId, ProjectId, SprintId, ValueId};
+use taskmaster_domain::boards::lanes::Bounds;
+use taskmaster_domain::search::{Filter, SortSpec};
+use taskmaster_domain::{FieldId, IssueId, ProjectId, SprintId, ValueId};
 
 use crate::search::compile::{push_base, push_filter};
 use crate::search::order::push_order_exprs;

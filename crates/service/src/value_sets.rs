@@ -5,20 +5,20 @@
 
 use serde_json::json;
 use sqlx::PgConnection;
-use time::Date;
-use trackflow_domain::access::Access;
-use trackflow_domain::access::permission::Permission;
-use trackflow_domain::fields::{
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::permission::Permission;
+use taskmaster_domain::fields::{
     SET_GROUPS_MAX, SET_USERS_MAX, SetKind, VALUES_MAX, may_edit_set, may_see_fields, set_name,
     value_color, value_description, value_name,
 };
-use trackflow_domain::validation::{Problem, Problems};
-use trackflow_domain::{GroupId, SetId, UserId, ValueId, rank};
-use trackflow_store::groups::{self, Group};
-use trackflow_store::projects::{self, Project};
-use trackflow_store::users::{self, User};
-use trackflow_store::value_sets::{self, NewValue, Usage, Value, ValueChange, ValueSet};
-use trackflow_store::{PgPool, audit, fields, unique_violation};
+use taskmaster_domain::validation::{Problem, Problems};
+use taskmaster_domain::{GroupId, SetId, UserId, ValueId, rank};
+use taskmaster_store::groups::{self, Group};
+use taskmaster_store::projects::{self, Project};
+use taskmaster_store::users::{self, User};
+use taskmaster_store::value_sets::{self, NewValue, Usage, Value, ValueChange, ValueSet};
+use taskmaster_store::{PgPool, audit, fields, unique_violation};
+use time::Date;
 
 use crate::issues::jobs::FieldWork;
 use crate::projects::can_see;
@@ -261,7 +261,7 @@ async fn check_value(
     let not_for = |path: &str, problems: &mut Problems| {
         problems.add(
             path,
-            trackflow_domain::validation::Rejection::new(
+            taskmaster_domain::validation::Rejection::new(
                 Problem::Invalid,
                 format!("values of a {} set have no {path}", kind.key()),
             ),
@@ -289,12 +289,12 @@ async fn check_value(
         .flatten()
         .flatten()
     {
-        if !(trackflow_domain::fields::YEAR_MIN..=trackflow_domain::fields::YEAR_MAX)
+        if !(taskmaster_domain::fields::YEAR_MIN..=taskmaster_domain::fields::YEAR_MAX)
             .contains(&date.year())
         {
             problems.add(
                 "date",
-                trackflow_domain::validation::Rejection::new(
+                taskmaster_domain::validation::Rejection::new(
                     Problem::OutOfRange,
                     "dates are within years 1–9999",
                 ),
@@ -525,7 +525,7 @@ pub async fn value_usage(pool: &PgPool, actor: &Access, set_id: SetId, id: Value
     let mut tx = pool.begin().await?;
     lock_editable(&mut tx, actor, set_id).await?;
     lock_value_of(&mut tx, set_id, id).await?;
-    Ok(trackflow_store::issue_values::issues_with_value(&mut *tx, id).await?)
+    Ok(taskmaster_store::issue_values::issues_with_value(&mut *tx, id).await?)
 }
 
 /// Deletes a value (FLD-032); it stops being anyone's default. Issues holding it get the
@@ -556,7 +556,7 @@ pub async fn delete_value(
     fields::forget_default_value(&mut tx, id).await?;
     value_sets::delete_value(&mut tx, id).await?;
     value_sets::touch(&mut tx, &[set_id]).await?;
-    if trackflow_store::issue_values::issues_with_value(&mut *tx, id).await? > 0 {
+    if taskmaster_store::issue_values::issues_with_value(&mut *tx, id).await? > 0 {
         enqueue_work(
             &mut tx,
             actor,
@@ -587,12 +587,12 @@ pub(crate) async fn enqueue_work(
     actor: &Access,
     work: FieldWork,
 ) -> Result<()> {
-    trackflow_store::jobs::enqueue(
+    taskmaster_store::jobs::enqueue(
         conn,
         &work,
-        trackflow_store::jobs::Enqueue {
+        taskmaster_store::jobs::Enqueue {
             initiator: actor_of(actor),
-            ..trackflow_store::jobs::Enqueue::default()
+            ..taskmaster_store::jobs::Enqueue::default()
         },
     )
     .await?;
@@ -710,7 +710,7 @@ pub(crate) async fn fork(
     let kind = kind_of(set)?;
     let base: String = format!("{project_name}: {}", set.name)
         .chars()
-        .take(trackflow_domain::fields::SET_NAME_MAX - 6)
+        .take(taskmaster_domain::fields::SET_NAME_MAX - 6)
         .collect();
     let name = crate::seed::free_set_name(conn, kind.key(), &base).await?;
     let id = value_sets::insert(conn, &name, kind.key()).await?;
@@ -750,6 +750,6 @@ fn target(id: SetId) -> String {
     format!("value_set:{id}")
 }
 
-fn actor_of(access: &Access) -> trackflow_domain::Actor {
-    trackflow_domain::Actor::User(access.user())
+fn actor_of(access: &Access) -> taskmaster_domain::Actor {
+    taskmaster_domain::Actor::User(access.user())
 }

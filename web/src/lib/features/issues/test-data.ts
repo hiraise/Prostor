@@ -73,6 +73,7 @@ export const PRIORITY = field(11, 'Priority', 'enum', {
   ],
 });
 export const ASSIGNEE = field(12, 'Assignee', 'user', {
+  field: { id: 12, name: 'Assignee', kind: 'user', multi: false, builtin: 'assignee' },
   users: [BORIS],
   empty_label: 'Unassigned',
 });

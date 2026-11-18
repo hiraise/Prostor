@@ -6,15 +6,15 @@
 //! hold the team itself, so whoever joins the team can be assigned at once (PRJ-054, D-027).
 
 use serde_json::json;
-use trackflow_domain::access::permission::{Permission, PermissionSet};
-use trackflow_domain::access::role::role_permissions;
-use trackflow_domain::access::{Access, Scope};
-use trackflow_domain::{GroupId, ProjectId, UserId};
-use trackflow_store::access::{self as assignments, Assignment};
-use trackflow_store::groups::{self, Group};
-use trackflow_store::projects::Project;
-use trackflow_store::users::{self, User};
-use trackflow_store::{PgPool, audit, roles, teams};
+use taskmaster_domain::access::permission::{Permission, PermissionSet};
+use taskmaster_domain::access::role::role_permissions;
+use taskmaster_domain::access::{Access, Scope};
+use taskmaster_domain::{GroupId, ProjectId, UserId};
+use taskmaster_store::access::{self as assignments, Assignment};
+use taskmaster_store::groups::{self, Group};
+use taskmaster_store::projects::Project;
+use taskmaster_store::users::{self, User};
+use taskmaster_store::{PgPool, audit, roles, teams};
 
 use crate::access::{changed, grants_of_group};
 use crate::projects::{actor_of, lock_visible, require, require_active, target, visible};
@@ -126,7 +126,7 @@ fn bulk(ids: &[i64], path: &str) -> Result<Vec<i64>> {
     if ids.len() > BULK_MAX {
         return Err(Error::field(
             path,
-            trackflow_domain::validation::Problem::TooLong,
+            taskmaster_domain::validation::Problem::TooLong,
             format!("choose at most {BULK_MAX}"),
         ));
     }
@@ -148,7 +148,7 @@ pub async fn add(
     if user_ids.is_empty() && group_ids.is_empty() {
         return Err(Error::field(
             "users",
-            trackflow_domain::validation::Problem::Required,
+            taskmaster_domain::validation::Problem::Required,
             "choose at least one account or group",
         ));
     }
@@ -170,7 +170,7 @@ pub async fn add(
     if found_groups.iter().any(Group::is_team) {
         return Err(Error::field(
             "groups",
-            trackflow_domain::validation::Problem::Invalid,
+            taskmaster_domain::validation::Problem::Invalid,
             "a project team cannot be in another team",
         ));
     }
@@ -179,7 +179,7 @@ pub async fn add(
     if !users_added.is_empty() || !groups_added.is_empty() {
         groups::touch(&mut tx, &[team.id]).await?;
         users::touch(&mut tx, &users_added).await?;
-        trackflow_store::projects::touch(&mut tx, &[id]).await?;
+        taskmaster_store::projects::touch(&mut tx, &[id]).await?;
         audit::record(
             &mut tx,
             actor_of(actor),
@@ -218,7 +218,7 @@ pub async fn remove(
     if !users_removed.is_empty() || !groups_removed.is_empty() {
         groups::touch(&mut tx, &[team.id]).await?;
         users::touch(&mut tx, &users_removed).await?;
-        trackflow_store::projects::touch(&mut tx, &[id]).await?;
+        taskmaster_store::projects::touch(&mut tx, &[id]).await?;
         audit::record(
             &mut tx,
             actor_of(actor),
@@ -243,7 +243,7 @@ pub(crate) fn check_team_scope(team: &Group, scope: Scope) -> Result<()> {
         (Some(project), Scope::Project(at)) if project == at => Ok(()),
         (Some(_), _) => Err(Error::field(
             "scopes",
-            trackflow_domain::validation::Problem::Invalid,
+            taskmaster_domain::validation::Problem::Invalid,
             "a project team holds roles only in its own project",
         )),
         (None, _) => Ok(()),

@@ -127,6 +127,8 @@ export const typedProblems = {
 
 // Edit mode and conflicts (ISS-018, ISS-051).
 export const edit = msg({ en: 'Edit', ru: 'Изменить' });
+export const saveVisibility = msg({ en: 'Save visibility', ru: 'Сохранить видимость' });
+export const openIssuePage = msg({ en: 'Open the page', ru: 'Открыть страницей' });
 export const editIssue = msg({ en: 'Edit the issue', ru: 'Правка задачи' });
 export const summary = msg({ en: 'Summary', ru: 'Название' });
 export const editHint = msg({
@@ -351,16 +353,13 @@ export const draftsDeleted = msg({ en: 'Drafts deleted', ru: 'Черновики
 // The activity stream (HIST-001…HIST-011).
 export const activity = msg({ en: 'Activity', ru: 'Активность' });
 export const activityShown = msg({ en: 'Shown in the activity', ru: 'Что показывать' });
+export const activityAll = msg({ en: 'All', ru: 'Все' });
 export const activityComments = msg({ en: 'Comments', ru: 'Комментарии' });
 export const activityChanges = msg({ en: 'Changes', ru: 'Изменения' });
 export const orderOldest = msg({ en: 'Oldest first', ru: 'Сначала старые' });
 export const orderNewest = msg({ en: 'Newest first', ru: 'Сначала новые' });
 export const showOlder = msg({ en: 'Show earlier', ru: 'Показать более ранние' });
 export const showNewer = msg({ en: 'Show newer', ru: 'Показать более новые' });
-export const activityHidden = msg({
-  en: 'Comments and changes are hidden.',
-  ru: 'Комментарии и изменения скрыты.',
-});
 export const activityEmpty = msg({
   en: 'No comments or changes yet.',
   ru: 'Комментариев и изменений пока нет.',
@@ -414,6 +413,14 @@ export const after = msg({ en: 'After', ru: 'Стало' });
 // Comments (CNT-001…CNT-007, CNT-018).
 export const comment = msg({ en: 'Comment', ru: 'Комментарий' });
 export const newComment = msg({ en: 'New comment', ru: 'Новый комментарий' });
+export const writeComment = msg({ en: 'Write a comment…', ru: 'Написать комментарий…' });
+export const discardCommentTitle = msg({ en: 'Discard the draft?', ru: 'Сбросить черновик?' });
+export const discardCommentText = msg({
+  en: 'The text and files of the comment will be lost.',
+  ru: 'Текст и файлы комментария будут потеряны.',
+});
+export const discardComment = msg({ en: 'Discard', ru: 'Сбросить' });
+export const keepComment = msg({ en: 'Keep writing', ru: 'Продолжить' });
 export const send = msg({ en: 'Send', ru: 'Отправить' });
 export const commentHint = msg({
   en: 'Ctrl+Enter sends.',
@@ -477,7 +484,6 @@ export const showAttachments = msg({ en: 'Show files', ru: 'Показать ф�
 export const hideAttachments = msg({ en: 'Hide files', ru: 'Скрыть файлы' });
 export const attachFiles = msg({ en: 'Attach files', ru: 'Прикрепить файлы' });
 export const moreFiles = msg({ en: 'Show more files', ru: 'Показать ещё файлы' });
-export const noAttachments = msg({ en: 'No files yet.', ru: 'Файлов пока нет.' });
 export const dropToAttach = msg({ en: 'Drop to attach', ru: 'Отпустите, чтобы прикрепить' });
 export const attachingFiles = msg({ en: 'Files on their way', ru: 'Загружаемые файлы' });
 export const attaching = msg<{ name: string }>({
@@ -598,6 +604,8 @@ export const subtaskProgress = msg<{ resolved: number; total: number }>({
 export const newSubtask = msg({ en: 'New subtask', ru: 'Новая подзадача' });
 export const newLinkedIssue = msg({ en: 'New linked issue…', ru: 'Новая связанная задача…' });
 export const newLinkedTitle = msg({ en: 'New linked issue', ru: 'Новая связанная задача' });
+export const commandsMenu = msg({ en: 'Commands…', ru: 'Команды…' });
+export const repeatMenu = msg({ en: 'Repeat last command', ru: 'Повторить последнюю команду' });
 export const markDuplicate = msg({ en: 'Mark as duplicate…', ru: 'Отметить как дубликат…' });
 export const markDuplicateTitle = msg({ en: 'Mark as duplicate', ru: 'Отметить как дубликат' });
 export const addLink = msg({ en: 'Add a link', ru: 'Добавить связь' });
@@ -623,3 +631,6 @@ export const mayBeOutdated = msg({
   ru: 'Связь с сервером прерывалась: страница могла устареть.',
 });
 export const refreshPage = msg({ en: 'Refresh', ru: 'Обновить' });
+
+// The keyboard of the issue view (step 2.2 §7, ISS-047).
+export const assignedToMe = msg({ en: 'Assigned to me', ru: 'Назначено на меня' });

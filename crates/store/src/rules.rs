@@ -2,9 +2,9 @@
 //! project creation (the template's set) and by the settings tab only; a rule with no row is off.
 
 use sqlx::{PgConnection, PgExecutor};
-use trackflow_domain::ProjectId;
-use trackflow_domain::projects::Template;
-use trackflow_domain::rules::{Rule, template_set};
+use taskmaster_domain::ProjectId;
+use taskmaster_domain::projects::Template;
+use taskmaster_domain::rules::{Rule, template_set};
 
 /// One toggle row of a project.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

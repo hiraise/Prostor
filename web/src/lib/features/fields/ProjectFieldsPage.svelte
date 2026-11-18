@@ -198,7 +198,7 @@
   }
 </script>
 
-<svelte:head><title>{m.fieldsTitle()} · {project.name} · trackflow</title></svelte:head>
+<svelte:head><title>{m.fieldsTitle()} · {project.name} · TaskMaster</title></svelte:head>
 
 <PageHeader title={m.fieldsTitle()}>
   {#snippet actions()}

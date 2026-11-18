@@ -1,5 +1,5 @@
 // The activity stream of the open issue (HIST-001, HIST-008…HIST-011, CNT-007): its loaded items,
-// the cursors at both edges, the filters and the order from preferences, and the comment a deep
+// the cursors at both edges, the tab choice and the order from preferences, and the comment a deep
 // link asked for. Items are kept oldest first; the order only changes how they are shown. Comments
 // also go into the store, so their cards follow edits made elsewhere.
 import { api } from '#lib/api/client.ts';
@@ -18,11 +18,21 @@ export type StreamRow =
   | { type: 'comment'; id: number; comment: Comment; changes: HistoryItem[] }
   | { type: 'change'; id: number; change: HistoryItem };
 
-/** The query of a stream request for the person's filters; both off asks for both. */
-export function filterQuery(): { comments: boolean; changes: boolean } {
+/** Which of the stream's tabs is open: everything, only comments, only change records. */
+export type ActivityView = 'all' | 'comments' | 'changes';
+
+/** The person's tab choice from the two stored filter settings (legacy «both off» reads as «все»). */
+export function viewQuery(): ActivityView {
   const comments = preferences.value('activity_comments');
   const changes = preferences.value('activity_changes');
-  return { comments: comments || !changes, changes: changes || !comments };
+  if (comments === changes) return 'all';
+  return comments ? 'comments' : 'changes';
+}
+
+/** The query of a stream request for the person's tab choice. */
+export function filterQuery(): { comments: boolean; changes: boolean } {
+  const view = viewQuery();
+  return { comments: view !== 'changes', changes: view !== 'comments' };
 }
 
 /** The first page in the person's order: the oldest items for oldest first, else the newest. */
@@ -77,14 +87,12 @@ export class ActivityStream {
   }
 
   readonly order = $derived(preferences.value('activity_order'));
-  readonly showComments = $derived(preferences.value('activity_comments'));
-  readonly showChanges = $derived(preferences.value('activity_changes'));
-  /** Both filters off: the stream shows nothing but the comment box. */
-  readonly hidden = $derived(!this.showComments && !this.showChanges);
+  readonly view = $derived(viewQuery());
 
   /** The rows in the person's order, changes made right after a shown comment inside it (HIST-011). */
   readonly rows = $derived.by((): StreamRow[] => {
-    if (this.hidden) return [];
+    const showComments = this.view !== 'changes';
+    const showChanges = this.view !== 'comments';
     // eslint-disable-next-line svelte/prefer-svelte-reactivity -- local to one computation
     const shown = new Set(
       this.items.flatMap((item) => (item.type === 'comment' ? [item.comment.id] : [])),
@@ -94,13 +102,13 @@ export class ActivityStream {
     const rows: StreamRow[] = [];
     for (const item of this.items) {
       if (item.type === 'comment') {
-        if (!this.showComments) continue;
+        if (!showComments) continue;
         const changes: HistoryItem[] = [];
         grouped.set(item.comment.id, changes);
         rows.push({ type: 'comment', id: item.id, comment: item.comment, changes });
-      } else if (this.showChanges) {
+      } else if (showChanges) {
         const host = item.after_comment;
-        if (this.showComments && host !== null && shown.has(host)) {
+        if (showComments && host !== null && shown.has(host)) {
           // A record comes after its comment in time, so the comment's row is already there.
           grouped.get(host)?.push(item);
         } else {
@@ -164,7 +172,7 @@ export class ActivityStream {
    * is missed.
    */
   async catchUp(append: boolean): Promise<void> {
-    if (this.newer !== null || this.hidden) return;
+    if (this.newer !== null) return;
     if (this.loading) {
       this.#again = append ? 'append' : (this.#again ?? 'wait');
       return;
@@ -202,11 +210,12 @@ export class ActivityStream {
 
   /**
    * Shows a comment the person just posted: appended when the newest items are loaded, else the
-   * first page is loaded again; comments are switched on if they were hidden.
+   * first page is loaded again. Posted from the «Изменения» tab, the stream returns to «Все» so
+   * the comment is seen.
    */
   async posted(): Promise<void> {
-    if (!this.showComments) {
-      await this.setFilter('comments', true);
+    if (this.view === 'changes') {
+      await this.setView('all');
       return;
     }
     if (this.newer === null) await this.appendNewer();
@@ -227,10 +236,13 @@ export class ActivityStream {
     }
   }
 
-  /** Sets a filter (HIST-008); the choice follows the person to other devices. */
-  async setFilter(filter: 'comments' | 'changes', on: boolean): Promise<void> {
-    preferences.set(filter === 'comments' ? { activity_comments: on } : { activity_changes: on });
-    if (!this.hidden) await this.reload();
+  /** Opens one of the stream's tabs (HIST-008); the choice follows the person to other devices. */
+  async setView(view: ActivityView): Promise<void> {
+    preferences.set({
+      activity_comments: view !== 'changes',
+      activity_changes: view !== 'comments',
+    });
+    await this.reload();
   }
 
   /** Sets the order (HIST-009); a stream loaded whole is only turned around. */

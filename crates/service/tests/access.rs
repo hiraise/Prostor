@@ -2,35 +2,35 @@
 //! assignments, effective access, capabilities, and the emailed one-time links.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::capability::Capability;
+use taskmaster_domain::access::identity::Tier;
+use taskmaster_domain::access::permission::Permission;
+use taskmaster_domain::access::role::PredefinedRole;
+use taskmaster_domain::accounts::DisabledLabel;
+use taskmaster_domain::auth::SessionPolicy;
+use taskmaster_domain::settings::Language;
+use taskmaster_domain::validation::Problem;
+use taskmaster_domain::{GroupId, RoleId, UserId};
+use taskmaster_service::access::{self, Source};
+use taskmaster_service::auth::{self, SignIn, SignedIn};
+use taskmaster_service::groups::{self, GroupChange, NewGroup};
+use taskmaster_service::links::{self, Acceptance};
+use taskmaster_service::mail::Letters;
+use taskmaster_service::roles::{self, NewRole};
+use taskmaster_service::setup::{self, Setup};
+use taskmaster_service::users::{self, IdentityInput, NewAccount, StateFilter};
+use taskmaster_service::{Error, Passwords, capabilities};
+use taskmaster_store::access::Holder;
+use taskmaster_store::sessions::Origin;
+use taskmaster_store::{PgPool, sessions};
+use taskmaster_testkit::TestDb;
 use time::macros::datetime;
 use time::{Duration, OffsetDateTime};
-use trackflow_domain::access::Access;
-use trackflow_domain::access::capability::Capability;
-use trackflow_domain::access::identity::Tier;
-use trackflow_domain::access::permission::Permission;
-use trackflow_domain::access::role::PredefinedRole;
-use trackflow_domain::accounts::DisabledLabel;
-use trackflow_domain::auth::SessionPolicy;
-use trackflow_domain::settings::Language;
-use trackflow_domain::validation::Problem;
-use trackflow_domain::{GroupId, RoleId, UserId};
-use trackflow_service::access::{self, Source};
-use trackflow_service::auth::{self, SignIn, SignedIn};
-use trackflow_service::groups::{self, GroupChange, NewGroup};
-use trackflow_service::links::{self, Acceptance};
-use trackflow_service::mail::Letters;
-use trackflow_service::roles::{self, NewRole};
-use trackflow_service::setup::{self, Setup};
-use trackflow_service::users::{self, IdentityInput, NewAccount, StateFilter};
-use trackflow_service::{Error, Passwords, capabilities};
-use trackflow_store::access::Holder;
-use trackflow_store::sessions::Origin;
-use trackflow_store::{PgPool, sessions};
-use trackflow_testkit::TestDb;
 
 const T0: OffsetDateTime = datetime!(2026-10-01 09:00 UTC);
 /// Groups of people, without project teams.
-const GROUPS: trackflow_store::groups::Kinds = trackflow_store::groups::Kinds {
+const GROUPS: taskmaster_store::groups::Kinds = taskmaster_store::groups::Kinds {
     groups: true,
     teams: false,
 };
@@ -117,7 +117,7 @@ async fn sign_in(pool: &PgPool, login: &str, password: &str) -> Result<SignedIn,
 }
 
 async fn role_id(pool: &PgPool, role: PredefinedRole) -> RoleId {
-    trackflow_store::roles::builtin_id(pool, role.key())
+    taskmaster_store::roles::builtin_id(pool, role.key())
         .await
         .unwrap()
         .unwrap()
@@ -183,7 +183,7 @@ async fn acc_001_acc_021_acc_052_a_new_instance_has_its_groups_roles_and_adminis
     assert!(bob_access.has(Permission::UserSelf));
     assert!(!bob_access.has(Permission::UserCreate));
     // ACC-061: the role's source is the built-in group.
-    let bob_user = trackflow_store::users::get(pool, bob)
+    let bob_user = taskmaster_store::users::get(pool, bob)
         .await
         .unwrap()
         .unwrap();
@@ -278,7 +278,7 @@ async fn acc_003_auth_010_administrators_create_accounts_that_may_have_to_change
         .unwrap()
         .unwrap();
     assert!(principal.must_change_password());
-    trackflow_service::account::change_password(
+    taskmaster_service::account::change_password(
         pool,
         &passwords(),
         &principal,
@@ -503,7 +503,7 @@ async fn auth_014_acc_017_a_changed_email_is_confirmed_by_a_link() {
     let bob = create(pool, &admin_access, "bob", "Bob").await;
     let bob_access = access_of(pool, bob).await;
     let version = |id| async move {
-        trackflow_store::users::get(pool, id)
+        taskmaster_store::users::get(pool, id)
             .await
             .unwrap()
             .unwrap()
@@ -552,7 +552,7 @@ async fn auth_014_acc_017_a_changed_email_is_confirmed_by_a_link() {
         links::confirm_email(pool, &secret, T0).await.unwrap(),
         "bob@new.example.com"
     );
-    let verified = trackflow_store::users::get(pool, bob)
+    let verified = taskmaster_store::users::get(pool, bob)
         .await
         .unwrap()
         .unwrap();
@@ -622,7 +622,7 @@ async fn acc_005_disabled_accounts_lose_access_at_once() {
     users::disable(pool, &access, &[bob], "left in May", DisabledLabel::Left)
         .await
         .unwrap();
-    let user = trackflow_store::users::get(pool, bob)
+    let user = taskmaster_store::users::get(pool, bob)
         .await
         .unwrap()
         .unwrap();
@@ -696,7 +696,7 @@ async fn acc_006_acc_013_deleted_accounts_resolve_to_their_replacement() {
         Err(Error::Conflict(_))
     ));
     users::delete(pool, &access, &[bob], carol).await.unwrap();
-    let gone = trackflow_store::users::get(pool, bob)
+    let gone = taskmaster_store::users::get(pool, bob)
         .await
         .unwrap()
         .unwrap();
@@ -741,7 +741,7 @@ async fn acc_015_acc_016_profiles_show_what_the_viewer_may_see() {
     assert!(own.password.unwrap().has_password);
 
     // Without the directory viewer role of All members, others are hidden.
-    let all_members = trackflow_store::groups::builtin_ids(pool).await.unwrap().1;
+    let all_members = taskmaster_store::groups::builtin_ids(pool).await.unwrap().1;
     let assignment = roles::assignments_of_holder(pool, &access, Holder::Group(all_members))
         .await
         .unwrap()[0]
@@ -757,15 +757,15 @@ async fn acc_015_acc_016_profiles_show_what_the_viewer_may_see() {
             .await
             .is_err()
     );
-    let names = trackflow_service::people::Names::with_secret(b"key");
-    let admin_user = trackflow_store::users::get(pool, admin.id)
+    let names = taskmaster_service::people::Names::with_secret(b"key");
+    let admin_user = taskmaster_store::users::get(pool, admin.id)
         .await
         .unwrap()
         .unwrap();
     let shown = names.show(&bob_access, &admin_user);
     assert!(matches!(
         shown.shown,
-        trackflow_service::people::Shown::Masked(_)
+        taskmaster_service::people::Shown::Masked(_)
     ));
 }
 
@@ -878,8 +878,8 @@ async fn acc_023_acc_024_acc_026_acc_032_groups_and_their_members() {
     .unwrap();
     let dave = create(pool, &access, "dave", "Dave").await;
     assert!(access_of(pool, dave).await.in_group(devs.id));
-    let (everyone, _) = trackflow_store::groups::builtin_ids(pool).await.unwrap();
-    let everyone_group = trackflow_store::groups::get(pool, everyone)
+    let (everyone, _) = taskmaster_store::groups::builtin_ids(pool).await.unwrap();
+    let everyone_group = taskmaster_store::groups::get(pool, everyone)
         .await
         .unwrap()
         .unwrap();
@@ -1151,7 +1151,7 @@ async fn acc_058_acc_059_acc_061_the_last_administrator_stays() {
         .unwrap();
 
     // ACC-061: the role shows both sources.
-    let admin_user = trackflow_store::users::get(pool, admin.id)
+    let admin_user = taskmaster_store::users::get(pool, admin.id)
         .await
         .unwrap()
         .unwrap();

@@ -1,4 +1,4 @@
-//! trackflow server: the HTTP router and its parts. The binary in `main.rs` only wires them together,
+//! taskmaster server: the HTTP router and its parts. The binary in `main.rs` only wires them together,
 //! so integration tests can build the same router with test doubles and a test database.
 
 pub mod access;
@@ -10,6 +10,7 @@ pub mod boards;
 pub mod bootstrap;
 pub mod cli;
 pub mod client;
+pub mod commands;
 pub mod comments;
 pub mod config;
 pub mod content;
@@ -52,18 +53,18 @@ use axum::http::{Extensions, HeaderMap, HeaderValue, Request, StatusCode, Versio
 use axum::middleware;
 use axum::response::IntoResponse;
 use axum::routing::{any, get};
+use taskmaster_files::FileStore;
+use taskmaster_service::Passwords;
+use taskmaster_service::files::Signer;
+use taskmaster_service::people::Names;
+use taskmaster_service::pictures::Gravatar;
+use taskmaster_store::PgPool;
 use tower_http::LatencyUnit;
 use tower_http::catch_panic::CatchPanicLayer;
 use tower_http::compression::predicate::{DefaultPredicate, Predicate};
 use tower_http::compression::{CompressionLayer, CompressionLevel};
 use tower_http::trace::{DefaultOnResponse, TraceLayer};
 use tracing::Level;
-use trackflow_files::FileStore;
-use trackflow_service::Passwords;
-use trackflow_service::files::Signer;
-use trackflow_service::people::Names;
-use trackflow_service::pictures::Gravatar;
-use trackflow_store::PgPool;
 use utoipa::OpenApi;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_axum::routes;
@@ -90,9 +91,9 @@ pub struct AppState {
     pub throttle: Arc<Throttle>,
     /// Set once the first-run setup is known to be complete; it never becomes pending again.
     pub setup_done: Arc<AtomicBool>,
-    /// Reverse proxies whose `X-Forwarded-For` is believed (`TRACKFLOW_TRUSTED_PROXIES`).
+    /// Reverse proxies whose `X-Forwarded-For` is believed (`TASKMASTER_TRUSTED_PROXIES`).
     pub trusted_proxies: Arc<[IpRange]>,
-    /// The setup code from `TRACKFLOW_SETUP_CODE`, instead of a random one.
+    /// The setup code from `TASKMASTER_SETUP_CODE`, instead of a random one.
     pub setup_code: Option<Arc<str>>,
     /// Compiled access per person (ACC-062).
     pub access: AccessCache,
@@ -102,7 +103,7 @@ pub struct AppState {
     pub files: FileStore,
     /// Signs file links; keyed by the instance secret, loaded at startup.
     pub signer: Arc<OnceLock<Signer>>,
-    /// The largest upload whatever the settings say (`TRACKFLOW_UPLOAD_CEILING_BYTES`).
+    /// The largest upload whatever the settings say (`TASKMASTER_UPLOAD_CEILING_BYTES`).
     pub upload_ceiling: u64,
     /// The Gravatar import; `None` when turned off (ACC-017).
     pub gravatar: Option<Gravatar>,
@@ -126,7 +127,7 @@ impl AppState {
             access: AccessCache::default(),
             names: Arc::new(OnceLock::new()),
             // Nodes that keep files are given their directory with `with_files`.
-            files: FileStore::new(std::env::temp_dir().join("trackflow-files")),
+            files: FileStore::new(std::env::temp_dir().join("taskmaster-files")),
             signer: Arc::new(OnceLock::new()),
             upload_ceiling: config::DEFAULT_UPLOAD_CEILING,
             gravatar: None,
@@ -144,7 +145,7 @@ impl AppState {
     pub fn with_secret_mail(
         mut self,
         env_mail: Option<crate::settings::EnvMail>,
-        secret_key: Option<trackflow_domain::secret::Key>,
+        secret_key: Option<taskmaster_domain::secret::Key>,
     ) -> Self {
         self.settings = self
             .settings
@@ -179,7 +180,7 @@ impl AppState {
     pub fn upload_limit(&self) -> u64 {
         self.settings
             .get()
-            .get(&trackflow_domain::settings::UPLOAD_MAX_BYTES)
+            .get(&taskmaster_domain::settings::UPLOAD_MAX_BYTES)
             .min(self.upload_ceiling)
     }
 
@@ -300,6 +301,7 @@ fn ready_routes() -> OpenApiRouter<AppState> {
         .routes(routes!(search::fields))
         .routes(routes!(search::counts))
         .routes(routes!(search::check))
+        .routes(routes!(search::assist))
         .routes(routes!(boards::list, boards::create))
         .routes(routes!(boards::get, boards::update, boards::delete))
         .routes(routes!(boards::impact))
@@ -354,6 +356,7 @@ fn ready_routes() -> OpenApiRouter<AppState> {
         ))
         .routes(routes!(issues::drafts, issues::delete_drafts))
         .routes(routes!(issues::batch))
+        .routes(routes!(issues::export))
         .routes(routes!(issues::clone_drafts))
         .routes(routes!(issues::field_options))
         .routes(routes!(issues::get, issues::update, issues::delete))
@@ -370,6 +373,10 @@ fn ready_routes() -> OpenApiRouter<AppState> {
         .routes(routes!(issues::activity))
         .routes(routes!(issues::page))
         .routes(routes!(issues::mention_candidates))
+        .routes(routes!(commands::apply))
+        .routes(routes!(commands::assist))
+        .routes(routes!(commands::apply_bulk))
+        .routes(routes!(commands::bulk_progress))
         .routes(routes!(comments::create))
         .routes(routes!(comments::get, comments::update, comments::delete))
         .routes(routes!(comments::restore))

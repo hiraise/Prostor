@@ -1,10 +1,10 @@
-//! Files of issues and comments (CNT-017…CNT-024). Rules: `trackflow_domain::attachments`;
+//! Files of issues and comments (CNT-017…CNT-024). Rules: `taskmaster_domain::attachments`;
 //! their records in the history: `issue_history`. The files are in the file store under
 //! `storage_key` and `thumbnail_key`.
 
 use sqlx::{PgConnection, PgExecutor};
+use taskmaster_domain::{AttachmentId, CommentId, GroupId, IssueId, UserId};
 use time::OffsetDateTime;
-use trackflow_domain::{AttachmentId, CommentId, GroupId, IssueId, UserId};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Attachment {

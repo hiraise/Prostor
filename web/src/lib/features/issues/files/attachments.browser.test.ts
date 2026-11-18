@@ -158,12 +158,14 @@ describe('CNT-020: the attachments section', () => {
     expect(preferences.value('attachments_collapsed')).toBe(true);
   });
 
-  it('offers to attach when there are no files', async () => {
+  it('stays away entirely while there are no files', async () => {
     const { screen } = await show([]);
 
-    const section = screen.getByRole('region', { name: 'Files' });
-    await expect.element(section.getByText('No files yet.')).toBeVisible();
-    await expect.element(section.getByRole('button', { name: 'Attach files' })).toBeVisible();
+    expect(screen.getByRole('region', { name: 'Files' }).query()).toBeNull();
+    // No empty header, no attach button: attaching starts from «Ещё», a drop or a paste,
+    // and the section appears with the first file.
+    expect(screen.getByText('No files yet.').query()).toBeNull();
+    expect(screen.getByRole('button', { name: 'Attach files' }).query()).toBeNull();
   });
 
   it('a reader without the right sees the files but no attach action', async () => {
@@ -245,7 +247,9 @@ describe('CNT-020, CNT-024: the file menu', () => {
     await screen.getByRole('menuitem', { name: 'Delete' }).click();
     const confirm = screen.getByRole('dialog', { name: 'Delete final.pdf?' });
     await confirm.getByRole('button', { name: 'Delete' }).click();
-    await expect.element(screen.getByText('No files yet.')).toBeVisible();
+    // The last file gone, the section leaves with it.
+    await expect.element(screen.getByText('final.pdf')).not.toBeInTheDocument();
+    expect(screen.getByRole('region', { name: /Files/ }).query()).toBeNull();
     expect(sent(calls, 'DELETE', '/attachments/43')).toHaveLength(1);
     // The texts are asked again, so names of the file show it as missing.
     await expect.poll(() => sent(calls, 'GET', '/issues/501')).toHaveLength(2);

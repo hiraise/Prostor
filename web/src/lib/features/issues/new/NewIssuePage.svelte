@@ -71,7 +71,7 @@
   }
 </script>
 
-<svelte:head><title>{m.newIssue()} · trackflow</title></svelte:head>
+<svelte:head><title>{m.newIssue()} · TaskMaster</title></svelte:head>
 
 <PageHeader title={m.newIssue()} />
 <div class="page">

@@ -4,7 +4,7 @@ export { default as IssuePage } from './page/IssuePage.svelte';
 export { default as IssueRef } from './IssueRef.svelte';
 export { default as IssueList } from './list/IssueList.svelte';
 export { default as QueryBar } from './list/QueryBar.svelte';
-export { listHref, parseListUrl, queryWord, type ListParams } from './list/list-state.ts';
+export { listHref, parseListUrl, queryWord, type ListParams } from './list/list-state.svelte.ts';
 export { ensureSearch, resolveContext } from './list/search.svelte.ts';
 export * as issueMessages from './messages.ts';
 export {
@@ -19,6 +19,7 @@ export {
   type OpenedIssue,
 } from './issues.ts';
 export { default as CreateMenu } from './new/CreateMenu.svelte';
+export { issueCreateExtra } from './new/create-extra.svelte.ts';
 export { default as NewIssueHost } from './new/NewIssueHost.svelte';
 export { default as NewIssuePage } from './new/NewIssuePage.svelte';
 export { newIssueHref, openNewIssue } from './new/open.svelte.ts';

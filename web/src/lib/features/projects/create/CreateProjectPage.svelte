@@ -138,7 +138,7 @@
   }
 </script>
 
-<svelte:head><title>{m.newProject()} · trackflow</title></svelte:head>
+<svelte:head><title>{m.newProject()} · TaskMaster</title></svelte:head>
 
 {#if !canCreateProjects()}
   <ForbiddenState {home} />

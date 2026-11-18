@@ -4,16 +4,16 @@
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use trackflow_api::access::{
+use taskmaster_api::access::{
     ChangedMembers, Group, GroupDeletion, GroupDeletionImpact, GroupKind, GroupPatch, GroupQuery,
     GroupRole, GroupSelection, MembersChange, NewGroup, TextQuery,
 };
-use trackflow_api::accounts::UserRef;
-use trackflow_api::error::ErrorBody;
-use trackflow_api::page::{Page, PageQuery};
-use trackflow_domain::auth::Scope;
-use trackflow_domain::{GroupId, UserId};
-use trackflow_service::groups::{self, GroupChange, GroupRow};
+use taskmaster_api::accounts::UserRef;
+use taskmaster_api::error::ErrorBody;
+use taskmaster_api::page::{Page, PageQuery};
+use taskmaster_domain::auth::Scope;
+use taskmaster_domain::{GroupId, UserId};
+use taskmaster_service::groups::{self, GroupChange, GroupRow};
 
 use crate::AppState;
 use crate::access::Viewer;
@@ -74,15 +74,15 @@ pub async fn list(
         .resolve::<(i32, String, GroupId)>(GROUPS_MAX_LIMIT)
         .map_err(ApiError::invalid)?;
     let kinds = match filter.kind.unwrap_or_default() {
-        GroupKind::Groups => trackflow_store::groups::Kinds {
+        GroupKind::Groups => taskmaster_store::groups::Kinds {
             groups: true,
             teams: false,
         },
-        GroupKind::Teams => trackflow_store::groups::Kinds {
+        GroupKind::Teams => taskmaster_store::groups::Kinds {
             groups: false,
             teams: true,
         },
-        GroupKind::All => trackflow_store::groups::Kinds {
+        GroupKind::All => taskmaster_store::groups::Kinds {
             groups: true,
             teams: true,
         },

@@ -1,9 +1,9 @@
 //! Browser sessions (AUTH-003…AUTH-005). When a session expires is decided by
-//! `trackflow_domain::auth::check_session`; this module only stores them.
+//! `taskmaster_domain::auth::check_session`; this module only stores them.
 
 use sqlx::{PgConnection, PgPool};
+use taskmaster_domain::UserId;
 use time::OffsetDateTime;
-use trackflow_domain::UserId;
 
 /// A session found by its token, with what authentication needs to know about the user.
 #[derive(Debug, Clone, PartialEq, Eq)]

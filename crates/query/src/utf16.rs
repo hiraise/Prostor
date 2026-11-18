@@ -24,6 +24,19 @@ pub fn offsets(text: &str, spans: &[Span]) -> Vec<Span> {
         .collect()
 }
 
+/// Converts a UTF-16 code-unit offset back to a byte offset, snapping to the character that
+/// starts at or contains it. The assist's caret arrives this way.
+pub fn from_units(text: &str, units: usize) -> usize {
+    let mut seen = 0usize;
+    for (at, c) in text.char_indices() {
+        if seen >= units {
+            return at;
+        }
+        seen += c.len_utf16();
+    }
+    text.len()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

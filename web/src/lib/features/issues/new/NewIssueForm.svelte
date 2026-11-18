@@ -342,15 +342,7 @@
       </div>
 
       <aside class="side" aria-label={m.fields()}>
-        <FieldPanel
-          {issue}
-          collapsed={false}
-          side="end"
-          ontoggle={() => undefined}
-          fixed
-          {invalid}
-          loadBoards
-        >
+        <FieldPanel {issue} {invalid} loadBoards>
           {#snippet project()}
             <ProjectChoice value={issue.project} {first} disabled={moving} onpick={pick} />
           {/snippet}

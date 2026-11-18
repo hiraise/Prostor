@@ -46,7 +46,7 @@
   );
 </script>
 
-<svelte:head><title>{title} · trackflow</title></svelte:head>
+<svelte:head><title>{title} · TaskMaster</title></svelte:head>
 
 {#if !allowed}
   <ForbiddenState {home} />

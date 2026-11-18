@@ -1,11 +1,11 @@
-//! Stored setting values (ADM-002). Meaning and validation: `trackflow_domain::settings`; the
-//! change flow (audit, notification): `trackflow_service::settings`. Secret values (NTF-004)
+//! Stored setting values (ADM-002). Meaning and validation: `taskmaster_domain::settings`; the
+//! change flow (audit, notification): `taskmaster_service::settings`. Secret values (NTF-004)
 //! live as ciphertext in their own table, sealed with the instance key.
 
 use serde_json::Value;
 use sqlx::{PgConnection, PgPool};
-use trackflow_domain::Actor;
-use trackflow_domain::secret::Key;
+use taskmaster_domain::Actor;
+use taskmaster_domain::secret::Key;
 
 /// All stored `(key, value)` pairs; settings without a row have their default. Secret settings
 /// come from [`load_secrets`] instead.

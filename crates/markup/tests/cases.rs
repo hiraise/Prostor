@@ -5,7 +5,7 @@
 use std::collections::{BTreeMap, HashMap};
 
 use serde::Deserialize;
-use trackflow_markup::{Profile, render};
+use taskmaster_markup::{Profile, render};
 
 #[derive(Debug, Deserialize)]
 struct Case {

@@ -1,5 +1,6 @@
 // An issue's page (ISS-001…ISS-003, UI-006): the address holds its readable ID, a former one or the
 // internal ID; a missing or hidden issue shows "not found". One request loads the whole page.
+// `?edit` opens the page in its edit form (step 2.2 §4: `e` in the list).
 import { openIssue } from '#lib/features/issues/index.ts';
 
 import type { PageLoad } from './$types';
@@ -12,6 +13,13 @@ export const load: PageLoad = async ({ parent, params, url }) => {
     params.id,
     Number.isSafeInteger(comment) && comment > 0 ? comment : undefined,
   );
-  if (opened.kind === 'missing') return { issue: null, page: null, requested: params.id };
-  return { issue: opened.issue, page: opened.page, requested: params.id };
+  if (opened.kind === 'missing') {
+    return { issue: null, page: null, requested: params.id, edit: false };
+  }
+  return {
+    issue: opened.issue,
+    page: opened.page,
+    requested: params.id,
+    edit: url.searchParams.has('edit'),
+  };
 };

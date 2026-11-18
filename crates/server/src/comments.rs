@@ -1,24 +1,24 @@
 //! `/issues/{id}/comments` and `/comments`: posting, reading, editing, deleting and restoring
-//! comments (CNT-001…CNT-005). Rules and flows live in `trackflow_service::comments`.
+//! comments (CNT-001…CNT-005). Rules and flows live in `taskmaster_service::comments`.
 
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use trackflow_api::comments::{
+use taskmaster_api::comments::{
     Comment, CommentAbilities, CommentAnswer, CommentDeletion, CommentPatch, NewComment,
 };
-use trackflow_api::error::ErrorBody;
-use trackflow_api::issues::Audience;
-use trackflow_domain::access::Access;
-use trackflow_domain::auth::Scope;
-use trackflow_domain::{CommentId, GroupId, IssueId, UserId};
-use trackflow_service::attachments::AttachmentView;
-use trackflow_service::comments::{self, CommentChange, CommentView};
-use trackflow_service::files::Signer;
-use trackflow_service::people::Names;
-use trackflow_service::text::Refs;
-use trackflow_store::groups::Group;
-use trackflow_store::users::User;
+use taskmaster_api::error::ErrorBody;
+use taskmaster_api::issues::Audience;
+use taskmaster_domain::access::Access;
+use taskmaster_domain::auth::Scope;
+use taskmaster_domain::{CommentId, GroupId, IssueId, UserId};
+use taskmaster_service::attachments::AttachmentView;
+use taskmaster_service::comments::{self, CommentChange, CommentView};
+use taskmaster_service::files::Signer;
+use taskmaster_service::people::Names;
+use taskmaster_service::text::Refs;
+use taskmaster_store::groups::Group;
+use taskmaster_store::users::User;
 
 use crate::AppState;
 use crate::access::Viewer;
@@ -63,7 +63,7 @@ pub fn comment_from<'a, 'f>(
                 &c.file_names,
             )
         } else {
-            trackflow_api::content::TextRefs::default()
+            taskmaster_api::content::TextRefs::default()
         },
         created_at: c.created_at,
         updated_at: c.updated_at,

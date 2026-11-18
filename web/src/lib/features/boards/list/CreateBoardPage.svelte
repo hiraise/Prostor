@@ -22,7 +22,7 @@
   }
 </script>
 
-<svelte:head><title>{m.newBoard()} · trackflow</title></svelte:head>
+<svelte:head><title>{m.newBoard()} · TaskMaster</title></svelte:head>
 
 <PageHeader title={m.newBoard()} />
 <div class="page">

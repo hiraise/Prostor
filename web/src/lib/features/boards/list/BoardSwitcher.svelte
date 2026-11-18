@@ -146,6 +146,9 @@
     display: inline-flex;
     align-items: center;
     gap: var(--space-1);
+    /* `100%` resolves against the `h1`, which the board page grows (`flex: 1 1 auto`), so its
+       used width is definite: a free row shows the whole name, a long one keeps the ellipsis.
+       Against a content-sized `h1` the percentage is cyclic and engines cut a name that fits. */
     max-width: 100%;
     min-height: var(--control-md);
     padding: 0 var(--space-2);

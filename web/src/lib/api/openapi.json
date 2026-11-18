@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "trackflow API",
-    "description": "The API of trackflow, used by its web app, scripts and integrations. Conventions: snake_case JSON, one error format, cursor pagination.",
+    "title": "TaskMaster API",
+    "description": "The API of TaskMaster, used by its web app, scripts and integrations. Conventions: snake_case JSON, one error format, cursor pagination.",
     "version": "0.1.0"
   },
   "servers": [
@@ -3449,6 +3449,244 @@
         ]
       }
     },
+    "/commands": {
+      "post": {
+        "tags": [
+          "issues"
+        ],
+        "summary": "Applies a command line to its issues (CMD-023, plan §4.8): one transaction per issue, each\nwith its own result; plan problems answer every issue and touch nothing.",
+        "operationId": "apply_commands",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The plan and one result per issue",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplyAnswer"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed call",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ]
+      }
+    },
+    "/commands/assist": {
+      "post": {
+        "tags": [
+          "issues"
+        ],
+        "summary": "The command dialog's assist (CMD-028, CMD-029, plan §5): the parsed plan for the preview,\nits problems over ranges with their quick fixes, and the completion at the caret. The line's\nown failures ride the answer as `cmd_*` codes, never HTTP errors.",
+        "operationId": "assist_commands",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AssistRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The plan, its problems and the suggestions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommandAssist"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No targets named",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ]
+      }
+    },
+    "/commands/bulk": {
+      "post": {
+        "tags": [
+          "issues"
+        ],
+        "summary": "Queues a bulk apply over a query (CMD-026, plan §4.7): a job of kind `commands` walks the\nquery's issues and applies the line per issue with progress.",
+        "operationId": "apply_commands_bulk",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The job was queued",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkQueued"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed call",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ]
+      }
+    },
+    "/commands/bulk/{id}": {
+      "get": {
+        "tags": [
+          "issues"
+        ],
+        "summary": "The bulk job's progress and results (plan §4.7), readable by its owner alone.",
+        "operationId": "commands_bulk_progress",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "Job ID",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Progress and per-issue failures",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkProgress"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such job of the caller's",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ]
+      }
+    },
     "/comments/{id}": {
       "get": {
         "tags": [
@@ -5798,6 +6036,70 @@
         "responses": {
           "204": {
             "description": "Deleted"
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ]
+      }
+    },
+    "/issues/export": {
+      "post": {
+        "tags": [
+          "issues"
+        ],
+        "summary": "The selection's export (QRY-084, step 2.2 §9): the chosen issues, or everything a query\nmatches, as a CSV or XLSX file — the fixed columns, then the union of the issues' custom\nfields, then the description. Issues the caller may not see are skipped and still counted.",
+        "operationId": "export_issues",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "The file: CSV (`text/csv; charset=utf-8`, a BOM first) or XLSX (`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`). `X-Exported-Count` is the rows in the file, `X-Total-Count` the matches — they differ when issues the caller may not see were skipped or the export cap cut the file",
+            "content": {
+              "application/octet-stream": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "format": "int32",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Both or neither of `ids` and `query`, or the query has errors (`invalid_query`)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such project, tag or saved search",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -11475,6 +11777,84 @@
         ]
       }
     },
+    "/queries/assist": {
+      "get": {
+        "tags": [
+          "issues"
+        ],
+        "summary": "Completion for the query bar (QRY-056…QRY-058, plan §5): the check — tokens and problems\nfor the highlighting and markers — plus the suggestions at the caret, the same contract the\ncommand dialog answers with (D-061).",
+        "operationId": "assist_query",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "caret",
+            "in": "query",
+            "description": "The caret, in UTF-16 code units, as JavaScript counts it.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "minimum": 0
+            }
+          },
+          {
+            "name": "project",
+            "in": "query",
+            "description": "Names are read as within this project.",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          },
+          {
+            "name": "time_zone",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Tokens, problems and suggestions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryAssist"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such project",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorBody"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "session": []
+          },
+          {
+            "token": []
+          }
+        ]
+      }
+    },
     "/queries/check": {
       "get": {
         "tags": [
@@ -16670,7 +17050,7 @@
           "upload_ceiling": {
             "type": "integer",
             "format": "int64",
-            "description": "The deployment's `TRACKFLOW_UPLOAD_CEILING_BYTES`: the upload setting may not exceed it.",
+            "description": "The deployment's `TASKMASTER_UPLOAD_CEILING_BYTES`: the upload setting may not exceed it.",
             "minimum": 0
           }
         }
@@ -16732,6 +17112,102 @@
           }
         }
       },
+      "ApplyAnswer": {
+        "type": "object",
+        "description": "The answer of `POST /commands` (plan §4.8): the plan the line resolved to — after any quick\nfixes — and one result per issue, in the request's order.",
+        "required": [
+          "operations",
+          "problems",
+          "issues"
+        ],
+        "properties": {
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IssueResult"
+            }
+          },
+          "operations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlannedOperation"
+            }
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CommandProblem"
+            },
+            "description": "Present: the apply touched nothing and the dialog shows each problem."
+          }
+        }
+      },
+      "ApplyRequest": {
+        "type": "object",
+        "description": "One command line to apply (plan §4.8) to at most 50 named issues — a query's worth goes\nthrough the bulk job.",
+        "required": [
+          "text",
+          "issues",
+          "comment",
+          "comment_visibility",
+          "time_zone",
+          "run_as"
+        ],
+        "properties": {
+          "comment": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Markdown the `comment` command attaches (the dialog's comment field)."
+          },
+          "comment_visibility": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AudienceInput",
+                "description": "The comment's audience; `null` is the issue's own."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "create_missing": {
+            "type": "boolean",
+            "description": "Make the create-value quick fixes before resolving the plan again."
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The issues to apply to, by their internal IDs."
+          },
+          "run_as": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64",
+            "description": "Apply as another account: `system.write`, audited (CMD-031)."
+          },
+          "silent": {
+            "type": "boolean",
+            "description": "Without subscriber notifications; needs `issue.silent` in every affected project."
+          },
+          "text": {
+            "type": "string"
+          },
+          "time_zone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "IANA name; the instance's `default_time_zone` when `null`."
+          }
+        }
+      },
       "Assignment": {
         "type": "object",
         "description": "A role held by an account or a group at one scope (ACC-058).",
@@ -16779,6 +17255,68 @@
             "items": {
               "$ref": "#/components/schemas/Assignment"
             }
+          }
+        }
+      },
+      "AssistRequest": {
+        "type": "object",
+        "description": "One command line the dialog is typing (plan §5): the text, the caret, and the targets the\nline would apply to — named issues, or the bulk flow's query.",
+        "required": [
+          "text",
+          "caret",
+          "query",
+          "project",
+          "comment",
+          "time_zone"
+        ],
+        "properties": {
+          "caret": {
+            "type": "integer",
+            "format": "int32",
+            "description": "The caret, in UTF-16 code units, as JavaScript counts it.",
+            "minimum": 0
+          },
+          "comment": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Markdown the `comment` command attaches; the preview says when it is missing."
+          },
+          "hide_resolved": {
+            "type": "boolean"
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The issues the dialog applies to, by their internal IDs."
+          },
+          "project": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "query": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The query the bulk dialog applies the line to; empty means the project's every issue."
+          },
+          "text": {
+            "type": "string"
+          },
+          "time_zone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "IANA name; the instance's `default_time_zone` when `null`."
           }
         }
       },
@@ -18346,6 +18884,161 @@
           "all_issues"
         ]
       },
+      "BulkFailure": {
+        "type": "object",
+        "description": "One issue the bulk job could not apply the line to.",
+        "required": [
+          "issue",
+          "code",
+          "detail"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "issue": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "BulkProgress": {
+        "type": "object",
+        "description": "The bulk job's progress and results (plan §4.7), for its owner alone.",
+        "required": [
+          "id",
+          "state",
+          "done",
+          "total",
+          "failed",
+          "failures",
+          "cancel_requested",
+          "last_error"
+        ],
+        "properties": {
+          "cancel_requested": {
+            "type": "boolean"
+          },
+          "done": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "failed": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "failures": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BulkFailure"
+            }
+          },
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "last_error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "description": "`queued`, `running`, `finished`, `cancelled`, `failed`."
+          },
+          "total": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          }
+        }
+      },
+      "BulkQueued": {
+        "type": "object",
+        "description": "The queued bulk job.",
+        "required": [
+          "job"
+        ],
+        "properties": {
+          "job": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "BulkRequest": {
+        "type": "object",
+        "description": "A bulk apply over a query (plan §4.7): enqueues the job that walks the query's issues.",
+        "required": [
+          "text",
+          "query",
+          "project",
+          "time_zone",
+          "comment",
+          "comment_visibility",
+          "run_as"
+        ],
+        "properties": {
+          "comment": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "comment_visibility": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AudienceInput"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "create_missing": {
+            "type": "boolean"
+          },
+          "hide_resolved": {
+            "type": "boolean"
+          },
+          "project": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "query": {
+            "type": "string",
+            "description": "The query every matching issue of which the line applies to; empty means the named\nproject's every issue."
+          },
+          "run_as": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "silent": {
+            "type": "boolean"
+          },
+          "text": {
+            "type": "string"
+          },
+          "time_zone": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        }
+      },
       "Capabilities": {
         "type": "object",
         "description": "Every capability.",
@@ -19026,6 +19719,118 @@
           }
         }
       },
+      "CommandAssist": {
+        "type": "object",
+        "description": "The answer of `POST /commands/assist` (plan §5): the parsed plan for the preview, its\nproblems over ranges with their quick fixes, and the completion at the caret.",
+        "required": [
+          "operations",
+          "problems",
+          "suggestions"
+        ],
+        "properties": {
+          "operations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PlannedOperation"
+            }
+          },
+          "problems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CommandProblem"
+            }
+          },
+          "suggestions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Suggestion"
+            }
+          }
+        }
+      },
+      "CommandProblem": {
+        "type": "object",
+        "description": "One problem over a range of the command text (plan §4.2): a `cmd_*` code, where the line\nsays it, and what the code names — the fields a bare value fits, the permission lacked.",
+        "required": [
+          "code",
+          "start",
+          "end",
+          "params",
+          "quick_fix"
+        ],
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "`cmd_unknown_word`, `cmd_value_expected`, `cmd_unknown_value`, `cmd_ambiguous`,\n`cmd_not_empty`, `cmd_wrong_kind`, `cmd_text_field`, `cmd_own_issue_vote`,\n`cmd_no_permission`, `cmd_target_not_found`, `cmd_board_no_sprints`."
+          },
+          "end": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "propertyNames": {
+              "type": "string"
+            }
+          },
+          "quick_fix": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CommandQuickFix",
+                "description": "Create the value the line names and the field lacks (plan §5); the dialog offers it,\nthe apply's `create_missing` makes it."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "start": {
+            "type": "integer",
+            "description": "Where the problem sits in the text, in bytes.",
+            "minimum": 0
+          }
+        }
+      },
+      "CommandQuickFix": {
+        "type": "object",
+        "description": "The fix for a value the command names and the field lacks (plan §5): create it.",
+        "required": [
+          "name",
+          "field",
+          "projects"
+        ],
+        "properties": {
+          "field": {
+            "type": "integer",
+            "format": "int64",
+            "description": "The field the value joins."
+          },
+          "name": {
+            "type": "string",
+            "description": "The name as typed, trimmed: the value's title."
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The projects sharing the set — those a creation updates."
+          }
+        }
+      },
+      "CommandSilentPrompt": {
+        "type": "string",
+        "description": "What came of the prompt after a first bulk apply without silent (plan 2.1 §6): `silent` —\nbulk applies start without notifications; `dismissed`/`never` — it asked, the answer was no.",
+        "enum": [
+          "silent",
+          "dismissed",
+          "never"
+        ]
+      },
       "Comment": {
         "type": "object",
         "description": "A comment (CNT-001). A deleted one is a placeholder (CNT-005): author, time and `deleted`;\nits text, HTML and audience are empty.",
@@ -19640,6 +20445,86 @@
           "internal",
           "unavailable"
         ]
+      },
+      "ExportFormat": {
+        "type": "string",
+        "description": "The file format of an export (QRY-084).",
+        "enum": [
+          "csv",
+          "xlsx"
+        ]
+      },
+      "ExportQuery": {
+        "type": "object",
+        "description": "The query an export runs on: the list's own parameters.",
+        "properties": {
+          "hide_resolved": {
+            "type": "boolean"
+          },
+          "project": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "q": {
+            "type": "string",
+            "description": "The query text; empty is every issue the caller may see."
+          },
+          "saved_search": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "tag": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int64"
+          },
+          "time_zone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "IANA zone that dates such as `today` are read in; the instance's zone by default."
+          }
+        }
+      },
+      "ExportRequest": {
+        "type": "object",
+        "description": "What one export runs on besides its format (QRY-084): the chosen issues, or the whole query.",
+        "required": [
+          "format"
+        ],
+        "properties": {
+          "format": {
+            "$ref": "#/components/schemas/ExportFormat"
+          },
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "format": "int64"
+            },
+            "description": "The chosen issues. Invisible ones are skipped and still counted in the answer's\n`X-Total-Count`; more than the cap truncates the file. Exactly one of `ids` and `query`."
+          },
+          "query": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ExportQuery",
+                "description": "Everything this query matches, as the list shows it. Exactly one of `ids` and `query`."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
       },
       "Field": {
         "type": "object",
@@ -21457,6 +22342,58 @@
           }
         }
       },
+      "IssueProblem": {
+        "type": "object",
+        "description": "Why one issue's apply failed: the same codes the plan uses, with the detail the web says.",
+        "required": [
+          "code",
+          "detail"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "IssueResult": {
+        "type": "object",
+        "description": "One issue's result (plan §4.3): applied whole, or not at all.",
+        "required": [
+          "issue",
+          "ok",
+          "problem",
+          "messages"
+        ],
+        "properties": {
+          "issue": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Message"
+            },
+            "description": "What the project's behaviors said; the web turns each into a toast."
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "problem": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/IssueProblem"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        }
+      },
       "IssueSearchPage": {
         "type": "object",
         "description": "A page of issues matching a query.",
@@ -21673,7 +22610,7 @@
       },
       "Language": {
         "type": "string",
-        "description": "Languages trackflow speaks.",
+        "description": "Languages taskmaster speaks.",
         "enum": [
           "en",
           "ru"
@@ -25575,6 +26512,52 @@
           }
         }
       },
+      "PlannedOperation": {
+        "type": "object",
+        "description": "One planned operation over its range (plan §4.2): what the preview shows a row for. The\nassist of step 2.1b fills the names; this is the shape.",
+        "required": [
+          "kind",
+          "start",
+          "end",
+          "mode"
+        ],
+        "properties": {
+          "end": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "kind": {
+            "type": "string",
+            "description": "`set_field`, `tag`, `move`, `link`, `duplicate`, `visibility`, `board`, `star`, `vote`,\n`comment`, `delete`, `clone`."
+          },
+          "mode": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "`set`, `add` or `remove` — the direction the operation changes things in; `null` where\nthe kind says it (a `move`, a `comment`). The assist fills it for the preview's marks."
+          },
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "What the operation names, as it reads (plan §5): the field and its values, the tag,\nthe project, the link's direction and target, the party, the board and sprint. The\npreview's rows build on these; empty for the nameless kinds."
+          },
+          "removals": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The values a plain set on a multi-value field takes off every target issue (plan §1:\n«Fix versions 2025.3» leaves only 2025.3), named as they read. The assist fills it; a\nbulk query, whose targets vary, leaves it empty."
+          },
+          "start": {
+            "type": "integer",
+            "description": "Where the command sits in the text, in bytes.",
+            "minimum": 0
+          }
+        }
+      },
       "PredefinedRoleKey": {
         "type": "string",
         "description": "A role that comes with every installation; shown in the viewer's language.",
@@ -25620,6 +26603,24 @@
             "type": [
               "boolean",
               "null"
+            ]
+          },
+          "commands_on_typing": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Typing a letter or digit on the issue page opens the command dialog (plan 2.1 §6),\ndefault off."
+          },
+          "commands_silent_prompt": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CommandSilentPrompt",
+                "description": "The answer of the silent-by-default prompt for bulk applies (plan 2.1 §6); unset = not\nasked yet."
+              },
+              {
+                "type": "null"
+              }
             ]
           },
           "editor_toolbar": {
@@ -25741,6 +26742,14 @@
               "null"
             ],
             "description": "The rail is folded to icons (UI-001)."
+          },
+          "rail_width": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "The expanded rail's width in tenths of a rem, 160…400."
           },
           "recent_issues": {
             "type": [
@@ -25790,6 +26799,24 @@
               "null"
             ]
           },
+          "commands_on_typing": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Typing a letter or digit on the issue page opens the command dialog (plan 2.1 §6),\ndefault off."
+          },
+          "commands_silent_prompt": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CommandSilentPrompt",
+                "description": "The answer of the silent-by-default prompt for bulk applies (plan 2.1 §6); unset = not\nasked yet."
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "editor_toolbar": {
             "type": [
               "boolean",
@@ -25909,6 +26936,14 @@
               "null"
             ],
             "description": "The rail is folded to icons (UI-001)."
+          },
+          "rail_width": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "format": "int32",
+            "description": "The expanded rail's width in tenths of a rem, 160…400."
           },
           "recent_issues": {
             "type": [
@@ -26417,6 +27452,35 @@
           },
           "name": {
             "type": "string"
+          }
+        }
+      },
+      "QueryAssist": {
+        "type": "object",
+        "description": "Completion for the query bar (QRY-056…QRY-058): the check — tokens and problems for the\nhighlighting and markers — plus the suggestions at the caret.",
+        "required": [
+          "tokens",
+          "problems",
+          "suggestions"
+        ],
+        "properties": {
+          "problems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QueryProblem"
+            }
+          },
+          "suggestions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Suggestion"
+            }
+          },
+          "tokens": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/QueryToken"
+            }
           }
         }
       },
@@ -27139,7 +28203,7 @@
               "string",
               "null"
             ],
-            "description": "The address people open trackflow at, used in links in emails."
+            "description": "The address people open taskmaster at, used in links in emails."
           },
           "code": {
             "type": "string",
@@ -27500,6 +28564,103 @@
             "format": "int64"
           }
         }
+      },
+      "Suggestion": {
+        "type": "object",
+        "description": "One completion (QRY-056's contract, shared by both surfaces, D-061): what to insert, where,\nand how it matched. Offsets are UTF-16 code units — `from` and `to` into the current text,\n`matched_from` and `matched_to` into `text`, `caret` into the text after the insert.",
+        "required": [
+          "text",
+          "description",
+          "group",
+          "from",
+          "to",
+          "matched_from",
+          "matched_to",
+          "caret",
+          "suffix",
+          "resolved"
+        ],
+        "properties": {
+          "caret": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "description": {
+            "type": "string",
+            "description": "Plain data the label builds on: the field of a value, a project's key, an account's\nfull name, an issue's summary. Empty when the group says it all."
+          },
+          "from": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "group": {
+            "$ref": "#/components/schemas/SuggestionGroup"
+          },
+          "matched_from": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "matched_to": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          },
+          "own": {
+            "type": "boolean",
+            "description": "The actor's own account."
+          },
+          "present": {
+            "type": "boolean",
+            "description": "The value is already on every target issue (commands only); the web marks it."
+          },
+          "resolved": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A relative date's concrete value in the caller's zone, as `YYYY-MM-DD`."
+          },
+          "suffix": {
+            "type": "string",
+            "description": "What follows the insert: a space, or the separator the position calls for."
+          },
+          "text": {
+            "type": "string",
+            "description": "The insert, quoted where the plain word would not read back the same."
+          },
+          "to": {
+            "type": "integer",
+            "format": "int32",
+            "minimum": 0
+          }
+        }
+      },
+      "SuggestionGroup": {
+        "type": "string",
+        "description": "What a suggestion is about; clients label and order by it.",
+        "enum": [
+          "command",
+          "attribute",
+          "value",
+          "link",
+          "tag",
+          "project",
+          "user",
+          "group",
+          "board",
+          "sprint",
+          "special",
+          "empty",
+          "date",
+          "issue",
+          "recent",
+          "keyword",
+          "sort_key",
+          "sort_direction"
+        ]
       },
       "Tag": {
         "type": "object",
@@ -28280,7 +29441,7 @@
       "session": {
         "type": "apiKey",
         "in": "cookie",
-        "name": "trackflow_session",
+        "name": "taskmaster_session",
         "description": "Set by signing in (`POST /session`); used by the web app"
       },
       "token": {

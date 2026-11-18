@@ -26,7 +26,7 @@ import { ASSIGNEE, BORIS, DUE, ESTIMATE, issue, PRIORITY, WEB } from '../test-da
 import { newIssueDialog, openNewIssue } from '../new/open.svelte.ts';
 import { forgetIssueFields } from './columns.ts';
 import IssueList from './IssueList.svelte';
-import type { ListParams, ResolvedContext } from './list-state.ts';
+import type { ListParams, ResolvedContext } from './list-state.svelte.ts';
 import { ensureSearch } from './search.svelte.ts';
 
 const LOGIN = issue();
@@ -111,7 +111,8 @@ async function show(
 
 /** The rows: a table on a desktop, a list of cards on a phone. */
 function rowsOf(screen: Shown['screen']) {
-  return screen.getByRole(isPhone() ? 'list' : 'table', { name: 'Found issues' });
+  // The rows are a keyboard grid on a desktop (step 2.2 §6), a list of cards on a phone.
+  return screen.getByRole(isPhone() ? 'list' : 'grid', { name: 'Found issues' });
 }
 
 /** How many issue rows are shown (the table's header row left out). */
@@ -192,7 +193,7 @@ describe('QRY-073: rows, count and empty hints', () => {
 describe('QRY-074: the query bar', () => {
   it('searches the typed text and clears it', async () => {
     const { screen, onnavigate } = await show();
-    const input = screen.getByRole('textbox', { name: 'Search query' });
+    const input = screen.getByRole('combobox', { name: 'Search query' });
     await input.fill('login sort: updated');
     await screen.getByRole('button', { name: 'Find' }).click();
     expect(onnavigate).toHaveBeenLastCalledWith({
@@ -216,7 +217,7 @@ describe('QRY-074: the query bar', () => {
     });
     await expect.element(screen.getByText('The query has mistakes')).toBeVisible();
     await expect.element(screen.getByText('“colour”: no such field')).toBeVisible();
-    const input = screen.getByRole('textbox', { name: 'Search query' });
+    const input = screen.getByRole('combobox', { name: 'Search query' });
     await expect.element(input).toHaveAttribute('aria-invalid', 'true');
     await expect.element(input).toHaveAccessibleDescription(/no such field/);
     await input.click();
@@ -511,12 +512,13 @@ describe('QRY-075: the table, its columns and header sort', () => {
     const rows = rowsOf(screen);
     await expect.element(rows.getByText('Login button does nothing')).toBeVisible();
     if (!isPhone()) {
-      // The first column is the star, the last the row's actions (AUT-066) — both structural.
+      // The first columns are the selection checkbox and the star, the last the row's actions
+      // (AUT-066) — all structural.
       const headers = () =>
         rows
           .getByRole('columnheader')
           .elements()
-          .slice(1, -1)
+          .slice(2, -1)
           .map((e) => e.textContent.trim());
       await expect.poll(headers).toEqual(['Summary', 'Due date', 'Votes']);
     }

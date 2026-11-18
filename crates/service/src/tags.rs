@@ -4,15 +4,16 @@
 
 use serde_json::json;
 use sqlx::PgConnection;
-use trackflow_domain::access::Access;
-use trackflow_domain::issues::history::{Origin, Record};
-use trackflow_domain::issues::rights;
-use trackflow_domain::issues::{self as domain, TAGS_PER_ISSUE_MAX, TAGS_PER_OWNER_MAX};
-use trackflow_domain::sharing::{Audience, Shared};
-use trackflow_domain::validation::{Problem, Problems};
-use trackflow_domain::{Actor, IssueId, TagId, UserId};
-use trackflow_store::tags::{self, Listing, Tag};
-use trackflow_store::{PgPool, audit, groups, unique_violation, users};
+use taskmaster_domain::access::Access;
+use taskmaster_domain::issues::history::{Origin, Record};
+use taskmaster_domain::issues::rights;
+use taskmaster_domain::issues::{self as domain, TAGS_PER_ISSUE_MAX, TAGS_PER_OWNER_MAX};
+use taskmaster_domain::sharing::{Audience, Shared};
+use taskmaster_domain::validation::{Problem, Problems};
+use taskmaster_domain::{Actor, IssueId, TagId, UserId};
+use taskmaster_store::issues::Issue;
+use taskmaster_store::tags::{self, Listing, Tag};
+use taskmaster_store::{PgPool, audit, groups, unique_violation, users};
 
 use crate::issues::{self, One};
 use crate::live::Batch;
@@ -304,6 +305,40 @@ pub async fn delete(pool: &PgPool, viewer: &Access, id: TagId) -> Result<()> {
     Ok(())
 }
 
+/// The tag write itself on the caller's connection (plan §4.3): the same checks as
+/// [`set_on_issue`], the add or remove, and the history record for the caller's change —
+/// `None` when the tag was already as asked. The issue is locked.
+pub(crate) async fn set_on_issue_conn(
+    conn: &mut PgConnection,
+    viewer: &Access,
+    issue: &Issue,
+    tag_id: TagId,
+    on: bool,
+) -> Result<Option<Record>> {
+    rights::may_update(viewer, &issues::facts(issue))?;
+    let tag = tags::get(&mut *conn, tag_id)
+        .await?
+        .filter(|t| t.sharing().can_use(viewer))
+        .ok_or(Error::NotFound("no such tag"))?;
+    let changed = if on {
+        if tags::count_on_issue(&mut *conn, issue.id).await?
+            >= i64::try_from(TAGS_PER_ISSUE_MAX).unwrap_or(i64::MAX)
+        {
+            return Err(Error::Conflict("the issue has too many tags"));
+        }
+        tags::add(&mut *conn, issue.id, tag.id).await?
+    } else {
+        tags::remove(&mut *conn, issue.id, tag.id).await?
+    };
+    Ok(if !changed {
+        None
+    } else if on {
+        Record::tags(&[], &[tag.id])
+    } else {
+        Record::tags(&[tag.id], &[])
+    })
+}
+
 /// Puts a tag on an issue or takes it off (ISS-035, ISS-037: own or shared for use), with a
 /// history record.
 pub async fn set_on_issue(
@@ -316,38 +351,10 @@ pub async fn set_on_issue(
 ) -> Result<One> {
     let mut tx = pool.begin().await?;
     let (issue, _) = issues::lock_for_change(&mut tx, viewer, issue_id).await?;
-    rights::may_update(viewer, &issues::facts(&issue))?;
-    let tag = tags::get(&mut *tx, tag_id)
-        .await?
-        .filter(|t| t.sharing().can_use(viewer))
-        .ok_or(Error::NotFound("no such tag"))?;
-    let changed = if on {
-        if tags::count_on_issue(&mut *tx, issue.id).await?
-            >= i64::try_from(TAGS_PER_ISSUE_MAX).unwrap_or(i64::MAX)
-        {
-            return Err(Error::Conflict("the issue has too many tags"));
-        }
-        tags::add(&mut tx, issue.id, tag.id).await?
-    } else {
-        tags::remove(&mut tx, issue.id, tag.id).await?
-    };
-    if changed {
-        let record = if on {
-            Record::tags(&[], &[tag.id])
-        } else {
-            Record::tags(&[tag.id], &[])
-        };
+    if let Some(record) = set_on_issue_conn(&mut tx, viewer, &issue, tag_id, on).await? {
         let author = issues::author(viewer, origin, false, issue.project_id)?;
         let mut batch = Batch::new();
-        issues::finish_change(
-            &mut tx,
-            &mut batch,
-            &issue,
-            author,
-            &record.into_iter().collect::<Vec<_>>(),
-            &[],
-        )
-        .await?;
+        issues::finish_change(&mut tx, &mut batch, &issue, author, &[record], &[]).await?;
         batch.publish(&mut tx).await?;
     }
     tx.commit().await?;

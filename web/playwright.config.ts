@@ -6,11 +6,11 @@ import { defineConfig, devices } from '@playwright/test';
 
 import { SETUP_CODE } from './e2e/accounts.ts';
 
-const port = Number(process.env.TRACKFLOW_E2E_PORT ?? 7701);
+const port = Number(process.env.TASKMASTER_E2E_PORT ?? 7701);
 const baseURL = `http://127.0.0.1:${String(port)}`;
-const database = process.env.TRACKFLOW_E2E_DATABASE_URL;
+const database = process.env.TASKMASTER_E2E_DATABASE_URL;
 if (!database)
-  throw new Error('TRACKFLOW_E2E_DATABASE_URL is not set: run the tests with `make e2e`');
+  throw new Error('TASKMASTER_E2E_DATABASE_URL is not set: run the tests with `make e2e`');
 
 export default defineConfig({
   testDir: 'e2e',
@@ -47,7 +47,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: '../target/debug/trackflow',
+    command: '../target/debug/taskmaster',
     url: `${baseURL}/api/v1/health/ready`,
     reuseExistingServer: false,
     timeout: 60_000,
@@ -55,17 +55,17 @@ export default defineConfig({
     stderr: 'pipe',
     env: {
       DATABASE_URL: database,
-      TRACKFLOW_LISTEN: `127.0.0.1:${String(port)}`,
-      TRACKFLOW_SETUP_CODE: SETUP_CODE,
+      TASKMASTER_LISTEN: `127.0.0.1:${String(port)}`,
+      TASKMASTER_SETUP_CODE: SETUP_CODE,
       // Account emails go to Mailpit of `make db-up`; the tests read them from its API.
-      TRACKFLOW_SMTP_URL: 'smtp://127.0.0.1:1025',
-      TRACKFLOW_MAIL_FROM: 'trackflow <e2e@trackflow.test>',
+      TASKMASTER_SMTP_URL: 'smtp://127.0.0.1:1025',
+      TASKMASTER_MAIL_FROM: 'TaskMaster <e2e@taskmaster.test>',
       // The instance key of the run: the mail screen saves its secrets sealed (NTF-004).
-      TRACKFLOW_SECRET_KEY: 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=',
+      TASKMASTER_SECRET_KEY: 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=',
       // Uploaded files of the run; `make e2e` empties the directory first. No Gravatar: the
       // tests stay offline.
-      TRACKFLOW_FILES_DIR: '.playwright/files',
-      TRACKFLOW_GRAVATAR_URL: '',
+      TASKMASTER_FILES_DIR: '.playwright/files',
+      TASKMASTER_GRAVATAR_URL: '',
       RUST_LOG: 'warn',
     },
   },

@@ -6,9 +6,9 @@ use std::time::Duration;
 
 use serde_json::Value as Json;
 use sqlx::{PgConnection, PgExecutor};
+use taskmaster_domain::notifications::{Folder, Kind, Settings, Source};
+use taskmaster_domain::{IssueId, SavedSearchId, SubscriptionId, TagId, UserId};
 use time::OffsetDateTime;
-use trackflow_domain::notifications::{Folder, Kind, Settings, Source};
-use trackflow_domain::{IssueId, SavedSearchId, SubscriptionId, TagId, UserId};
 
 /// Both unique keys of `notification_subscriptions` mean the same thing: one subscription per
 /// person and source.

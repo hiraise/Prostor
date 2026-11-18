@@ -1,0 +1,23 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "select deleted_at is not null as \"gone!\" from issues where id = $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "gone!",
+        "type_info": "Bool",
+        "origin": "Expression"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "2ec8b798d70ca8f4de76b0efc5fb952ee362c19a6b5bf73bc8e2f0c61344dcb5"
+}

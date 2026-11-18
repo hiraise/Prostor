@@ -1,5 +1,5 @@
 [package]
-name = "trackflow-query-wasm"
+name = "taskmaster-query-wasm"
 description = "The browser's copy of the query language: tokens, problems and the canonical text over linear memory"
 version.workspace = true
 edition.workspace = true
@@ -10,7 +10,7 @@ publish.workspace = true
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-trackflow-query.workspace = true
+taskmaster-query.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 

@@ -3,11 +3,11 @@
 
 use std::collections::HashSet;
 
-use trackflow_domain::access::Access;
-use trackflow_domain::access::permission::Permission;
-use trackflow_domain::live::{Guard, ListScope, Topic};
-use trackflow_domain::{BoardId, IssueId, ProjectId};
-use trackflow_store::PgPool;
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::permission::Permission;
+use taskmaster_domain::live::{Guard, ListScope, Topic};
+use taskmaster_domain::{BoardId, IssueId, ProjectId};
+use taskmaster_store::PgPool;
 
 /// The accepted topics and the denied strings, each in the order asked, without repeats.
 pub struct Checked {
@@ -34,7 +34,7 @@ pub async fn check(db: &PgPool, access: &Access, asked: &[String]) -> Result<Che
     let visible: HashSet<IssueId> = if ids.is_empty() {
         HashSet::new()
     } else {
-        trackflow_store::live::issue_facts(db, &ids)
+        taskmaster_store::live::issue_facts(db, &ids)
             .await?
             .into_iter()
             .filter(|facts| {
@@ -53,7 +53,7 @@ pub async fn check(db: &PgPool, access: &Access, asked: &[String]) -> Result<Che
     let boards: Vec<(BoardId, Vec<ProjectId>)> = if board_ids.is_empty() {
         Vec::new()
     } else {
-        trackflow_store::boards::get_many(db, &board_ids)
+        taskmaster_store::boards::get_many(db, &board_ids)
             .await?
             .into_iter()
             .filter(|b| b.access().can_view(access))

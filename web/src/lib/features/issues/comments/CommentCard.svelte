@@ -147,8 +147,23 @@
   }
 
   function cardKeydown(event: KeyboardEvent): void {
-    if (event.key !== 'F2' || event.defaultPrevented) return;
-    // Handled here even while editing: F2 in a comment never edits the issue around it.
+    // F2, and `e` of the issue view when the card holds the focus (step 2.2 §7) — handled here
+    // even while editing: neither key ever edits the issue around the comment. A field of the
+    // card (the editor, its lists) keeps its letters.
+    const editKey =
+      event.key === 'F2' ||
+      (!event.metaKey &&
+        !event.ctrlKey &&
+        !event.altKey &&
+        !event.shiftKey &&
+        event.code === 'KeyE');
+    if (!editKey || event.defaultPrevented) return;
+    if (
+      event.target instanceof HTMLElement &&
+      event.target.closest('input, textarea, select, [contenteditable="true"]') !== null
+    ) {
+      return;
+    }
     if (!editing && !comment.can.update) return;
     event.preventDefault();
     startEditing();

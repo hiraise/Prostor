@@ -10,9 +10,9 @@ use axum::extract::{FromRequest, FromRequestParts};
 use axum::http::{HeaderValue, StatusCode, header};
 use axum::response::{IntoResponse, Json, Response};
 use serde::Serialize;
-use trackflow_api::error::{ErrorBody, ErrorCode, FieldError};
-use trackflow_api::search::{QueryProblem, QuerySeverity};
-use trackflow_domain::links::Refusal;
+use taskmaster_api::error::{ErrorBody, ErrorCode, FieldError};
+use taskmaster_api::search::{QueryProblem, QuerySeverity};
+use taskmaster_domain::links::Refusal;
 
 /// An error answer of the API.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -179,9 +179,9 @@ impl From<sqlx::Error> for ApiError {
     }
 }
 
-impl From<trackflow_service::Error> for ApiError {
-    fn from(error: trackflow_service::Error) -> Self {
-        use trackflow_service::Error;
+impl From<taskmaster_service::Error> for ApiError {
+    fn from(error: taskmaster_service::Error) -> Self {
+        use taskmaster_service::Error;
         match error {
             Error::Invalid(problems) => Self::invalid(
                 problems

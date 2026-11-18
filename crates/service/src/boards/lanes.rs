@@ -3,26 +3,26 @@
 //! new ones, their order, back to the backlog — and parents joining a sprint as lanes.
 
 use sqlx::PgConnection;
-use time::OffsetDateTime;
-use trackflow_domain::access::Access;
-use trackflow_domain::boards::lanes::{
+use taskmaster_domain::access::Access;
+use taskmaster_domain::boards::lanes::{
     self as domain, Attribute, Bounds, LaneKey, LaneMode, OtherLane, Source,
 };
-use trackflow_domain::fields::FieldKind;
-use trackflow_domain::issues::history::{Origin, Record};
-use trackflow_domain::issues::rights;
-use trackflow_domain::issues::values::Input;
-use trackflow_domain::links::Side;
-use trackflow_domain::live::Change;
-use trackflow_domain::rank;
-use trackflow_domain::validation::Problem;
-use trackflow_domain::{BoardId, FieldId, IssueId, ProjectId, SprintId};
-use trackflow_store::PgPool;
-use trackflow_store::boards::cards as store_cards;
-use trackflow_store::boards::view::{DateOf, LaneScope, LaneSource};
-use trackflow_store::boards::{self as store, Sprint};
-use trackflow_store::fields::{self as store_fields, Field};
-use trackflow_store::issues::Issue;
+use taskmaster_domain::fields::FieldKind;
+use taskmaster_domain::issues::history::{Origin, Record};
+use taskmaster_domain::issues::rights;
+use taskmaster_domain::issues::values::Input;
+use taskmaster_domain::links::Side;
+use taskmaster_domain::live::Change;
+use taskmaster_domain::rank;
+use taskmaster_domain::validation::Problem;
+use taskmaster_domain::{BoardId, FieldId, IssueId, ProjectId, SprintId};
+use taskmaster_store::PgPool;
+use taskmaster_store::boards::cards as store_cards;
+use taskmaster_store::boards::view::{DateOf, LaneScope, LaneSource};
+use taskmaster_store::boards::{self as store, Sprint};
+use taskmaster_store::fields::{self as store_fields, Field};
+use taskmaster_store::issues::Issue;
+use time::OffsetDateTime;
 
 use super::cards::{place, sprint_of};
 use super::view::{Lane, is_query, zone_name};
@@ -242,7 +242,7 @@ pub(super) async fn check_change(
     let ids: Vec<i64> = keys.iter().filter_map(|k| k.id()).collect();
     match source {
         Source::Values if !ids.is_empty() => {
-            let found = trackflow_store::value_sets::get_values(&mut *conn, &ids).await?;
+            let found = taskmaster_store::value_sets::get_values(&mut *conn, &ids).await?;
             let all_of_set = ids.iter().all(|id| {
                 found
                     .iter()
@@ -264,7 +264,7 @@ pub(super) async fn check_change(
             ));
         }
         Source::Tags => {
-            let found = trackflow_store::tags::get_many(&mut *conn, &ids).await?;
+            let found = taskmaster_store::tags::get_many(&mut *conn, &ids).await?;
             let usable = ids.iter().all(|id| {
                 found
                     .iter()
@@ -289,7 +289,7 @@ pub(super) async fn check_change(
             ));
         }
         Some(id) => {
-            if trackflow_store::value_sets::get_values(&mut *conn, &[id])
+            if taskmaster_store::value_sets::get_values(&mut *conn, &[id])
                 .await?
                 .is_empty()
             {
@@ -388,13 +388,13 @@ pub(super) async fn set_lane(
     if source == Source::Tags {
         let mut removed = Vec::new();
         for tag in leaving {
-            if trackflow_store::tags::remove(conn, issue.id, tag).await? {
+            if taskmaster_store::tags::remove(conn, issue.id, tag).await? {
                 removed.push(tag);
             }
         }
         let mut added = Vec::new();
         if let Some(tag) = coming
-            && trackflow_store::tags::add(conn, issue.id, tag).await?
+            && taskmaster_store::tags::add(conn, issue.id, tag).await?
         {
             added.push(tag);
         }
@@ -481,7 +481,7 @@ async fn set_parent(
     issue: &Issue,
     parent: Option<IssueId>,
 ) -> Result<()> {
-    let current = trackflow_store::links::parent_link(&mut *conn, issue.id).await?;
+    let current = taskmaster_store::links::parent_link(&mut *conn, issue.id).await?;
     if current.as_ref().map(|l| l.source_id) == parent {
         return Ok(());
     }
@@ -489,7 +489,7 @@ async fn set_parent(
         crate::issue_links::remove_locked(conn, batch, actor, origin, issue, &link).await?;
     }
     if let Some(parent) = parent {
-        let link_type = trackflow_store::links::subtask_type(&mut *conn)
+        let link_type = taskmaster_store::links::subtask_type(&mut *conn)
             .await?
             .ok_or_else(|| internal("the subtask link type is missing"))?;
         crate::issue_links::add_locked(
@@ -521,7 +521,7 @@ pub(super) async fn is_lane(
         return Ok(false);
     }
     let field = setup.field.as_ref().filter(|_| !setup.ids.is_empty());
-    Ok(trackflow_store::boards::view::is_parent_lane(
+    Ok(taskmaster_store::boards::view::is_parent_lane(
         &mut *conn,
         issue,
         field.map(|f| (f.id, &setup.ids[..])),

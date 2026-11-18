@@ -7,6 +7,7 @@ import type { BoardView } from '#lib/api/schema.gen.ts';
 import { setAccessForTests, setSessionForTests } from '#lib/session/index.ts';
 
 import { expectAccessible, isPhone, smallTargets } from '../../../../test/a11y.ts';
+import { need } from '../../../../test/dom.ts';
 import { fakeApi, failure, type FakeRequest, type FakeRoute } from '../../../../test/fake-api.ts';
 import { columnQuery, plainExcerpt } from '../boards.ts';
 import { COLUMNS, MEMBER, OPEN, SESSION, board, column, issue, view } from '../test-data.ts';
@@ -53,6 +54,23 @@ describe('BRD-068: the board', () => {
     const small = smallTargets(screen.container, isPhone() ? 44 : 24);
     expect(small.filter((name) => !name.startsWith('WEB-'))).toEqual([]);
     await expectAccessible(screen.container);
+  });
+
+  it('shows the board name in the switcher in full, and cuts only a truly long one', async () => {
+    server({});
+    const screen = await render(BoardPage, { board: board({ name: 'TaskMaster' }) });
+    const switcherTitle = () =>
+      need(screen.container.querySelector('h1 button span'), 'switcher title');
+    // A free row must not truncate the name (the switcher used to collapse to “Trackfl…”).
+    expect(switcherTitle().scrollWidth).toBeLessThanOrEqual(switcherTitle().clientWidth);
+
+    const long = 'A very long board name that cannot fit the header row of the board page. '.repeat(
+      3,
+    );
+    await screen.rerender({ board: board({ name: long }) });
+    // A definite narrow width, so the long name truly cannot fit the row.
+    screen.container.style.width = '640px';
+    expect(switcherTitle().scrollWidth).toBeGreaterThan(switcherTitle().clientWidth);
   });
 
   it('asks the person to choose columns when the board has none', async () => {

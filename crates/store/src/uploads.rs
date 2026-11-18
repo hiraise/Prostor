@@ -2,8 +2,8 @@
 //! each a day later; attaching moves it into `attachments`.
 
 use sqlx::{PgConnection, PgExecutor};
+use taskmaster_domain::{UploadId, UserId};
 use time::OffsetDateTime;
-use trackflow_domain::{UploadId, UserId};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Upload {

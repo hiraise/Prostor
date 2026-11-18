@@ -13,7 +13,7 @@ const KEY_LEN: usize = 32;
 /// The size of the nonce, in bytes.
 const NONCE_LEN: usize = 12;
 
-/// The key secret settings are sealed with: `TRACKFLOW_SECRET_KEY`, 32 bytes base64-encoded.
+/// The key secret settings are sealed with: `TASKMASTER_SECRET_KEY`, 32 bytes base64-encoded.
 #[derive(Clone, PartialEq, Eq)]
 pub struct Key([u8; KEY_LEN]);
 

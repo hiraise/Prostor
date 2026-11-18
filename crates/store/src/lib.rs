@@ -12,6 +12,7 @@ pub mod attachments;
 pub mod audit;
 pub mod boards;
 pub mod bus;
+pub mod command_history;
 pub mod comments;
 pub mod content;
 pub mod db;

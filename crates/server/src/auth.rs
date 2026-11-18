@@ -11,18 +11,18 @@ use std::net::IpAddr;
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
 use axum::http::{HeaderMap, HeaderValue, Method, header};
+use taskmaster_api::error::ErrorCode;
+use taskmaster_domain::auth::{Principal, Scope};
+use taskmaster_domain::settings::{BASE_URL, session_policy};
+use taskmaster_store::sessions;
 use time::{Duration, OffsetDateTime};
-use trackflow_api::error::ErrorCode;
-use trackflow_domain::auth::{Principal, Scope};
-use trackflow_domain::settings::{BASE_URL, session_policy};
-use trackflow_store::sessions;
 
 use crate::AppState;
 use crate::client::client_ip;
 use crate::error::ApiError;
 
 /// Name of the session cookie.
-pub const SESSION_COOKIE: &str = "trackflow_session";
+pub const SESSION_COOKIE: &str = "taskmaster_session";
 /// The cookie goes only to the API, not with every static file.
 const COOKIE_PATH: &str = "/api";
 
@@ -83,7 +83,7 @@ async fn authenticate(parts: &mut Parts, state: &AppState) -> Result<Principal, 
             .ok_or_else(|| {
                 unauthenticated("Send an API token as `Authorization: Bearer <token>`")
             })?;
-        return trackflow_service::auth::authenticate_token(&state.db, token, now)
+        return taskmaster_service::auth::authenticate_token(&state.db, token, now)
             .await?
             .ok_or_else(|| unauthenticated("The API token is not valid"));
     }
@@ -92,7 +92,7 @@ async fn authenticate(parts: &mut Parts, state: &AppState) -> Result<Principal, 
         return Err(unauthenticated("Sign in or send an API token"));
     };
     let policy = session_policy(&state.settings.get());
-    let principal = trackflow_service::auth::authenticate_session(&state.db, cookie, policy, now)
+    let principal = taskmaster_service::auth::authenticate_session(&state.db, cookie, policy, now)
         .await?
         .ok_or_else(|| unauthenticated("The session has ended; sign in again"))?;
     if !is_safe(&parts.method) && !same_origin(parts, state) {
@@ -321,7 +321,7 @@ mod tests {
         headers.append(header::COOKIE, HeaderValue::from_static("theme=dark; a=b"));
         headers.append(
             header::COOKIE,
-            HeaderValue::from_static("trackflow_session=abc123; x=y"),
+            HeaderValue::from_static("taskmaster_session=abc123; x=y"),
         );
         assert_eq!(cookie(&headers, SESSION_COOKIE), Some("abc123"));
         assert_eq!(cookie(&headers, "theme"), Some("dark"));
@@ -329,7 +329,7 @@ mod tests {
         let mut empty = HeaderMap::new();
         empty.insert(
             header::COOKIE,
-            HeaderValue::from_static("trackflow_session="),
+            HeaderValue::from_static("taskmaster_session="),
         );
         assert_eq!(cookie(&empty, SESSION_COOKIE), None);
     }

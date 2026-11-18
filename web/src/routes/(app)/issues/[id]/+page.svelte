@@ -12,11 +12,11 @@
 </script>
 
 <svelte:head>
-  {#if !issue}<title>{states.notFoundTitle()} · trackflow</title>{/if}
+  {#if !issue}<title>{states.notFoundTitle()} · TaskMaster</title>{/if}
 </svelte:head>
 
 {#if issue}
-  <IssuePage {issue} requested={data.requested} page={data.page ?? undefined} />
+  <IssuePage {issue} requested={data.requested} page={data.page ?? undefined} edit={data.edit} />
 {:else}
   <NotFoundState home={homeHref()} />
 {/if}

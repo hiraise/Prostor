@@ -19,7 +19,7 @@
   );
 </script>
 
-<svelte:head><title>{title} · trackflow</title></svelte:head>
+<svelte:head><title>{title} · TaskMaster</title></svelte:head>
 
 {#if !data.allowed}
   <ForbiddenState home={homeHref()} />

@@ -9,22 +9,22 @@ use std::time::Instant;
 
 use axum::extract::ws::Utf8Bytes;
 use futures_util::StreamExt;
+use taskmaster_api::live::{
+    LiveChange, LiveEntity, LiveEvent, LiveResync, LiveServerMessage, LiveSubscribed, close,
+};
+use taskmaster_domain::access::Access;
+use taskmaster_domain::live::{Change, EntityKind, ListScope, Topic};
+use taskmaster_domain::settings::session_policy;
+use taskmaster_domain::{BoardId, IssueId, ProjectId, UserId};
+use taskmaster_store::PgPool;
+use taskmaster_store::bus::{self, BusEvent};
+use taskmaster_store::live::Stored;
 use time::OffsetDateTime;
 use tokio::sync::mpsc::error::TrySendError;
 use tokio::sync::{broadcast, mpsc};
 use tokio::task::JoinHandle;
 use tokio::time::MissedTickBehavior;
 use tokio_util::sync::CancellationToken;
-use trackflow_api::live::{
-    LiveChange, LiveEntity, LiveEvent, LiveResync, LiveServerMessage, LiveSubscribed, close,
-};
-use trackflow_domain::access::Access;
-use trackflow_domain::live::{Change, EntityKind, ListScope, Topic};
-use trackflow_domain::settings::session_policy;
-use trackflow_domain::{BoardId, IssueId, ProjectId, UserId};
-use trackflow_store::PgPool;
-use trackflow_store::bus::{self, BusEvent};
-use trackflow_store::live::Stored;
 
 use super::{ACCESS_RELOAD, BUFFER_AGE, Config, Ending, PURGE_EVERY, READ_BATCH, RETENTION, TICK};
 use crate::access::AccessCache;
@@ -216,9 +216,9 @@ impl Pump {
         settings: SettingsCache,
         config: Config,
     ) -> Result<Self, sqlx::Error> {
-        let position = trackflow_store::live::head(&db).await?;
+        let position = taskmaster_store::live::head(&db).await?;
         let recent =
-            trackflow_store::live::since_time(&db, OffsetDateTime::now_utc() - BUFFER_AGE).await?;
+            taskmaster_store::live::since_time(&db, OffsetDateTime::now_utc() - BUFFER_AGE).await?;
         let mut floor = position;
         let mut buffer = VecDeque::new();
         if let Some(first) = recent.first() {
@@ -226,7 +226,7 @@ impl Pump {
             floor = first.id - 1;
             let mut after = floor;
             'read: loop {
-                let rows = trackflow_store::live::after(&db, after, READ_BATCH).await?;
+                let rows = taskmaster_store::live::after(&db, after, READ_BATCH).await?;
                 if rows.is_empty() {
                     break;
                 }
@@ -327,7 +327,7 @@ impl Pump {
             let sessions: Vec<i64> = sessions.into_iter().collect();
             let tokens: Vec<i64> = tokens.into_iter().collect();
             let now = OffsetDateTime::now_utc();
-            match trackflow_service::auth::alive(&db, &sessions, &tokens, policy, now).await {
+            match taskmaster_service::auth::alive(&db, &sessions, &tokens, policy, now).await {
                 Ok((live_sessions, live_tokens)) => {
                     let ended = Command::Ended {
                         sessions: (sessions.into_iter())
@@ -358,18 +358,18 @@ impl Pump {
         self.purged_at = Some(Instant::now());
         let db = self.db.clone();
         self.purging = Some(tokio::spawn(async move {
-            if let Err(error) = trackflow_store::live::purge(&db, RETENTION).await {
+            if let Err(error) = taskmaster_store::live::purge(&db, RETENTION).await {
                 tracing::warn!(%error, "cannot purge old live events");
             }
             // Inbox rows older than the retention go on the same schedule (plan §3.5).
             if let Err(error) =
-                trackflow_store::notifications::purge(&db, super::INBOX_RETENTION).await
+                taskmaster_store::notifications::purge(&db, super::INBOX_RETENTION).await
             {
                 tracing::warn!(%error, "cannot purge old inbox rows");
             }
             // Empty drafts a closed form could not delete (ISS-010) go on the same schedule.
-            let idle = trackflow_service::issues::EMPTY_DRAFT_IDLE;
-            if let Err(error) = trackflow_service::issues::sweep_drafts(&db, idle).await {
+            let idle = taskmaster_service::issues::EMPTY_DRAFT_IDLE;
+            if let Err(error) = taskmaster_service::issues::sweep_drafts(&db, idle).await {
                 tracing::warn!(%error, "cannot sweep empty drafts");
             }
         }));
@@ -397,7 +397,7 @@ impl Pump {
                 self.reload_access().await;
                 self.notice("settings");
                 self.notice("access");
-                match trackflow_store::live::head(&self.db).await {
+                match taskmaster_store::live::head(&self.db).await {
                     Ok(head) => self.target = self.target.max(head),
                     Err(error) => tracing::warn!(%error, "cannot read the live event head"),
                 }
@@ -411,7 +411,7 @@ impl Pump {
     async fn on_tick(&mut self) {
         self.evict();
         self.purge();
-        match trackflow_store::live::head(&self.db).await {
+        match taskmaster_store::live::head(&self.db).await {
             Ok(head) => {
                 self.target = self.target.max(self.last_head);
                 self.last_head = head;
@@ -424,14 +424,14 @@ impl Pump {
     /// Dispatches the events up to `target`.
     async fn catch_up(&mut self) {
         while self.position < self.target {
-            let rows = match trackflow_store::live::after(&self.db, self.position, READ_BATCH).await
-            {
-                Ok(rows) => rows,
-                Err(error) => {
-                    tracing::warn!(%error, "cannot read live events");
-                    return;
-                }
-            };
+            let rows =
+                match taskmaster_store::live::after(&self.db, self.position, READ_BATCH).await {
+                    Ok(rows) => rows,
+                    Err(error) => {
+                        tracing::warn!(%error, "cannot read live events");
+                        return;
+                    }
+                };
             if rows.is_empty() {
                 // The target was rolled back or purged.
                 self.position = self.target;

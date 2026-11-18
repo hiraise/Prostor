@@ -3,11 +3,11 @@
 
 use serde_json::Value;
 use sqlx::{PgConnection, PgExecutor};
+use taskmaster_domain::links::Side;
+use taskmaster_domain::search::stored::{Names, Refs};
+use taskmaster_domain::sharing::{Audience, Shared};
+use taskmaster_domain::{GroupId, ProjectId, UserId};
 use time::OffsetDateTime;
-use trackflow_domain::links::Side;
-use trackflow_domain::search::stored::{Names, Refs};
-use trackflow_domain::sharing::{Audience, Shared};
-use trackflow_domain::{GroupId, ProjectId, UserId};
 
 pub type SavedSearchId = i64;
 
@@ -527,7 +527,7 @@ pub async fn names(
 /// `(rank, issue_id)`, the rest after them in the query's sort.
 pub mod ranks {
     use sqlx::{PgConnection, PgExecutor};
-    use trackflow_domain::{BoardId, IssueId};
+    use taskmaster_domain::{BoardId, IssueId};
 
     use super::SavedSearchId;
 
@@ -654,7 +654,7 @@ pub mod ranks {
     /// Whether the owner has a saved search of this name (case folded).
     pub async fn name_taken(
         db: impl PgExecutor<'_>,
-        owner: trackflow_domain::UserId,
+        owner: taskmaster_domain::UserId,
         name: &str,
     ) -> Result<bool, sqlx::Error> {
         sqlx::query_scalar!(

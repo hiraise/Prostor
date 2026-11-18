@@ -2,15 +2,15 @@
 //! invitations. Only the SHA-256 of a link's secret is stored; using a link deletes it.
 
 use sqlx::{PgConnection, PgPool};
+use taskmaster_domain::UserId;
 use time::OffsetDateTime;
-use trackflow_domain::UserId;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Link {
     pub id: i64,
     pub user_id: UserId,
     /// `password_reset`, `email_verification` or `invitation`
-    /// (`trackflow_domain::auth::LinkPurpose`).
+    /// (`taskmaster_domain::auth::LinkPurpose`).
     pub purpose: String,
     pub email: String,
     pub created_at: OffsetDateTime,

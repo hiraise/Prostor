@@ -679,6 +679,84 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/commands": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Applies a command line to its issues (CMD-023, plan §4.8): one transaction per issue, each
+         *     with its own result; plan problems answer every issue and touch nothing.
+         */
+        post: operations["apply_commands"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/commands/assist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * The command dialog's assist (CMD-028, CMD-029, plan §5): the parsed plan for the preview,
+         *     its problems over ranges with their quick fixes, and the completion at the caret. The line's
+         *     own failures ride the answer as `cmd_*` codes, never HTTP errors.
+         */
+        post: operations["assist_commands"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/commands/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Queues a bulk apply over a query (CMD-026, plan §4.7): a job of kind `commands` walks the
+         *     query's issues and applies the line per issue with progress.
+         */
+        post: operations["apply_commands_bulk"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/commands/bulk/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The bulk job's progress and results (plan §4.7), readable by its owner alone. */
+        get: operations["commands_bulk_progress"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/comments/{id}": {
         parameters: {
             query?: never;
@@ -1140,6 +1218,27 @@ export interface paths {
         post?: never;
         /** Deletes all of the caller's drafts with their files (ISS-011). */
         delete: operations["delete_drafts"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/issues/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * The selection's export (QRY-084, step 2.2 §9): the chosen issues, or everything a query
+         *     matches, as a CSV or XLSX file — the fixed columns, then the union of the issues' custom
+         *     fields, then the description. Issues the caller may not see are skipped and still counted.
+         */
+        post: operations["export_issues"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -2273,6 +2372,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/queries/assist": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Completion for the query bar (QRY-056…QRY-058, plan §5): the check — tokens and problems
+         *     for the highlighting and markers — plus the suggestions at the caret, the same contract the
+         *     command dialog answers with (D-061).
+         */
+        get: operations["assist_query"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/queries/check": {
         parameters: {
             query?: never;
@@ -3349,7 +3469,7 @@ export interface components {
             settings: components["schemas"]["AdminSetting"][];
             /**
              * Format: int64
-             * @description The deployment's `TRACKFLOW_UPLOAD_CEILING_BYTES`: the upload setting may not exceed it.
+             * @description The deployment's `TASKMASTER_UPLOAD_CEILING_BYTES`: the upload setting may not exceed it.
              */
             upload_ceiling: number;
         };
@@ -3381,6 +3501,39 @@ export interface components {
             /** Format: int64 */
             version: number;
         };
+        /**
+         * @description The answer of `POST /commands` (plan §4.8): the plan the line resolved to — after any quick
+         *     fixes — and one result per issue, in the request's order.
+         */
+        ApplyAnswer: {
+            issues: components["schemas"]["IssueResult"][];
+            operations: components["schemas"]["PlannedOperation"][];
+            /** @description Present: the apply touched nothing and the dialog shows each problem. */
+            problems: components["schemas"]["CommandProblem"][];
+        };
+        /**
+         * @description One command line to apply (plan §4.8) to at most 50 named issues — a query's worth goes
+         *     through the bulk job.
+         */
+        ApplyRequest: {
+            /** @description Markdown the `comment` command attaches (the dialog's comment field). */
+            comment: string | null;
+            comment_visibility: components["schemas"]["AudienceInput"] | null;
+            /** @description Make the create-value quick fixes before resolving the plan again. */
+            create_missing?: boolean;
+            /** @description The issues to apply to, by their internal IDs. */
+            issues: number[];
+            /**
+             * Format: int64
+             * @description Apply as another account: `system.write`, audited (CMD-031).
+             */
+            run_as: number | null;
+            /** @description Without subscriber notifications; needs `issue.silent` in every affected project. */
+            silent?: boolean;
+            text: string;
+            /** @description IANA name; the instance's `default_time_zone` when `null`. */
+            time_zone: string | null;
+        };
         /** @description A role held by an account or a group at one scope (ACC-058). */
         Assignment: {
             /** Format: date-time */
@@ -3398,6 +3551,29 @@ export interface components {
         /** @description Assignments that were made; existing ones are not repeated. */
         Assignments: {
             items: components["schemas"]["Assignment"][];
+        };
+        /**
+         * @description One command line the dialog is typing (plan §5): the text, the caret, and the targets the
+         *     line would apply to — named issues, or the bulk flow's query.
+         */
+        AssistRequest: {
+            /**
+             * Format: int32
+             * @description The caret, in UTF-16 code units, as JavaScript counts it.
+             */
+            caret: number;
+            /** @description Markdown the `comment` command attaches; the preview says when it is missing. */
+            comment: string | null;
+            hide_resolved?: boolean;
+            /** @description The issues the dialog applies to, by their internal IDs. */
+            issues?: number[];
+            /** Format: int64 */
+            project: number | null;
+            /** @description The query the bulk dialog applies the line to; empty means the project's every issue. */
+            query: string | null;
+            text: string;
+            /** @description IANA name; the instance's `default_time_zone` when `null`. */
+            time_zone: string | null;
         };
         /** @description A field to attach to a project (FLD-052, FLD-053). */
         AttachField: {
@@ -3924,6 +4100,53 @@ export interface components {
          * @enum {string}
          */
         BuiltinSearchKey: "assigned_to_me" | "commented_by_me" | "reported_by_me" | "all_issues";
+        /** @description One issue the bulk job could not apply the line to. */
+        BulkFailure: {
+            code: string;
+            detail: string;
+            /** Format: int64 */
+            issue: number;
+        };
+        /** @description The bulk job's progress and results (plan §4.7), for its owner alone. */
+        BulkProgress: {
+            cancel_requested: boolean;
+            /** Format: int64 */
+            done: number;
+            /** Format: int64 */
+            failed: number;
+            failures: components["schemas"]["BulkFailure"][];
+            /** Format: int64 */
+            id: number;
+            last_error: string | null;
+            /** @description `queued`, `running`, `finished`, `cancelled`, `failed`. */
+            state: string;
+            /** Format: int64 */
+            total: number | null;
+        };
+        /** @description The queued bulk job. */
+        BulkQueued: {
+            /** Format: int64 */
+            job: number;
+        };
+        /** @description A bulk apply over a query (plan §4.7): enqueues the job that walks the query's issues. */
+        BulkRequest: {
+            comment: string | null;
+            comment_visibility: components["schemas"]["AudienceInput"] | null;
+            create_missing?: boolean;
+            hide_resolved?: boolean;
+            /** Format: int64 */
+            project: number | null;
+            /**
+             * @description The query every matching issue of which the line applies to; empty means the named
+             *     project's every issue.
+             */
+            query: string;
+            /** Format: int64 */
+            run_as: number | null;
+            silent?: boolean;
+            text: string;
+            time_zone: string | null;
+        };
         /** @description Every capability. */
         Capabilities: {
             items: components["schemas"]["Capability"][];
@@ -4154,6 +4377,52 @@ export interface components {
             wip: components["schemas"]["WipState"];
         };
         /**
+         * @description The answer of `POST /commands/assist` (plan §5): the parsed plan for the preview, its
+         *     problems over ranges with their quick fixes, and the completion at the caret.
+         */
+        CommandAssist: {
+            operations: components["schemas"]["PlannedOperation"][];
+            problems: components["schemas"]["CommandProblem"][];
+            suggestions: components["schemas"]["Suggestion"][];
+        };
+        /**
+         * @description One problem over a range of the command text (plan §4.2): a `cmd_*` code, where the line
+         *     says it, and what the code names — the fields a bare value fits, the permission lacked.
+         */
+        CommandProblem: {
+            /**
+             * @description `cmd_unknown_word`, `cmd_value_expected`, `cmd_unknown_value`, `cmd_ambiguous`,
+             *     `cmd_not_empty`, `cmd_wrong_kind`, `cmd_text_field`, `cmd_own_issue_vote`,
+             *     `cmd_no_permission`, `cmd_target_not_found`, `cmd_board_no_sprints`.
+             */
+            code: string;
+            end: number;
+            params: {
+                [key: string]: string;
+            };
+            quick_fix: components["schemas"]["CommandQuickFix"] | null;
+            /** @description Where the problem sits in the text, in bytes. */
+            start: number;
+        };
+        /** @description The fix for a value the command names and the field lacks (plan §5): create it. */
+        CommandQuickFix: {
+            /**
+             * Format: int64
+             * @description The field the value joins.
+             */
+            field: number;
+            /** @description The name as typed, trimmed: the value's title. */
+            name: string;
+            /** @description The projects sharing the set — those a creation updates. */
+            projects: number[];
+        };
+        /**
+         * @description What came of the prompt after a first bulk apply without silent (plan 2.1 §6): `silent` —
+         *     bulk applies start without notifications; `dismissed`/`never` — it asked, the answer was no.
+         * @enum {string}
+         */
+        CommandSilentPrompt: "silent" | "dismissed" | "never";
+        /**
          * @description A comment (CNT-001). A deleted one is a placeholder (CNT-005): author, time and `deleted`;
          *     its text, HTML and audience are empty.
          */
@@ -4355,6 +4624,35 @@ export interface components {
          * @enum {string}
          */
         ErrorCode: "invalid_request" | "invalid_query" | "unauthenticated" | "invalid_credentials" | "forbidden" | "password_change_required" | "not_found" | "method_not_allowed" | "conflict" | "last_administrator" | "link_type_locked" | "parent_taken" | "link_cycle" | "hierarchy_conflict" | "gravatar_not_found" | "gravatar_unavailable" | "payload_too_large" | "unsupported_media_type" | "rate_limited" | "internal" | "unavailable";
+        /**
+         * @description The file format of an export (QRY-084).
+         * @enum {string}
+         */
+        ExportFormat: "csv" | "xlsx";
+        /** @description The query an export runs on: the list's own parameters. */
+        ExportQuery: {
+            hide_resolved?: boolean;
+            /** Format: int64 */
+            project?: number | null;
+            /** @description The query text; empty is every issue the caller may see. */
+            q?: string;
+            /** Format: int64 */
+            saved_search?: number | null;
+            /** Format: int64 */
+            tag?: number | null;
+            /** @description IANA zone that dates such as `today` are read in; the instance's zone by default. */
+            time_zone?: string | null;
+        };
+        /** @description What one export runs on besides its format (QRY-084): the chosen issues, or the whole query. */
+        ExportRequest: {
+            format: components["schemas"]["ExportFormat"];
+            /**
+             * @description The chosen issues. Invisible ones are skipped and still counted in the answer's
+             *     `X-Total-Count`; more than the cap truncates the file. Exactly one of `ids` and `query`.
+             */
+            ids?: number[];
+            query?: components["schemas"]["ExportQuery"] | null;
+        };
         /** @description A field of the instance (FLD-015…FLD-025). */
         Field: {
             /** @description Other words for it in searches and commands (FLD-017). */
@@ -4981,6 +5279,20 @@ export interface components {
             project: components["schemas"]["ProjectRef"] | null;
             readable_id: string;
         };
+        /** @description Why one issue's apply failed: the same codes the plan uses, with the detail the web says. */
+        IssueProblem: {
+            code: string;
+            detail: string;
+        };
+        /** @description One issue's result (plan §4.3): applied whole, or not at all. */
+        IssueResult: {
+            /** Format: int64 */
+            issue: number;
+            /** @description What the project's behaviors said; the web turns each into a toast. */
+            messages: components["schemas"]["Message"][];
+            ok: boolean;
+            problem: components["schemas"]["IssueProblem"] | null;
+        };
         /** @description A page of issues matching a query. */
         IssueSearchPage: {
             items: components["schemas"]["Issue"][];
@@ -5078,7 +5390,7 @@ export interface components {
             issues: number[];
         };
         /**
-         * @description Languages trackflow speaks.
+         * @description Languages taskmaster speaks.
          * @enum {string}
          */
         Language: "en" | "ru";
@@ -6396,6 +6708,37 @@ export interface components {
             refs: components["schemas"]["CardRefs"];
         };
         /**
+         * @description One planned operation over its range (plan §4.2): what the preview shows a row for. The
+         *     assist of step 2.1b fills the names; this is the shape.
+         */
+        PlannedOperation: {
+            end: number;
+            /**
+             * @description `set_field`, `tag`, `move`, `link`, `duplicate`, `visibility`, `board`, `star`, `vote`,
+             *     `comment`, `delete`, `clone`.
+             */
+            kind: string;
+            /**
+             * @description `set`, `add` or `remove` — the direction the operation changes things in; `null` where
+             *     the kind says it (a `move`, a `comment`). The assist fills it for the preview's marks.
+             */
+            mode: string | null;
+            /**
+             * @description What the operation names, as it reads (plan §5): the field and its values, the tag,
+             *     the project, the link's direction and target, the party, the board and sprint. The
+             *     preview's rows build on these; empty for the nameless kinds.
+             */
+            names?: string[];
+            /**
+             * @description The values a plain set on a multi-value field takes off every target issue (plan §1:
+             *     «Fix versions 2025.3» leaves only 2025.3), named as they read. The assist fills it; a
+             *     bulk query, whose targets vary, leaves it empty.
+             */
+            removals?: string[];
+            /** @description Where the command sits in the text, in bytes. */
+            start: number;
+        };
+        /**
          * @description A role that comes with every installation; shown in the viewer's language.
          * @enum {string}
          */
@@ -6408,6 +6751,12 @@ export interface components {
             activity_comments?: boolean | null;
             activity_order?: components["schemas"]["ActivityOrder"] | null;
             attachments_collapsed?: boolean | null;
+            /**
+             * @description Typing a letter or digit on the issue page opens the command dialog (plan 2.1 §6),
+             *     default off.
+             */
+            commands_on_typing?: boolean | null;
+            commands_silent_prompt?: components["schemas"]["CommandSilentPrompt"] | null;
             /** @description The Markdown editor shows its toolbar. */
             editor_toolbar?: boolean | null;
             home?: components["schemas"]["HomePage"] | null;
@@ -6442,6 +6791,11 @@ export interface components {
             long_comments?: components["schemas"]["LongComments"] | null;
             /** @description The rail is folded to icons (UI-001). */
             rail_collapsed?: boolean | null;
+            /**
+             * Format: int32
+             * @description The expanded rail's width in tenths of a rem, 160…400.
+             */
+            rail_width?: number | null;
             /** @description Issues the person opened lately, newest first, at most 20 internal IDs. */
             recent_issues?: number[] | null;
         };
@@ -6453,6 +6807,12 @@ export interface components {
             activity_comments?: boolean | null;
             activity_order?: components["schemas"]["ActivityOrder"] | null;
             attachments_collapsed?: boolean | null;
+            /**
+             * @description Typing a letter or digit on the issue page opens the command dialog (plan 2.1 §6),
+             *     default off.
+             */
+            commands_on_typing?: boolean | null;
+            commands_silent_prompt?: components["schemas"]["CommandSilentPrompt"] | null;
             /** @description The Markdown editor shows its toolbar. */
             editor_toolbar?: boolean | null;
             home?: components["schemas"]["HomePage"] | null;
@@ -6487,6 +6847,11 @@ export interface components {
             long_comments?: components["schemas"]["LongComments"] | null;
             /** @description The rail is folded to icons (UI-001). */
             rail_collapsed?: boolean | null;
+            /**
+             * Format: int32
+             * @description The expanded rail's width in tenths of a rem, 160…400.
+             */
+            rail_width?: number | null;
             /** @description Issues the person opened lately, newest first, at most 20 internal IDs. */
             recent_issues?: number[] | null;
         };
@@ -6656,6 +7021,15 @@ export interface components {
             /** @description The uploaded logo (PRJ-007); `null` shows the generated one. */
             logo_url: string | null;
             name: string;
+        };
+        /**
+         * @description Completion for the query bar (QRY-056…QRY-058): the check — tokens and problems for the
+         *     highlighting and markers — plus the suggestions at the caret.
+         */
+        QueryAssist: {
+            problems: components["schemas"]["QueryProblem"][];
+            suggestions: components["schemas"]["Suggestion"][];
+            tokens: components["schemas"]["QueryToken"][];
         };
         /** @description How a query reads, for highlighting while it is typed. */
         QueryCheck: {
@@ -6897,7 +7271,7 @@ export interface components {
         };
         /** @description Everything the setup wizard asks for. Problems are reported per field (`invalid_request`). */
         SetupRequest: {
-            /** @description The address people open trackflow at, used in links in emails. */
+            /** @description The address people open taskmaster at, used in links in emails. */
             base_url: string | null;
             /** @description The setup code from the server log; case, spaces and hyphens do not matter. */
             code: string;
@@ -7023,6 +7397,44 @@ export interface components {
             /** Format: int64 */
             unresolved: number;
         };
+        /**
+         * @description One completion (QRY-056's contract, shared by both surfaces, D-061): what to insert, where,
+         *     and how it matched. Offsets are UTF-16 code units — `from` and `to` into the current text,
+         *     `matched_from` and `matched_to` into `text`, `caret` into the text after the insert.
+         */
+        Suggestion: {
+            /** Format: int32 */
+            caret: number;
+            /**
+             * @description Plain data the label builds on: the field of a value, a project's key, an account's
+             *     full name, an issue's summary. Empty when the group says it all.
+             */
+            description: string;
+            /** Format: int32 */
+            from: number;
+            group: components["schemas"]["SuggestionGroup"];
+            /** Format: int32 */
+            matched_from: number;
+            /** Format: int32 */
+            matched_to: number;
+            /** @description The actor's own account. */
+            own?: boolean;
+            /** @description The value is already on every target issue (commands only); the web marks it. */
+            present?: boolean;
+            /** @description A relative date's concrete value in the caller's zone, as `YYYY-MM-DD`. */
+            resolved: string | null;
+            /** @description What follows the insert: a space, or the separator the position calls for. */
+            suffix: string;
+            /** @description The insert, quoted where the plain word would not read back the same. */
+            text: string;
+            /** Format: int32 */
+            to: number;
+        };
+        /**
+         * @description What a suggestion is about; clients label and order by it.
+         * @enum {string}
+         */
+        SuggestionGroup: "command" | "attribute" | "value" | "link" | "tag" | "project" | "user" | "group" | "board" | "sprint" | "special" | "empty" | "date" | "issue" | "recent" | "keyword" | "sort_key" | "sort_direction";
         /** @description A tag the caller owns or that is shared with them (ISS-034, ISS-037). */
         Tag: {
             abilities: components["schemas"]["SharingAbilities"];
@@ -7327,8 +7739,11 @@ export type AdminSetting = components['schemas']['AdminSetting'];
 export type AdminSettings = components['schemas']['AdminSettings'];
 export type AdminSettingsChange = components['schemas']['AdminSettingsChange'];
 export type ApiToken = components['schemas']['ApiToken'];
+export type ApplyAnswer = components['schemas']['ApplyAnswer'];
+export type ApplyRequest = components['schemas']['ApplyRequest'];
 export type Assignment = components['schemas']['Assignment'];
 export type Assignments = components['schemas']['Assignments'];
+export type AssistRequest = components['schemas']['AssistRequest'];
 export type AttachField = components['schemas']['AttachField'];
 export type Attachment = components['schemas']['Attachment'];
 export type AttachmentAbilities = components['schemas']['AttachmentAbilities'];
@@ -7370,6 +7785,10 @@ export type BuiltinField = components['schemas']['BuiltinField'];
 export type BuiltinGroupKey = components['schemas']['BuiltinGroupKey'];
 export type BuiltinLinkType = components['schemas']['BuiltinLinkType'];
 export type BuiltinSearchKey = components['schemas']['BuiltinSearchKey'];
+export type BulkFailure = components['schemas']['BulkFailure'];
+export type BulkProgress = components['schemas']['BulkProgress'];
+export type BulkQueued = components['schemas']['BulkQueued'];
+export type BulkRequest = components['schemas']['BulkRequest'];
 export type Capabilities = components['schemas']['Capabilities'];
 export type Capability = components['schemas']['Capability'];
 export type CapabilityChange = components['schemas']['CapabilityChange'];
@@ -7391,6 +7810,10 @@ export type CloneDraftsAnswer = components['schemas']['CloneDraftsAnswer'];
 export type CloneDraftsRequest = components['schemas']['CloneDraftsRequest'];
 export type CloneOfRef = components['schemas']['CloneOfRef'];
 export type ColumnCount = components['schemas']['ColumnCount'];
+export type CommandAssist = components['schemas']['CommandAssist'];
+export type CommandProblem = components['schemas']['CommandProblem'];
+export type CommandQuickFix = components['schemas']['CommandQuickFix'];
+export type CommandSilentPrompt = components['schemas']['CommandSilentPrompt'];
 export type Comment = components['schemas']['Comment'];
 export type CommentAbilities = components['schemas']['CommentAbilities'];
 export type CommentAnswer = components['schemas']['CommentAnswer'];
@@ -7414,6 +7837,9 @@ export type EffectiveRoles = components['schemas']['EffectiveRoles'];
 export type EmailSent = components['schemas']['EmailSent'];
 export type ErrorBody = components['schemas']['ErrorBody'];
 export type ErrorCode = components['schemas']['ErrorCode'];
+export type ExportFormat = components['schemas']['ExportFormat'];
+export type ExportQuery = components['schemas']['ExportQuery'];
+export type ExportRequest = components['schemas']['ExportRequest'];
 export type Field = components['schemas']['Field'];
 export type FieldBoardUse = components['schemas']['FieldBoardUse'];
 export type FieldBoards = components['schemas']['FieldBoards'];
@@ -7469,6 +7895,8 @@ export type IssueMention = components['schemas']['IssueMention'];
 export type IssuePage = components['schemas']['IssuePage'];
 export type IssuePatch = components['schemas']['IssuePatch'];
 export type IssuePlace = components['schemas']['IssuePlace'];
+export type IssueProblem = components['schemas']['IssueProblem'];
+export type IssueResult = components['schemas']['IssueResult'];
 export type IssueSearchPage = components['schemas']['IssueSearchPage'];
 export type IssueWatchers = components['schemas']['IssueWatchers'];
 export type JobProgress = components['schemas']['JobProgress'];
@@ -7592,6 +8020,7 @@ export type Picture = components['schemas']['Picture'];
 export type PictureInput = components['schemas']['PictureInput'];
 export type PlacedCard = components['schemas']['PlacedCard'];
 export type PlacedLane = components['schemas']['PlacedLane'];
+export type PlannedOperation = components['schemas']['PlannedOperation'];
 export type PredefinedRoleKey = components['schemas']['PredefinedRoleKey'];
 export type Preferences = components['schemas']['Preferences'];
 export type PreferencesPatch = components['schemas']['PreferencesPatch'];
@@ -7607,6 +8036,7 @@ export type ProjectKind = components['schemas']['ProjectKind'];
 export type ProjectPatch = components['schemas']['ProjectPatch'];
 export type ProjectPeople = components['schemas']['ProjectPeople'];
 export type ProjectRef = components['schemas']['ProjectRef'];
+export type QueryAssist = components['schemas']['QueryAssist'];
 export type QueryCheck = components['schemas']['QueryCheck'];
 export type QueryProblem = components['schemas']['QueryProblem'];
 export type QueryProblemCode = components['schemas']['QueryProblemCode'];
@@ -7647,6 +8077,8 @@ export type SprintName = components['schemas']['SprintName'];
 export type SprintPatch = components['schemas']['SprintPatch'];
 export type SubscriptionSourceKind = components['schemas']['SubscriptionSourceKind'];
 export type SubtaskCount = components['schemas']['SubtaskCount'];
+export type Suggestion = components['schemas']['Suggestion'];
+export type SuggestionGroup = components['schemas']['SuggestionGroup'];
 export type Tag = components['schemas']['Tag'];
 export type TagPatch = components['schemas']['TagPatch'];
 export type TagRef = components['schemas']['TagRef'];
@@ -9899,6 +10331,173 @@ export interface operations {
             };
         };
     };
+    apply_commands: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ApplyRequest"];
+            };
+        };
+        responses: {
+            /** @description The plan and one result per issue */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ApplyAnswer"];
+                };
+            };
+            /** @description Malformed call */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    assist_commands: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AssistRequest"];
+            };
+        };
+        responses: {
+            /** @description The plan, its problems and the suggestions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommandAssist"];
+                };
+            };
+            /** @description No targets named */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    apply_commands_bulk: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkRequest"];
+            };
+        };
+        responses: {
+            /** @description The job was queued */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkQueued"];
+                };
+            };
+            /** @description Malformed call */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    commands_bulk_progress: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Job ID */
+                id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Progress and per-issue failures */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkProgress"];
+                };
+            };
+            /** @description Not signed in */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description No such job of the caller's */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
     get_comment: {
         parameters: {
             query?: never;
@@ -11460,6 +12059,48 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+        };
+    };
+    export_issues: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExportRequest"];
+            };
+        };
+        responses: {
+            /** @description The file: CSV (`text/csv; charset=utf-8`, a BOM first) or XLSX (`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`). `X-Exported-Count` is the rows in the file, `X-Total-Count` the matches — they differ when issues the caller may not see were skipped or the export cap cut the file */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/octet-stream": number[];
+                };
+            };
+            /** @description Both or neither of `ids` and `query`, or the query has errors (`invalid_query`) */
+            400: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description No such project, tag or saved search */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
             };
         };
     };
@@ -15163,6 +15804,42 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+            /** @description No such project */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorBody"];
+                };
+            };
+        };
+    };
+    assist_query: {
+        parameters: {
+            query?: {
+                q?: string;
+                /** @description The caret, in UTF-16 code units, as JavaScript counts it. */
+                caret?: number;
+                /** @description Names are read as within this project. */
+                project?: number;
+                time_zone?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Tokens, problems and suggestions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["QueryAssist"];
                 };
             };
             /** @description No such project */

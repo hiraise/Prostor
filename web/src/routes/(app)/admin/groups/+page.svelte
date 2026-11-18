@@ -27,7 +27,7 @@
   }
 </script>
 
-<svelte:head><title>{m.groups()} · trackflow</title></svelte:head>
+<svelte:head><title>{m.groups()} · TaskMaster</title></svelte:head>
 
 {#if data.groups}
   <GroupsPage

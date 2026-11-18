@@ -216,7 +216,7 @@ pub enum LinkPurpose {
     PasswordReset,
     /// Confirm that an address receives mail.
     EmailVerification,
-    /// Join trackflow: choose a password for an account an administrator created.
+    /// Join taskmaster: choose a password for an account an administrator created.
     Invitation,
 }
 

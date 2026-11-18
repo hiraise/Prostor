@@ -213,3 +213,24 @@ pub enum TokenClass {
     Punctuation,
     Error,
 }
+
+/// The parameters of a query assist (QRY-056).
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, IntoParams)]
+#[into_params(parameter_in = Query)]
+pub struct QueryAssistQuery {
+    pub q: Option<String>,
+    /// The caret, in UTF-16 code units, as JavaScript counts it.
+    pub caret: Option<u32>,
+    /// Names are read as within this project.
+    pub project: Option<i64>,
+    pub time_zone: Option<String>,
+}
+
+/// Completion for the query bar (QRY-056…QRY-058): the check — tokens and problems for the
+/// highlighting and markers — plus the suggestions at the caret.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
+pub struct QueryAssist {
+    pub tokens: Vec<QueryToken>,
+    pub problems: Vec<QueryProblem>,
+    pub suggestions: Vec<crate::commands::Suggestion>,
+}

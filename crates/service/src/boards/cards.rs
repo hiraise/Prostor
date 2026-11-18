@@ -5,21 +5,21 @@
 //! board an issue joins by the field changes that make it match the board query (BRD-028).
 
 use sqlx::PgConnection;
-use trackflow_domain::access::Access;
-use trackflow_domain::boards::query_mode::{self, Facts, Failure, Step};
-use trackflow_domain::issues::history::{BoardPlace, ChangeKind, Origin, Record};
-use trackflow_domain::issues::rights;
-use trackflow_domain::issues::values::Input;
-use trackflow_domain::live::Change;
-use trackflow_domain::rank;
-use trackflow_domain::search::Filter;
-use trackflow_domain::validation::Problem;
-use trackflow_domain::{BoardId, ColumnId, IssueId, SprintId, TagId};
-use trackflow_store::PgPool;
-use trackflow_store::boards::cards as store_cards;
-use trackflow_store::boards::view::{self as store_view, After};
-use trackflow_store::boards::{self as store, Sprint};
-use trackflow_store::issues::Issue;
+use taskmaster_domain::access::Access;
+use taskmaster_domain::boards::query_mode::{self, Facts, Failure, Step};
+use taskmaster_domain::issues::history::{BoardPlace, ChangeKind, Origin, Record};
+use taskmaster_domain::issues::rights;
+use taskmaster_domain::issues::values::Input;
+use taskmaster_domain::live::Change;
+use taskmaster_domain::rank;
+use taskmaster_domain::search::Filter;
+use taskmaster_domain::validation::Problem;
+use taskmaster_domain::{BoardId, ColumnId, IssueId, SprintId, TagId};
+use taskmaster_store::PgPool;
+use taskmaster_store::boards::cards as store_cards;
+use taskmaster_store::boards::view::{self as store_view, After};
+use taskmaster_store::boards::{self as store, Sprint};
+use taskmaster_store::issues::Issue;
 
 use super::view::{CELL_CAP, Card, Lens, cards_of, is_query, lens, scope, visibility};
 use super::{BoardRow, load};
@@ -247,7 +247,7 @@ async fn plan_for(
 ) -> Result<Vec<Step>> {
     let leaves = query_mode::leaves(filter);
     let vis = visibility(actor, board);
-    let holds = trackflow_store::search::holds_each(&mut *conn, issue.id, &leaves, &vis).await?;
+    let holds = taskmaster_store::search::holds_each(&mut *conn, issue.id, &leaves, &vis).await?;
     let fields = crate::issues::values::of_project(&mut *conn, issue.project_id).await?;
     let wanted: Vec<TagId> = leaves
         .iter()
@@ -257,7 +257,7 @@ async fn plan_for(
         })
         .flatten()
         .collect();
-    let usable: Vec<TagId> = trackflow_store::tags::get_many(&mut *conn, &wanted)
+    let usable: Vec<TagId> = taskmaster_store::tags::get_many(&mut *conn, &wanted)
         .await?
         .into_iter()
         .filter(|t| t.sharing().can_use(actor))
@@ -308,7 +308,7 @@ async fn apply(
                 writes.push(written);
             }
             Step::Tag(tag) => {
-                if trackflow_store::tags::add(conn, issue.id, tag).await? {
+                if taskmaster_store::tags::add(conn, issue.id, tag).await? {
                     records.extend(Record::tags(&[], &[tag]));
                 }
             }
@@ -527,7 +527,7 @@ async fn join_subtasks(
     sprint: &Sprint,
     parent: IssueId,
 ) -> Result<()> {
-    let mut ids: Vec<IssueId> = trackflow_store::links::children_of(&mut *tx, &[parent])
+    let mut ids: Vec<IssueId> = taskmaster_store::links::children_of(&mut *tx, &[parent])
         .await?
         .into_iter()
         .map(|(_, child)| child)
@@ -567,7 +567,7 @@ async fn join_subtasks(
 #[allow(clippy::too_many_arguments)]
 async fn add_by_query(
     pool: &PgPool,
-    mut tx: trackflow_store::Transaction<'_, trackflow_store::Postgres>,
+    mut tx: taskmaster_store::Transaction<'_, taskmaster_store::Postgres>,
     ctx: &mut Ctx<'_>,
     actor: &Access,
     origin: Origin,
@@ -800,4 +800,183 @@ pub async fn remove(
     batch.publish(&mut tx).await?;
     tx.commit().await?;
     Ok(())
+}
+
+/// What a board membership command could not do (step 2.1 §4.5).
+pub(crate) enum Membership {
+    Done,
+    /// The board has no sprint the command could mean, or takes no removals (a query board).
+    NoSprints,
+}
+
+/// Puts a locked issue on a board, or takes it off, inside the caller's transaction (step 2.1
+/// §4.3, the `board` command): the same checks and writes as [`add`] and [`remove`] for a card
+/// with no column and no place — manual adding, BRD-025 — plus the field rewrite a query board
+/// needs (BRD-028). `None` as the sprint means the current one, else the auto-add sprint
+/// (BRD-034); a removal without a sprint leaves every sprint of the board.
+#[allow(clippy::too_many_arguments)]
+pub(crate) async fn membership(
+    conn: &mut PgConnection,
+    batch: &mut Batch,
+    ctx: &mut Ctx<'_>,
+    actor: &Access,
+    origin: Origin,
+    board_id: BoardId,
+    sprint: Option<SprintId>,
+    issue: &Issue,
+    on: bool,
+) -> Result<Membership> {
+    let board = load(conn, actor, board_id, true).await?;
+    if on {
+        let sprint = match sprint {
+            Some(id) => sprint_of(&board, id)?.clone(),
+            None => {
+                if is_query(&board) || !board.full.board.sprints_on {
+                    // A sprintless or query board keeps one hidden sprint that holds its issues.
+                    board
+                        .full
+                        .sprints
+                        .iter()
+                        .find(|s| s.internal)
+                        .cloned()
+                        .ok_or(Error::NotFound("no such sprint"))?
+                } else {
+                    let today = super::view::today(conn, time::OffsetDateTime::now_utc()).await?;
+                    let dates: Vec<_> = board.full.sprints.iter().map(|s| s.dates()).collect();
+                    let chosen = taskmaster_domain::boards::sprints::current(&dates, today)
+                        .or(board.full.board.auto_sprint_id)
+                        .and_then(|id| board.full.sprints.iter().find(|s| s.id == id).cloned());
+                    let Some(chosen) = chosen else {
+                        return Ok(Membership::NoSprints);
+                    };
+                    chosen
+                }
+            }
+        };
+        rights::may_update(actor, &crate::issues::facts(issue))?;
+        if issue.is_draft() && is_query(&board) {
+            return Err(Error::field(
+                "issue",
+                Problem::Invalid,
+                "a draft joins a query board through its fields once it is published",
+            ));
+        }
+        if !board.full.board.projects.contains(&issue.project_id) {
+            return Err(Error::field(
+                "issue",
+                Problem::Invalid,
+                "the issue's project is not on this board",
+            ));
+        }
+        if is_query(&board) {
+            return add_by_query_conn(conn, batch, ctx, actor, origin, &board, &sprint, issue)
+                .await;
+        }
+        let setup = super::lanes::setup(conn, &board, time::OffsetDateTime::now_utc()).await?;
+        if let Some(setup) = &setup
+            && super::lanes::is_lane(conn, setup, issue.id).await?
+        {
+            super::lanes::join_as_lane(conn, actor, origin, &board, &sprint, issue).await?;
+            return Ok(Membership::Done);
+        }
+        join_card(
+            conn,
+            batch,
+            ctx,
+            actor,
+            origin,
+            &board,
+            &sprint,
+            issue,
+            &NewCard {
+                issue: issue.id,
+                ..NewCard::default()
+            },
+        )
+        .await?;
+        return Ok(Membership::Done);
+    }
+    // Removal: a query board's issues come and go with its query (BRD-028).
+    if is_query(&board) {
+        return Ok(Membership::NoSprints);
+    }
+    rights::may_update(actor, &crate::issues::facts(issue))?;
+    let mut records = Vec::new();
+    if let Some(id) = sprint {
+        let left = sprint_of(&board, id)?.clone();
+        if !store_cards::remove(conn, id, issue.id).await? {
+            return Err(Error::NotFound("the issue is not on this board"));
+        }
+        records.extend(Record::boards(Some(&place(&board.full.board, &left)), None));
+    } else {
+        let places = store_cards::places(&mut *conn, board_id, issue.id).await?;
+        let mut left_any = false;
+        for at in &places {
+            let Some(left) = board.full.sprints.iter().find(|s| s.id == at.sprint) else {
+                continue;
+            };
+            if store_cards::remove(conn, at.sprint, issue.id).await? {
+                left_any = true;
+                records.extend(Record::boards(Some(&place(&board.full.board, left)), None));
+            }
+        }
+        if !left_any {
+            return Err(Error::NotFound("the issue is not on this board"));
+        }
+    }
+    finish_change(
+        conn,
+        batch,
+        issue,
+        author(actor, origin, false, issue.project_id)?,
+        &records,
+        &[],
+    )
+    .await?;
+    batch.issue_on_board(issue.id, Change::Updated, board_id);
+    Ok(Membership::Done)
+}
+
+/// The query-board half of [`membership`]: the field changes that make the issue match the
+/// board query (BRD-028), in a savepoint, with the behaviors hearing them (§3.5).
+#[allow(clippy::too_many_arguments)]
+async fn add_by_query_conn(
+    conn: &mut PgConnection,
+    batch: &mut Batch,
+    ctx: &mut Ctx<'_>,
+    actor: &Access,
+    origin: Origin,
+    board: &BoardRow,
+    sprint: &Sprint,
+    issue: &Issue,
+) -> Result<Membership> {
+    let lens = lens(conn, actor, board, None, None).await?;
+    let filter = lens.filter.clone().unwrap_or(Filter::True);
+    let steps = plan_for(conn, actor, board, issue, &filter).await?;
+    let mut sp = sqlx::Connection::begin(&mut *conn).await?;
+    let mut writes = Vec::new();
+    let records = apply(&mut sp, actor, issue, &steps, &mut writes).await?;
+    let (mut shown, _) = cards_of(&mut sp, actor, board, Some(sprint), &lens, &[issue.id]).await?;
+    if shown.pop().flatten().is_none() {
+        return Err(Error::Refused(Failure::Unsettable.message().into()));
+    }
+    let mut rule_records = Vec::new();
+    for written in &writes {
+        hear(&mut sp, batch, ctx, issue, written, &mut rule_records).await?;
+    }
+    sp.commit().await?;
+    if !records.is_empty() {
+        finish_change(
+            conn,
+            batch,
+            issue,
+            author(actor, origin, false, issue.project_id)?,
+            &records,
+            &[],
+        )
+        .await?;
+    }
+    settle(conn, batch, ctx, issue, &rule_records).await?;
+    batch.issue_on_board(issue.id, Change::Updated, board.full.board.id);
+    Ok(Membership::Done)
 }

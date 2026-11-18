@@ -1,8 +1,8 @@
-//! Projects, their keys and favorites (PRJ). Rules for the values: `trackflow_domain::projects`.
+//! Projects, their keys and favorites (PRJ). Rules for the values: `taskmaster_domain::projects`.
 
 use sqlx::{PgConnection, PgExecutor};
+use taskmaster_domain::{GroupId, ProjectId, UserId};
 use time::OffsetDateTime;
-use trackflow_domain::{GroupId, ProjectId, UserId};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Project {

@@ -80,7 +80,7 @@
   }
 </script>
 
-<svelte:head><title>{m.title()} · {project.name} · trackflow</title></svelte:head>
+<svelte:head><title>{m.title()} · {project.name} · TaskMaster</title></svelte:head>
 
 <PageHeader title={m.title()} />
 <p class="lead">{m.lead()}</p>

@@ -1,6 +1,7 @@
 <script lang="ts">
   // The account menu (UI-003): who is signed in, the account page, theme and language, and signing
   // out. The button shows the person's picture or initials, and their name where the rail has room.
+  import Keyboard from '@lucide/svelte/icons/keyboard';
   import LogOut from '@lucide/svelte/icons/log-out';
   import UserRound from '@lucide/svelte/icons/user-round';
   import type { HTMLButtonAttributes } from 'svelte/elements';
@@ -28,9 +29,11 @@
     /** Show the name next to the initials (the expanded rail). */
     withName?: boolean;
     placement?: Placement;
+    /** Opens the shortcut reference (UI-020); unset hides the help entry. */
+    onhelp?: () => void;
   }
 
-  let { user, withName = false, placement }: Props = $props();
+  let { user, withName = false, placement, onhelp }: Props = $props();
 
   const themes: [ThemePreference, () => string][] = [
     ['system', m.themeSystem],
@@ -58,6 +61,16 @@
       icon: UserRound,
       onSelect: () => void goto(resolve('/(app)/account')),
     },
+    ...(onhelp
+      ? [
+          {
+            type: 'action' as const,
+            label: m.shortcutsTitle(),
+            icon: Keyboard,
+            onSelect: onhelp,
+          },
+        ]
+      : []),
     { type: 'separator' },
     {
       type: 'group',

@@ -1,9 +1,9 @@
-//! Link types and links between issues (LNK). Rules: `trackflow_domain::links`; design:
+//! Link types and links between issues (LNK). Rules: `taskmaster_domain::links`; design:
 //! decisions.md D-034.
 
 use sqlx::{PgConnection, PgExecutor};
+use taskmaster_domain::{GroupId, IssueId, LinkId, LinkTypeId, ProjectId, UserId};
 use time::OffsetDateTime;
-use trackflow_domain::{GroupId, IssueId, LinkId, LinkTypeId, ProjectId, UserId};
 
 /// Name space of the advisory locks taken here (`'lnk'`).
 const LOCK_SPACE: i32 = 0x006c_6e6b;

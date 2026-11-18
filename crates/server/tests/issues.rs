@@ -3,9 +3,10 @@
 //! counts.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+use axum::http::header;
 use axum::http::{Method, StatusCode};
 use serde_json::{Value, json};
-use trackflow_server::throttle::Throttle;
+use taskmaster_server::throttle::Throttle;
 
 mod common;
 
@@ -446,4 +447,201 @@ async fn iss_001_page_matches_the_four_answers() {
     assert_eq!(by_key.body["issue"]["id"], id);
     let missing = call(Method::GET, "/api/v1/issues/999999/page".into(), None).await;
     assert_eq!(missing.status, StatusCode::NOT_FOUND);
+}
+
+/// QRY-084 (step 2.2 §9): the export of a selection and of a query, as CSV and XLSX, with the
+/// counts the toolbar reads. Headers in the instance's language (English here — the setup's
+/// choice), dates in its format and zone.
+#[tokio::test(flavor = "multi_thread")]
+async fn qry_084_export_csv_of_the_selection() {
+    let node = Node::start(Throttle::default()).await;
+    let admin = node.set_up().await;
+    let call = |method: Method, path: String, body: Option<Value>| {
+        let node = &node;
+        let admin = admin.clone();
+        async move { node.call(method, &path, Some(&admin), body).await }
+    };
+    let web = call(
+        Method::POST,
+        "/api/v1/projects".into(),
+        Some(json!({ "template": "blank", "name": "Web", "key": "WEB" })),
+    )
+    .await;
+    assert_eq!(web.status, StatusCode::CREATED, "{}", web.body);
+    let web_id = web.body["id"].as_i64().unwrap();
+
+    let first = call(
+        Method::POST,
+        "/api/v1/issues".into(),
+        Some(json!({
+            "project": web_id,
+            "summary": "Login fails",
+            "description": "Steps, \"quoted\"\nsecond line",
+        })),
+    )
+    .await;
+    assert_eq!(first.status, StatusCode::CREATED, "{}", first.body);
+    let issue = &first.body["issue"];
+    let first_id = issue["id"].as_i64().unwrap();
+    // The assignee column: the reporter takes the issue.
+    let assignee = field(issue, "Assignee")["field"]["id"].as_i64().unwrap();
+    let me = issue["reporter"]["id"].as_i64().unwrap();
+    let taken = call(
+        Method::PUT,
+        format!("/api/v1/issues/{first_id}/fields/{assignee}"),
+        Some(json!({ "value": [me] })),
+    )
+    .await;
+    assert_eq!(taken.status, StatusCode::OK, "{}", taken.body);
+    let second = call(
+        Method::POST,
+        "/api/v1/issues".into(),
+        Some(json!({ "project": web_id, "summary": "Also exportable" })),
+    )
+    .await;
+    let second_id = second.body["issue"]["id"].as_i64().unwrap();
+
+    let (status, headers, bytes) = node
+        .raw(
+            Method::POST,
+            "/api/v1/issues/export",
+            Some(&admin),
+            &[(header::CONTENT_TYPE, "application/json")],
+            json!({ "ids": [first_id, second_id], "format": "csv" })
+                .to_string()
+                .into_bytes(),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(
+        headers.get(header::CONTENT_TYPE).unwrap(),
+        "text/csv; charset=utf-8"
+    );
+    assert_eq!(
+        headers.get(header::CONTENT_DISPOSITION).unwrap(),
+        "attachment; filename=\"issues.csv\""
+    );
+    assert_eq!(headers.get("x-exported-count").unwrap(), "2");
+    assert_eq!(headers.get("x-total-count").unwrap(), "2");
+    assert_eq!(&bytes[..3], "\u{feff}".as_bytes(), "the BOM");
+    let text = String::from_utf8(bytes).unwrap();
+    let mut lines = text.strip_prefix('\u{feff}').unwrap().split("\r\n");
+    let header = lines.next().unwrap();
+    assert!(
+        header.starts_with(
+            "ID,Project,Summary,Reporter,Assignee,State,Created,Updated,Resolved,Tags,Votes,"
+        ),
+        "the fixed columns first: {header}"
+    );
+    assert!(
+        header.ends_with(",Description"),
+        "the description last: {header}"
+    );
+    assert!(
+        header.contains("Priority"),
+        "the custom fields between: {header}"
+    );
+    let row = lines.next().unwrap();
+    assert!(
+        row.starts_with("WEB-1,Web,Login fails,Anna Admin,Anna Admin,"),
+        "{row}"
+    );
+    assert!(row.contains(",New,"), "the state: {row}");
+    // The dates carry the year; the description keeps its commas and quotes inside one cell.
+    assert!(row.contains("2026"), "the dates: {row}");
+    assert!(
+        row.contains("\"Steps, \"\"quoted\"\"\nsecond line\""),
+        "the description: {row}"
+    );
+    assert_eq!(lines.next().unwrap().split(',').next().unwrap(), "WEB-2");
+
+    // A missing issue is skipped and still counted: the toolbar's truncation signal.
+    let (status, headers, bytes) = node
+        .raw(
+            Method::POST,
+            "/api/v1/issues/export",
+            Some(&admin),
+            &[(header::CONTENT_TYPE, "application/json")],
+            json!({ "ids": [first_id, 999999], "format": "csv" })
+                .to_string()
+                .into_bytes(),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(headers.get("x-exported-count").unwrap(), "1");
+    assert_eq!(headers.get("x-total-count").unwrap(), "2");
+    let text = String::from_utf8(bytes).unwrap();
+    assert_eq!(text.matches("WEB-1").count(), 1);
+}
+
+/// QRY-084 (step 2.2 §9): the export of a query as XLSX, and what the endpoint refuses.
+#[tokio::test(flavor = "multi_thread")]
+async fn qry_084_export_xlsx_of_a_query_and_its_rules() {
+    let node = Node::start(Throttle::default()).await;
+    let admin = node.set_up().await;
+    let call = |method: Method, path: String, body: Option<Value>| {
+        let node = &node;
+        let admin = admin.clone();
+        async move { node.call(method, &path, Some(&admin), body).await }
+    };
+    let web = call(
+        Method::POST,
+        "/api/v1/projects".into(),
+        Some(json!({ "template": "blank", "name": "Web", "key": "WEB" })),
+    )
+    .await;
+    let web_id = web.body["id"].as_i64().unwrap();
+    for index in 1..=2 {
+        let created = call(
+            Method::POST,
+            "/api/v1/issues".into(),
+            Some(json!({ "project": web_id, "summary": format!("Exportable widget {index}") })),
+        )
+        .await;
+        assert_eq!(created.status, StatusCode::CREATED, "{}", created.body);
+    }
+    let other = call(
+        Method::POST,
+        "/api/v1/issues".into(),
+        Some(json!({ "project": web_id, "summary": "Something else" })),
+    )
+    .await;
+    let other_id = other.body["issue"]["id"].as_i64().unwrap();
+
+    let (status, headers, bytes) = node
+        .raw(
+            Method::POST,
+            "/api/v1/issues/export",
+            Some(&admin),
+            &[(header::CONTENT_TYPE, "application/json")],
+            json!({ "query": { "q": "Exportable" }, "format": "xlsx" })
+                .to_string()
+                .into_bytes(),
+        )
+        .await;
+    assert_eq!(status, StatusCode::OK);
+    assert_eq!(
+        headers.get(header::CONTENT_TYPE).unwrap(),
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    assert_eq!(headers.get("x-exported-count").unwrap(), "2");
+    assert_eq!(headers.get("x-total-count").unwrap(), "2");
+    assert_eq!(&bytes[..2], b"PK", "an XLSX file is a zip");
+
+    // Both of `ids` and `query`, and neither, are refused; a broken query answers invalid_query.
+    for body in [
+        json!({ "ids": [other_id], "query": { "q": "" }, "format": "csv" }),
+        json!({ "format": "csv" }),
+    ] {
+        let answer = call(Method::POST, "/api/v1/issues/export".into(), Some(body)).await;
+        assert_eq!(answer.status, StatusCode::BAD_REQUEST, "{}", answer.body);
+    }
+    let broken = call(
+        Method::POST,
+        "/api/v1/issues/export".into(),
+        Some(json!({ "query": { "q": "(" }, "format": "csv" })),
+    )
+    .await;
+    assert_eq!(broken.status, StatusCode::BAD_REQUEST, "{}", broken.body);
+    assert_eq!(broken.body["code"], "invalid_query");
 }

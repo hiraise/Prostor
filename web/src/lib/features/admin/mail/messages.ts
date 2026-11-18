@@ -61,8 +61,8 @@ export const offerOn = msg({
 });
 export const switchOn = msg({ en: 'Switch email on', ru: 'Включить почту' });
 export const envNotice = msg({
-  en: 'Until a server is saved here, the transport comes from the environment (TRACKFLOW_SMTP_URL).',
-  ru: 'Пока здесь не сохранён сервер, транспорт берётся из переменных окружения (TRACKFLOW_SMTP_URL).',
+  en: 'Until a server is saved here, the transport comes from the environment (TASKMASTER_SMTP_URL).',
+  ru: 'Пока здесь не сохранён сервер, транспорт берётся из переменных окружения (TASKMASTER_SMTP_URL).',
 });
 export const offNotice = msg({
   en: 'Email is off: no letter leaves the instance.',

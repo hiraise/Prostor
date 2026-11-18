@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select pf.project_id, pf.field_id, pf.set_id, pf.empty_label, pf.private,\n                  f.name, f.aliases, f.kind, f.multi\n           from project_fields pf join fields f on f.id = pf.field_id\n           where pf.project_id = any($1)\n           order by f.rank, f.id, pf.project_id",
+  "query": "select pf.project_id, pf.field_id, pf.set_id, pf.can_be_empty, pf.empty_label,\n                  pf.private, f.name, f.aliases, f.kind, f.multi, f.builtin\n           from project_fields pf join fields f on f.id = pf.field_id\n           where pf.project_id = any($1)\n           order by f.rank, f.id, pf.project_id",
   "describe": {
     "columns": [
       {
@@ -38,6 +38,17 @@
       },
       {
         "ordinal": 3,
+        "name": "can_be_empty",
+        "type_info": "Bool",
+        "origin": {
+          "Table": {
+            "table": "project_fields",
+            "name": "can_be_empty"
+          }
+        }
+      },
+      {
+        "ordinal": 4,
         "name": "empty_label",
         "type_info": "Text",
         "origin": {
@@ -48,7 +59,7 @@
         }
       },
       {
-        "ordinal": 4,
+        "ordinal": 5,
         "name": "private",
         "type_info": "Bool",
         "origin": {
@@ -59,7 +70,7 @@
         }
       },
       {
-        "ordinal": 5,
+        "ordinal": 6,
         "name": "name",
         "type_info": "Text",
         "origin": {
@@ -70,7 +81,7 @@
         }
       },
       {
-        "ordinal": 6,
+        "ordinal": 7,
         "name": "aliases",
         "type_info": "TextArray",
         "origin": {
@@ -81,7 +92,7 @@
         }
       },
       {
-        "ordinal": 7,
+        "ordinal": 8,
         "name": "kind",
         "type_info": "Text",
         "origin": {
@@ -92,13 +103,24 @@
         }
       },
       {
-        "ordinal": 8,
+        "ordinal": 9,
         "name": "multi",
         "type_info": "Bool",
         "origin": {
           "Table": {
             "table": "fields",
             "name": "multi"
+          }
+        }
+      },
+      {
+        "ordinal": 10,
+        "name": "builtin",
+        "type_info": "Text",
+        "origin": {
+          "Table": {
+            "table": "fields",
+            "name": "builtin"
           }
         }
       }
@@ -117,8 +139,10 @@
       false,
       false,
       false,
-      false
+      false,
+      false,
+      true
     ]
   },
-  "hash": "b22c476a303f860c0d51b700f09507bb653741801759fdfcb7eb9c6ae60d606c"
+  "hash": "c5b8e585c0c1cdd381a7ae4751dfe61bdd7fce012d1924a54482cf5b29837ab2"
 }

@@ -1,18 +1,18 @@
 //! Loaders of `domain::search::Catalog`: one query per kind of name. Names are narrowed in SQL by
-//! the folded forms of `trackflow_query::{fold, fold_value}` (`lower`, `ё` → `е`, and for full
+//! the folded forms of `taskmaster_query::{fold, fold_value}` (`lower`, `ё` → `е`, and for full
 //! names runs of spaces, `-` and `_` as one space); the resolver compares again in Rust.
 
 use sqlx::{PgConnection, Postgres, QueryBuilder, Row};
-use trackflow_domain::access::Projects;
-use trackflow_domain::boards::sprints::SprintDates;
-use trackflow_domain::fields::FieldKind;
-use trackflow_domain::links::Side;
-use trackflow_domain::search::Filter;
-use trackflow_domain::search::catalog::{
+use taskmaster_domain::access::Projects;
+use taskmaster_domain::boards::sprints::SprintDates;
+use taskmaster_domain::fields::FieldKind;
+use taskmaster_domain::links::Side;
+use taskmaster_domain::search::Filter;
+use taskmaster_domain::search::catalog::{
     Attached, BoardEntry, FieldEntry, GroupEntry, IssueEntry, LinkSideEntry, ProjectEntry,
     SprintEntry, TagEntry, UserEntry, ValueEntry,
 };
-use trackflow_domain::{BoardId, GroupId, IssueId, ProjectId, SetId, UserId};
+use taskmaster_domain::{BoardId, GroupId, IssueId, ProjectId, SetId, UserId};
 
 use crate::boards::Viewer;
 
@@ -60,8 +60,8 @@ pub async fn fields(
     projects: &[ProjectId],
 ) -> Result<(Vec<FieldEntry>, Vec<Attached>), sqlx::Error> {
     let rows = sqlx::query!(
-        r#"select pf.project_id, pf.field_id, pf.set_id, pf.empty_label, pf.private,
-                  f.name, f.aliases, f.kind, f.multi
+        r#"select pf.project_id, pf.field_id, pf.set_id, pf.can_be_empty, pf.empty_label,
+                  pf.private, f.name, f.aliases, f.kind, f.multi, f.builtin
            from project_fields pf join fields f on f.id = pf.field_id
            where pf.project_id = any($1)
            order by f.rank, f.id, pf.project_id"#,
@@ -82,10 +82,12 @@ pub async fn fields(
                 aliases: r.aliases,
                 kind,
                 multi: r.multi,
+                builtin: r.builtin,
             });
         }
         attached.push(Attached {
             project: r.project_id,
+            can_be_empty: r.can_be_empty,
             field: r.field_id,
             set: r.set_id,
             empty_label: r.empty_label,
@@ -383,7 +385,7 @@ pub async fn common_words(
 ) -> Result<Vec<String>, sqlx::Error> {
     sqlx::query_scalar!(
         r#"select t as "t!" from unnest($1::text[]) t
-           where numnode(phraseto_tsquery('trackflow_text', t)) = 0"#,
+           where numnode(phraseto_tsquery('taskmaster_text', t)) = 0"#,
         texts
     )
     .fetch_all(conn)

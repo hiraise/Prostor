@@ -47,10 +47,10 @@ test('QRY-053, QRY-054, QRY-073, QRY-074, QRY-075, QRY-076, QRY-082, QRY-086, PR
     `/projects/${key}`,
   );
   await expect(page.getByRole('button', { name: `Search in: ${name}` })).toBeVisible();
-  await expect(page.getByText('2 issues')).toBeVisible();
+  await expect(page.getByText('2 issues', { exact: true })).toBeVisible();
 
   // QRY-074: a mistake is explained; the fixed query finds the issues.
-  const query = page.getByRole('textbox', { name: 'Search query' });
+  const query = page.getByRole('combobox', { name: 'Search query' });
   await query.fill('nosuchfield: x');
   await page.getByRole('button', { name: 'Find' }).click();
   await expect(page.getByText('The query has mistakes')).toBeVisible();
@@ -62,7 +62,7 @@ test('QRY-053, QRY-054, QRY-073, QRY-074, QRY-075, QRY-076, QRY-082, QRY-086, PR
 
   // QRY-075: a click on a header sorts by it, the next one reverses (tables are for wide screens).
   if (!phone) {
-    const table = page.getByRole('table', { name: 'Found issues' });
+    const table = page.getByRole('grid', { name: 'Found issues' });
     const firstRow = table.getByRole('row').nth(1);
     await table.getByRole('button', { name: 'Summary' }).click();
     await expect(page).toHaveURL(/sort/);
@@ -120,4 +120,54 @@ test('QRY-053, QRY-054, QRY-073, QRY-074, QRY-075, QRY-076, QRY-082, QRY-086, PR
   await page.getByRole('button', { name: 'Refresh' }).click();
   await expect(page.getByRole('link', { name: 'Gamma widget' })).toBeVisible();
   await expect(page.getByText('The list has changed')).toBeHidden();
+});
+
+test('QRY-056, QRY-058: completion and markers in the query bar', async ({ page }) => {
+  const suffix = `Q${String(Date.now()).slice(-6)}`;
+  const key = `L${suffix}`;
+
+  await signIn(page);
+  const made = await page.request.post('/api/v1/projects', {
+    data: { name: `Query bar ${suffix}`, key, template: 'blank' },
+  });
+  expect(made.status()).toBe(201);
+  const project = (await made.json()) as Project;
+  await createIssue(page, project.id, 'Login button is grey');
+
+  await page.goto('/issues');
+  const query = page.getByRole('combobox', { name: 'Search query' });
+  await query.click();
+  const list = page.getByRole('listbox', { name: 'Suggestions' });
+
+  // QRY-056: the manual trigger opens the list; a partial word narrows it to fields; Tab inserts
+  // the active row with its suffix. The trigger is retried until the assist's answer arrives.
+  await query.fill('prior');
+  await expect(async () => {
+    await page.keyboard.press('Control+Space');
+    await expect(list.getByRole('option', { name: /priority/i })).toBeVisible({ timeout: 2000 });
+  }).toPass();
+  await page.keyboard.press('Tab');
+  await expect(query).toHaveValue(/^Priority $/);
+  await expect(list).toBeHidden();
+
+  // The colon makes the word an attribute; after it the field's values (QRY-056), and a click
+  // takes one. Enter over the closed list searches.
+  // The suffix space goes before the colon: `Priority:`, and after it the values.
+  await page.keyboard.press('Backspace');
+  await page.keyboard.press(':');
+  await expect(async () => {
+    await page.keyboard.press('Control+Space');
+    await expect(list.getByRole('option', { name: /High/ })).toBeVisible({ timeout: 2000 });
+  }).toPass();
+  await list.getByRole('option', { name: /High/ }).click();
+  await expect(query).toHaveValue(/^Priority:High $/);
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/q=Priority/);
+
+  // QRY-058: an unknown name underlines as the assist answers, the pointer gets its message, and
+  // the input's description says it.
+  await query.fill('nosuchfield: x');
+  await expect(query).toHaveAccessibleDescription(/no such field/);
+  await query.hover({ position: { x: 14, y: 12 } });
+  await expect(query).toHaveAttribute('title', 'no such field');
 });

@@ -14,7 +14,7 @@
 </script>
 
 <svelte:head>
-  {#if !board}<title>{states.notFoundTitle()} · trackflow</title>{/if}
+  {#if !board}<title>{states.notFoundTitle()} · TaskMaster</title>{/if}
 </svelte:head>
 
 {#if board}
@@ -23,6 +23,7 @@
       {board}
       openSettings={page.url.searchParams.has('settings')}
       q={page.url.searchParams.get('q')}
+      card={page.url.searchParams.get('issue')}
     />
   {/key}
 {:else}

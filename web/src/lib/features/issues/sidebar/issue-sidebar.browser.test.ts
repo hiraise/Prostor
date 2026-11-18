@@ -19,8 +19,9 @@ import { preferences, setPreferencesForTests, setSessionForTests } from '#lib/se
 import { store } from '#lib/store/index.ts';
 
 import { expectAccessible, isPhone } from '../../../../test/a11y.ts';
+import { need } from '../../../../test/dom.ts';
 import { fakeApi, type FakeRequest, type FakeRoute } from '../../../../test/fake-api.ts';
-import type { ListContext, ResolvedContext } from '../list/list-state.ts';
+import type { ListContext, ResolvedContext } from '../list/list-state.svelte.ts';
 import { newIssueDialog } from '../new/open.svelte.ts';
 import { ANNA, BORIS, issue } from '../test-data.ts';
 import IssueSidebar from './IssueSidebar.svelte';
@@ -244,6 +245,48 @@ describe('QRY-082: the sidebar', () => {
       .element(nav.getByRole('link', { name: 'urgent, 12 issues' }))
       .toHaveAttribute('href', '/issues?tag=5');
     await expectAccessible(screen.container.ownerDocument.body);
+  });
+
+  it('starts nested items under the first letter of their heading, tags included', async () => {
+    const { screen } = await show({});
+    // The first glyph of a heading versus the start of its items: the items used to sit 40px
+    // further right (the browser's default list padding) and tag names after their dot.
+    const letterX = (element: Element): number => {
+      // The app renders in its own document; Range and TreeWalker must come from there too.
+      const doc = element.ownerDocument;
+      const walker = doc.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+      let node: Node | null;
+      while ((node = walker.nextNode())) {
+        const text = node.textContent;
+        if (text?.trim()) {
+          const range = doc.createRange();
+          range.setStart(node, text.indexOf(text.trim()));
+          range.setEnd(node, range.startOffset + 1);
+          return range.getBoundingClientRect().left;
+        }
+      }
+      throw new Error('no text');
+    };
+    // The panel on wide screens, the drawer's nav on phones — the same rows inside.
+    // The groups render once the sidebar's requests answer.
+    await expect.element(lists(screen).getByRole('button', { name: 'Projects' })).toBeVisible();
+    const nav = need(screen.container.querySelector('nav.panel, nav.drawer'), 'sidebar nav');
+    for (const group of ['Projects', 'Tags', 'Saved searches']) {
+      const heading = need(
+        [...nav.querySelectorAll('h2')].find((e) => e.textContent.trim() === group),
+        `${group} heading`,
+      );
+      const under = letterX(heading);
+      const section = need(heading.closest('section'), `${group} section`);
+      for (const link of section.querySelectorAll('.link')) {
+        // A row starts under the heading's first letter: the dot of a tag, the name otherwise.
+        const dot = link.querySelector('.dot');
+        const left = dot
+          ? dot.getBoundingClientRect().left
+          : letterX(need(link.querySelector('.name'), 'row name'));
+        expect(Math.abs(left - under)).toBeLessThanOrEqual(1);
+      }
+    }
   });
 
   it('counts unresolved issues while resolved ones are hidden, and marks the current list', async () => {

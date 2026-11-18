@@ -11,7 +11,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use sqlx::{Connection, PgConnection};
-use trackflow_store::PgConnectOptions;
+use taskmaster_store::PgConnectOptions;
 
 use crate::breakdown::{self, Statement, Totals};
 use crate::catalog::Catalog;
@@ -109,8 +109,9 @@ pub async fn measure(
     }
     let variants = scenario.variants();
     // The server's pool: its statement timeout and connection settings.
-    let pool = trackflow_store::pool(options, u32::try_from(clients)?);
-    let per_client = run.iterations.div_ceil(clients);
+    let pool = taskmaster_store::pool(options, u32::try_from(clients)?);
+    let iterations = scenario.iterations(run);
+    let per_client = iterations.div_ceil(clients);
     let (seed, warmup) = (run.seed, run.warmup);
     let mut tasks = tokio::task::JoinSet::new();
     for client in 0..clients {
@@ -144,7 +145,7 @@ pub async fn measure(
             Ok::<_, anyhow::Error>((samples, totals))
         });
     }
-    let mut samples = Vec::with_capacity(run.iterations);
+    let mut samples = Vec::with_capacity(iterations);
     let mut statements = Vec::new();
     while let Some(done) = tasks.join_next().await {
         let (mine, totals) = done??;

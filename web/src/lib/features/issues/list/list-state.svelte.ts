@@ -3,6 +3,7 @@
 // part of the address. A copied link and a new saved search keep the query as it reads now: a saved
 // search's own query is written out in place of its ID (step 1.7 plan §3.9).
 import { resolve } from '$app/paths';
+import { SvelteSet } from 'svelte/reactivity';
 
 import type { QueryEngine } from '#lib/query/index.ts';
 
@@ -55,6 +56,8 @@ export function parseListUrl(url: URL): ListParams {
 
 /** The address of a list state (relative to the app's base). */
 export function listHref(params: ListParams): string {
+  // A plain builder, not the reactive Svelte kind: the address is a string of now.
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity
   const query = new URLSearchParams();
   const { context } = params;
   if (context.kind === 'project') query.set('project', context.key);
@@ -138,4 +141,108 @@ export function copiedHref(engine: QueryEngine, q: string, context: ResolvedCont
   if (context.kind !== 'search') return listHref({ q, context: contextOf(context) });
   const frozen = frozenQuery(engine, q, context, false);
   return listHref({ q: frozen.q, context: { kind: 'all' } });
+}
+
+/**
+ * The list's keyboard focus (step 2.2 §6, QRY-085): the focused row's issue ID, `null` when the
+ * query bar (or nothing) holds it. One instance per list; the focus is by ID, so it survives a
+ * refresh — the reloaded answer's rows keep it where they are (D-043).
+ */
+export class ListFocus {
+  current = $state<number | null>(null);
+}
+
+/**
+ * The list's selection (step 2.2 §8.1, QRY-083): the chosen issues by ID, or the state
+ * «everything the query matches». The IDs survive page turns and a refresh; live updates do not
+ * touch them — the list waits for «Обновить» (D-043). One instance per list.
+ */
+export class ListSelection {
+  /** The rows chosen one by one; empty while `allMatching` — accepting it lets the IDs go. A
+   * `SvelteSet`, not `$state`: Svelte's deep proxy does not take collections. */
+  private readonly ids = new SvelteSet<number>();
+  /** The state «everything the query matches»: every row renders chosen without an own ID. */
+  allMatching = $state(false);
+  /** The last row toggled; shift-click and `Shift+↑/↓` extend the range from it. */
+  anchor = $state<number | null>(null);
+
+  has(id: number): boolean {
+    return this.allMatching || this.ids.has(id);
+  }
+
+  get empty(): boolean {
+    return !this.allMatching && this.ids.size === 0;
+  }
+
+  /** How many rows are chosen by ID; the all-matching count is the query's, not the model's. */
+  get size(): number {
+    return this.ids.size;
+  }
+
+  /** The chosen IDs — empty while `allMatching`: the command dialog's explicit target (§8.2). */
+  idsOf(): number[] {
+    return [...this.ids];
+  }
+
+  /**
+   * A row's checkbox: a plain click toggles the row and makes it the anchor; a shift-click takes
+   * the range from the anchor. Unchecking a row of an all-matching selection drops to the page's
+   * explicit IDs — the rest of the page's rows stay chosen.
+   */
+  click(id: number, page: readonly number[], shift = false): void {
+    if (shift && this.anchor !== null) {
+      this.extend(this.anchor, id, page);
+      return;
+    }
+    if (this.allMatching) {
+      this.ids.clear();
+      for (const row of page) if (row !== id) this.ids.add(row);
+      this.allMatching = false;
+      this.anchor = id;
+      return;
+    }
+    if (!this.ids.delete(id)) this.ids.add(id);
+    this.anchor = id;
+  }
+
+  /** Adds every row between two IDs, in the page's order. */
+  extend(from: number, to: number, page: readonly number[]): void {
+    const start = page.indexOf(from);
+    const end = page.indexOf(to);
+    if (start === -1 || end === -1) return;
+    const range = page.slice(Math.min(start, end), Math.max(start, end) + 1);
+    for (const id of range) this.ids.add(id);
+  }
+
+  /** `Shift+↑/↓` (§8.1): the anchor — the row the move starts from when no toggle made one —
+   * reaches the row the focus lands on. Everything matched stays chosen. */
+  keyExtend(from: number, to: number, page: readonly number[]): void {
+    if (this.allMatching) return;
+    const anchor = this.anchor ?? from;
+    this.anchor = anchor;
+    this.extend(anchor, to, page);
+  }
+
+  /** The header's checkbox: the page's issues all chosen, or the selection let go. */
+  selectPage(all: boolean, page: readonly number[]): void {
+    if (!all) {
+      this.clear();
+      return;
+    }
+    for (const id of page) this.ids.add(id);
+    this.anchor = null;
+  }
+
+  /** «Выбрать все N задач по запросу»: the query's worth, no own IDs. */
+  selectAllMatching(): void {
+    this.allMatching = true;
+    this.ids.clear();
+    this.anchor = null;
+  }
+
+  clear(): void {
+    this.ids.clear();
+    this.allMatching = false;
+    this.anchor = null;
+  }
 }

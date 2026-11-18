@@ -17,7 +17,7 @@ import { currentUser } from '#lib/session/index.ts';
 import { keyText, store, type ListHandle } from '#lib/store/index.ts';
 
 import '../issues.ts';
-import type { ListContext, ResolvedContext } from './list-state.ts';
+import type { ListContext, ResolvedContext } from './list-state.svelte.ts';
 
 /** Rows per page: the page the budget is measured on (architecture.md §7). */
 export const PAGE = 50;
@@ -40,7 +40,9 @@ export interface SearchMeta {
 
 const metas = new SvelteMap<string, SearchMeta>();
 
-function params(spec: SearchSpec): {
+/** The query parameters of a search's own requests — the export of its every match runs on the
+ * same ones, so the file and the list cannot disagree. */
+export function params(spec: SearchSpec): {
   q: string | undefined;
   project: number | undefined;
   tag: number | undefined;

@@ -178,6 +178,14 @@ impl JobContext {
         Ok(())
     }
 
+    /// Merges results into the job's payload, under `results` (step 2.1 §4.7): what a long job
+    /// gathered for its reader — progress the job row already carries, this is the per-item
+    /// detail. Call per batch, like [`Self::progress`].
+    pub async fn save_results(&self, results: &serde_json::Value) -> Result<(), JobError> {
+        queue::merge_results(&self.inner.pool, self.inner.id, self.inner.token, results).await?;
+        Ok(())
+    }
+
     /// Applies the answer of a lease renewal or progress write.
     fn apply(&self, answer: Option<bool>) {
         match answer {
@@ -456,15 +464,15 @@ async fn report_job(
         let row = crate::notifications::system(&mut *tx, user, &content).await?;
         crate::live::publish(
             &mut tx,
-            &[trackflow_domain::live::NewEvent {
-                kind: trackflow_domain::live::EntityKind::Inbox,
+            &[taskmaster_domain::live::NewEvent {
+                kind: taskmaster_domain::live::EntityKind::Inbox,
                 entity: user,
                 version: row,
-                change: trackflow_domain::live::Change::Created,
+                change: taskmaster_domain::live::Change::Created,
                 issues: Vec::new(),
                 projects: Vec::new(),
                 boards: Vec::new(),
-                patch: Some(trackflow_domain::live::Patch::Notification {
+                patch: Some(taskmaster_domain::live::Patch::Notification {
                     id: row,
                     event: "system".to_owned(),
                     issue: None,
@@ -472,7 +480,7 @@ async fn report_job(
                     excerpt: format!("{kind}: {state}"),
                     reasons: Vec::new(),
                 }),
-                guard: trackflow_domain::live::Guard::user(user),
+                guard: taskmaster_domain::live::Guard::user(user),
             }],
         )
         .await?;

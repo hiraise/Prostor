@@ -17,7 +17,7 @@
   }
 </script>
 
-<svelte:head><title>{m.forcedTitle()} · trackflow</title></svelte:head>
+<svelte:head><title>{m.forcedTitle()} · TaskMaster</title></svelte:head>
 
 <PublicFrame title={m.forcedTitle()}>
   <ForcedPasswordForm ondone={done} />

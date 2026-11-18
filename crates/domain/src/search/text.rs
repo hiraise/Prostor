@@ -2,7 +2,7 @@
 //! `summary:`, `description:`, `comments:`, `text:` or a text field; `mentions:` and
 //! `mentioned in:`.
 
-use trackflow_query::{Atom, Condition, ItemKind, Op, ProblemCode};
+use taskmaster_query::{Atom, Condition, ItemKind, Op, ProblemCode};
 
 use super::filter::{Filter, TextScope, TextTerm};
 use super::names::looks_like_id;

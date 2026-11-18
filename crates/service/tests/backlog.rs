@@ -1,27 +1,27 @@
 //! Backlogs, template boards and boards from the issue's side (step 1.8b-4, D-045).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::role::PredefinedRole;
+use taskmaster_domain::boards::{Mode, Preset};
+use taskmaster_domain::issues::history::Origin;
+use taskmaster_domain::projects::Template;
+use taskmaster_domain::settings::Language;
+use taskmaster_domain::{BoardId, IssueId, ProjectId};
+use taskmaster_service::boards::backlog::{self, BacklogInput, Missing};
+use taskmaster_service::boards::issue_side;
+use taskmaster_service::boards::{self as boards, BoardChange, BoardRow, NewBoard, Sharing};
+use taskmaster_service::issues::{self, AudienceInput, NewIssue};
+use taskmaster_service::projects::{self, NewProjectInput};
+use taskmaster_service::setup::{self, Setup};
+use taskmaster_service::users::{self, NewAccount};
+use taskmaster_service::{Error, Passwords, access, roles, saved_searches};
+use taskmaster_store::PgPool;
+use taskmaster_store::access::Holder;
+use taskmaster_store::sessions::Origin as SessionOrigin;
+use taskmaster_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::datetime;
-use trackflow_domain::access::Access;
-use trackflow_domain::access::role::PredefinedRole;
-use trackflow_domain::boards::{Mode, Preset};
-use trackflow_domain::issues::history::Origin;
-use trackflow_domain::projects::Template;
-use trackflow_domain::settings::Language;
-use trackflow_domain::{BoardId, IssueId, ProjectId};
-use trackflow_service::boards::backlog::{self, BacklogInput, Missing};
-use trackflow_service::boards::issue_side;
-use trackflow_service::boards::{self as boards, BoardChange, BoardRow, NewBoard, Sharing};
-use trackflow_service::issues::{self, AudienceInput, NewIssue};
-use trackflow_service::projects::{self, NewProjectInput};
-use trackflow_service::setup::{self, Setup};
-use trackflow_service::users::{self, NewAccount};
-use trackflow_service::{Error, Passwords, access, roles, saved_searches};
-use trackflow_store::PgPool;
-use trackflow_store::access::Holder;
-use trackflow_store::sessions::Origin as SessionOrigin;
-use trackflow_testkit::TestDb;
 
 const T0: OffsetDateTime = datetime!(2026-10-01 09:00 UTC);
 
@@ -89,7 +89,7 @@ async fn member(pool: &PgPool, admin: &Access, username: &str, of: &[ProjectId])
     .unwrap()
     .id;
     if !of.is_empty() {
-        let role = trackflow_store::roles::builtin_id(pool, PredefinedRole::ProjectMember.key())
+        let role = taskmaster_store::roles::builtin_id(pool, PredefinedRole::ProjectMember.key())
             .await
             .unwrap()
             .unwrap();
@@ -249,13 +249,13 @@ async fn brd_089_default_backlog() {
     assert_eq!(shown.len(), 2);
     // BRD-096: an issue sent to the board leaves the backlog.
     let sprint = board.full.sprints[0].id;
-    trackflow_service::boards::cards::add(
+    taskmaster_service::boards::cards::add(
         pool,
         &admin,
         Origin::Web,
         board.full.board.id,
         sprint,
-        trackflow_service::boards::cards::NewCard {
+        taskmaster_service::boards::cards::NewCard {
             issue: a,
             ..Default::default()
         },
@@ -279,7 +279,7 @@ async fn brd_089_default_backlog() {
         board.full.board.id,
         BoardChange {
             sharing: Some(Sharing {
-                view: trackflow_domain::sharing::Audience {
+                view: taskmaster_domain::sharing::Audience {
                     users: vec![outsider.user()],
                     groups: Vec::new(),
                 },
@@ -470,7 +470,7 @@ async fn brd_093_order_rights() {
         id,
         BoardChange {
             sharing: Some(Sharing {
-                view: trackflow_domain::sharing::Audience {
+                view: taskmaster_domain::sharing::Audience {
                     users: vec![other.user()],
                     groups: Vec::new(),
                 },
@@ -536,7 +536,7 @@ async fn brd_033_issue_boards() {
             comments: true,
             changes: true,
             from: None,
-            direction: trackflow_store::issue_history::Direction::Older,
+            direction: taskmaster_store::issue_history::Direction::Older,
             limit: 10,
             around_comment: None,
         },
@@ -648,7 +648,7 @@ async fn prj_023_scrum_board() {
     assert_eq!(search.row.view_groups, b.view_groups);
     // A member of the team sees the board.
     let m = member(pool, &admin, "tom", &[]).await;
-    trackflow_service::teams::add(pool, &admin, p, &[m.user()], &[])
+    taskmaster_service::teams::add(pool, &admin, p, &[m.user()], &[])
         .await
         .unwrap();
     let m = access::load(pool, m.user()).await.unwrap();

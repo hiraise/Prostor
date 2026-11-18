@@ -5,19 +5,19 @@
 
 use serde_json::{Value, json};
 use sqlx::PgConnection;
-use trackflow_domain::access::permission::Permission;
-use trackflow_domain::access::{Access, Projects};
-use trackflow_domain::search::saved::{self, Builtin, PER_OWNER_MAX};
-use trackflow_domain::search::stored::Refs;
-use trackflow_domain::search::{self as domain, Catalog, Clock, Ctx, Stored};
-use trackflow_domain::settings::Language;
-use trackflow_domain::sharing::{Audience, Shared};
-use trackflow_domain::validation::{Problem as InputProblem, Problems};
-use trackflow_domain::{Actor, ProjectId, UserId};
-use trackflow_query::{Problem, Query, Severity};
-use trackflow_store::saved_searches::{self as store, Listing, NewSavedSearch, SavedSearchId};
-use trackflow_store::search::catalog;
-use trackflow_store::{PgPool, audit, unique_violation};
+use taskmaster_domain::access::permission::Permission;
+use taskmaster_domain::access::{Access, Projects};
+use taskmaster_domain::search::saved::{self, Builtin, PER_OWNER_MAX};
+use taskmaster_domain::search::stored::Refs;
+use taskmaster_domain::search::{self as domain, Catalog, Clock, Ctx, Stored};
+use taskmaster_domain::settings::Language;
+use taskmaster_domain::sharing::{Audience, Shared};
+use taskmaster_domain::validation::{Problem as InputProblem, Problems};
+use taskmaster_domain::{Actor, ProjectId, UserId};
+use taskmaster_query::{Problem, Query, Severity};
+use taskmaster_store::saved_searches::{self as store, Listing, NewSavedSearch, SavedSearchId};
+use taskmaster_store::search::catalog;
+use taskmaster_store::{PgPool, audit, unique_violation};
 
 use crate::tags::{self, sharing_change};
 use crate::{Error, Result};
@@ -265,7 +265,7 @@ pub(crate) async fn query_for(
     if !view.problems.is_empty() {
         return Err(Error::InvalidQuery(view.problems));
     }
-    let q = trackflow_query::parse(&view.text);
+    let q = taskmaster_query::parse(&view.text);
     if q.problems.iter().any(|p| p.severity == Severity::Error) {
         return Err(Error::InvalidQuery(q.problems));
     }
@@ -277,10 +277,10 @@ pub(crate) async fn text_of(
     conn: &mut PgConnection,
     viewer: &Access,
     query: &Value,
-) -> Result<(String, Vec<trackflow_query::Problem>)> {
+) -> Result<(String, Vec<taskmaster_query::Problem>)> {
     let stored = decode(query)?;
     let read = viewer.projects_with(Permission::IssueRead);
-    let reader = trackflow_store::boards::Viewer {
+    let reader = taskmaster_store::boards::Viewer {
         me: viewer.user(),
         groups: viewer.groups(),
         read: &read,
@@ -365,9 +365,9 @@ pub(crate) async fn bind_board(
     me: UserId,
     text: &str,
     projects: &[ProjectId],
-    board: (trackflow_domain::BoardId, &str),
+    board: (taskmaster_domain::BoardId, &str),
 ) -> Result<Stored> {
-    let entry = trackflow_domain::search::catalog::BoardEntry {
+    let entry = taskmaster_domain::search::catalog::BoardEntry {
         id: board.0,
         name: board.1.to_owned(),
         query: None,
@@ -380,9 +380,9 @@ async fn bind_with(
     me: UserId,
     text: &str,
     scope: Option<Vec<ProjectId>>,
-    boards: Vec<trackflow_domain::search::catalog::BoardEntry>,
+    boards: Vec<taskmaster_domain::search::catalog::BoardEntry>,
 ) -> Result<Stored> {
-    let q = trackflow_query::parse(text);
+    let q = taskmaster_query::parse(text);
     let projects: Vec<_> = catalog::projects(&mut *conn)
         .await?
         .into_iter()
@@ -448,7 +448,7 @@ async fn described(
         refs.sprints.extend(r.sprints);
     }
     let read = viewer.projects_with(Permission::IssueRead);
-    let reader = trackflow_store::boards::Viewer {
+    let reader = taskmaster_store::boards::Viewer {
         me: viewer.user(),
         groups: viewer.groups(),
         read: &read,

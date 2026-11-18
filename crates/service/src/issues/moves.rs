@@ -4,21 +4,21 @@
 use std::collections::BTreeMap;
 
 use sqlx::PgConnection;
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::visibility::{self, Audience, Item, Kind};
+use taskmaster_domain::fields::FieldKind;
+use taskmaster_domain::issues::history::{Origin, Place, Record};
+use taskmaster_domain::issues::moves::{self, Outcome, TargetField};
+use taskmaster_domain::issues::readable_id;
+use taskmaster_domain::issues::rights;
+use taskmaster_domain::issues::values::{self as rules, Value};
+use taskmaster_domain::{FieldId, IssueId, ProjectId};
+use taskmaster_store::PgPool;
+use taskmaster_store::issue_values;
+use taskmaster_store::issues::{self, Issue};
+use taskmaster_store::projects::{self, Project};
+use taskmaster_store::value_sets;
 use time::OffsetDateTime;
-use trackflow_domain::access::Access;
-use trackflow_domain::access::visibility::{self, Audience, Item, Kind};
-use trackflow_domain::fields::FieldKind;
-use trackflow_domain::issues::history::{Origin, Place, Record};
-use trackflow_domain::issues::moves::{self, Outcome, TargetField};
-use trackflow_domain::issues::readable_id;
-use trackflow_domain::issues::rights;
-use trackflow_domain::issues::values::{self as rules, Value};
-use trackflow_domain::{FieldId, IssueId, ProjectId};
-use trackflow_store::PgPool;
-use trackflow_store::issue_values;
-use trackflow_store::issues::{self, Issue};
-use trackflow_store::projects::{self, Project};
-use trackflow_store::value_sets;
 
 use super::values::{self, ProjectField, ProjectFields};
 use super::{One, author, facts, get, lock_for_change};
@@ -175,18 +175,65 @@ pub async fn move_issue(
 ) -> Result<crate::rules::Answer<Option<One>>> {
     let mut tx = pool.begin().await?;
     let (issue, source_project) = lock_for_change(&mut tx, actor, id).await?;
-    rights::may_update(actor, &facts(&issue))?;
-    let project = target_project(&mut tx, actor, &issue, target).await?;
+    let mut batch = Batch::new();
+    let mut ctx = crate::rules::Ctx::new(actor);
+    let can_see_after = move_locked(
+        &mut tx,
+        &mut batch,
+        &mut ctx,
+        actor,
+        origin,
+        (&issue, &source_project),
+        target,
+        silent,
+    )
+    .await?;
+    batch.publish(&mut tx).await?;
+    tx.commit().await?;
+    if !can_see_after {
+        return Ok(crate::rules::Answer {
+            done: None,
+            messages: ctx.messages,
+        });
+    }
+    let done = get(pool, actor, id).await?;
+    Ok(crate::rules::Answer {
+        done: Some(done),
+        messages: ctx.messages,
+    })
+}
+
+/// Moves a locked issue inside the caller's transaction (step 2.1 §4.3): everything
+/// [`move_issue`] does between its begin and its commit, so a command apply runs the move and
+/// the rest of its line as one transaction. The move keeps its own history change — the number
+/// and mapping records are the writer's — and its rule events join the caller's `batch` and
+/// `ctx`. Answers whether the actor still sees the issue after the move.
+#[allow(clippy::too_many_arguments)]
+pub(crate) async fn move_locked(
+    tx: &mut PgConnection,
+    batch: &mut Batch,
+    ctx: &mut crate::rules::Ctx<'_>,
+    actor: &Access,
+    origin: Origin,
+    locked: (&Issue, &Project),
+    target: ProjectId,
+    silent: bool,
+) -> Result<bool> {
+    let (issue, source_project) = locked;
+    let id = issue.id;
+    rights::may_update(actor, &facts(issue))?;
+    let project = target_project(&mut *tx, actor, issue, target).await?;
     // Two moves into the same project take numbers under the project's lock.
-    projects::lock(&mut tx, project.id).await?;
+    projects::lock(&mut *tx, project.id).await?;
     let who = author(actor, origin, silent, issue.project_id)?;
-    let source = values::of_project(&mut tx, issue.project_id).await?;
-    let fields = values::of_project(&mut tx, project.id).await?;
-    let mut held = values::of_issue(&mut tx, &issue, &source).await?;
-    let outcomes = plan(&mut tx, &held, &fields).await?;
+    let source = values::of_project(&mut *tx, issue.project_id).await?;
+    let fields = values::of_project(&mut *tx, project.id).await?;
+    let mut held = values::of_issue(&mut *tx, issue, &source).await?;
+    let outcomes = plan(&mut *tx, &held, &fields).await?;
     let mut records = Vec::new();
     if let Some(old_number) = issue.number {
-        let number = issues::move_to(&mut tx, id, issue.project_id, old_number, project.id).await?;
+        let number =
+            issues::move_to(&mut *tx, id, issue.project_id, old_number, project.id).await?;
         let from_id = readable_id(&source_project.key, old_number);
         let to_id = readable_id(&project.key, number);
         records.push(Record::project(
@@ -202,7 +249,7 @@ pub async fn move_issue(
             },
         ));
     } else {
-        issues::set_draft_project(&mut tx, id, project.id).await?;
+        issues::set_draft_project(&mut *tx, id, project.id).await?;
     }
     for (field, outcome) in outcomes {
         let Some(f) = source.get(field) else {
@@ -212,14 +259,14 @@ pub async fn move_issue(
         match outcome {
             Outcome::Kept => {}
             Outcome::Erased => {
-                issue_values::set(&mut tx, id, field, f.kind.kind, None).await?;
+                issue_values::set(&mut *tx, id, field, f.kind.kind, None).await?;
                 records.extend(Record::field(field, old.as_ref(), None, |_| None));
                 held.remove(&field);
             }
             Outcome::Replaced(new) => {
                 if let Some(there) = fields.get(field) {
                     records.extend(
-                        values::write(&mut tx, id, there, old.as_ref(), new.as_ref()).await?,
+                        values::write(&mut *tx, id, there, old.as_ref(), new.as_ref()).await?,
                     );
                 }
                 match new {
@@ -235,7 +282,7 @@ pub async fn move_issue(
                 continue;
             }
             if let Some(value) = rules::default_value(&f.attached.default_values) {
-                values::store(&mut tx, id, f.id(), f.kind.kind, Some(&value)).await?;
+                values::store(&mut *tx, id, f.id(), f.kind.kind, Some(&value)).await?;
                 held.insert(f.id(), value);
             }
         }
@@ -244,36 +291,18 @@ pub async fn move_issue(
         .await?
         .ok_or(Error::NotFound("no such issue"))?;
     let now = OffsetDateTime::now_utc();
-    records.extend(values::settle_resolution(&mut tx, &moved, &fields, &held, now).await?);
-    let mut batch = Batch::new();
+    records.extend(values::settle_resolution(&mut *tx, &moved, &fields, &held, now).await?);
     batch.issue_moved(id, issue.project_id);
     // The behaviors of the target project hear the move before its own records (§3.5).
-    let mut ctx = crate::rules::Ctx::new(actor);
     let mut rule_records = crate::rules::on(
-        &mut tx,
-        &mut batch,
-        &mut ctx,
+        &mut *tx,
+        batch,
+        ctx,
         crate::rules::Event::Moved { issue: &moved },
     )
     .await?;
-    rule_records.extend(
-        crate::rules::on_resolution(&mut tx, &mut batch, &mut ctx, &moved, &records).await?,
-    );
-    super::finish_change(&mut tx, &mut batch, &moved, who, &records, &[]).await?;
-    crate::rules::finish(&mut tx, &mut batch, &ctx, &moved, &rule_records).await?;
-    batch.publish(&mut tx).await?;
-    let can_see_after = super::can_read(actor, &moved, &project);
-    let messages = ctx.messages;
-    tx.commit().await?;
-    if !can_see_after {
-        return Ok(crate::rules::Answer {
-            done: None,
-            messages,
-        });
-    }
-    let done = get(pool, actor, id).await?;
-    Ok(crate::rules::Answer {
-        done: Some(done),
-        messages,
-    })
+    rule_records.extend(crate::rules::on_resolution(&mut *tx, batch, ctx, &moved, &records).await?);
+    super::finish_change(&mut *tx, batch, &moved, who, &records, &[]).await?;
+    crate::rules::finish(&mut *tx, batch, ctx, &moved, &rule_records).await?;
+    Ok(super::can_read(actor, &moved, &project))
 }

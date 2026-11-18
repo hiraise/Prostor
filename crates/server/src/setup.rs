@@ -5,13 +5,13 @@ use std::time::Instant;
 
 use axum::extract::State;
 use axum::response::Response;
+use taskmaster_api::auth::Session;
+use taskmaster_api::error::ErrorBody;
+use taskmaster_api::setup::{Language, SetupRequest};
+use taskmaster_domain::validation::Problem;
+use taskmaster_service::setup::Setup;
+use taskmaster_store::PgPool;
 use time::OffsetDateTime;
-use trackflow_api::auth::Session;
-use trackflow_api::error::ErrorBody;
-use trackflow_api::setup::{Language, SetupRequest};
-use trackflow_domain::validation::Problem;
-use trackflow_service::setup::Setup;
-use trackflow_store::PgPool;
 
 use crate::AppState;
 use crate::auth::RequestInfo;
@@ -61,7 +61,7 @@ pub async fn run(
         base_url: request.base_url,
         time_zone: request.time_zone,
     };
-    let result = trackflow_service::setup::run(
+    let result = taskmaster_service::setup::run(
         &state.db,
         &state.passwords,
         setup,
@@ -72,7 +72,7 @@ pub async fn run(
     let signed_in = match result {
         Ok(signed_in) => signed_in,
         Err(error) => {
-            if let trackflow_service::Error::Invalid(problems) = &error
+            if let taskmaster_service::Error::Invalid(problems) = &error
                 && problems
                     .iter()
                     .any(|p| p.path == "code" && p.problem == Problem::Incorrect)
@@ -101,5 +101,5 @@ pub async fn required(state: &AppState) -> Result<bool, sqlx::Error> {
 }
 
 async fn complete(pool: &PgPool) -> Result<bool, sqlx::Error> {
-    trackflow_store::instance::setup_complete(pool).await
+    taskmaster_store::instance::setup_complete(pool).await
 }

@@ -75,6 +75,17 @@ pub enum SidebarSection {
     Searches,
 }
 
+/// What came of the prompt after a first bulk apply without silent (plan 2.1 §6): `silent` —
+/// bulk applies start without notifications; `dismissed`/`never` — it asked, the answer was no;
+/// unset — it has not asked yet.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CommandSilentPrompt {
+    Silent,
+    Dismissed,
+    Never,
+}
+
 /// Declares the keys once: the settings, their patch, and how a patch splits.
 macro_rules! keys {
     ($($key:ident: $ty:ty),* $(,)?) => {
@@ -112,6 +123,7 @@ macro_rules! keys {
 
 keys! {
     rail_collapsed: bool,
+    rail_width: i32,
     editor_toolbar: bool,
     home: Home,
     issue_panel_side: PanelSide,
@@ -130,6 +142,8 @@ keys! {
     list_sidebar_folded: Vec<SidebarSection>,
     recent_issues: Vec<i64>,
     last_project: i64,
+    commands_on_typing: bool,
+    commands_silent_prompt: CommandSilentPrompt,
 }
 
 /// A checked patch: the keys to set (absent ones are `None`) and the keys to reset.
@@ -145,6 +159,7 @@ pub fn validate(patch: Patch) -> Result<Valid, Vec<FieldProblem>> {
     let (mut set, reset) = patch.split();
     let mut problems = Problems::new();
     for (path, width) in [
+        ("rail_width", set.rail_width),
         ("issue_panel_width", set.issue_panel_width),
         ("list_sidebar_width", set.list_sidebar_width),
     ] {
@@ -288,6 +303,7 @@ mod tests {
     #[test]
     fn ui_018_rejects_out_of_range_and_bad_lists() {
         let found = paths(validate(Patch {
+            rail_width: Some(Some(159)),
             issue_panel_width: Some(Some(159)),
             list_sidebar_width: Some(Some(401)),
             list_columns: Some(Some(vec!["id".into(), "field:x".into()])),
@@ -298,6 +314,7 @@ mod tests {
         assert_eq!(
             found,
             [
+                ("rail_width".to_owned(), Problem::OutOfRange),
                 ("issue_panel_width".to_owned(), Problem::OutOfRange),
                 ("list_sidebar_width".to_owned(), Problem::OutOfRange),
                 ("list_columns".to_owned(), Problem::Invalid),
@@ -306,6 +323,7 @@ mod tests {
             ]
         );
         let edges = validate(Patch {
+            rail_width: Some(Some(400)),
             issue_panel_width: Some(Some(160)),
             list_sidebar_width: Some(Some(400)),
             list_columns: Some(Some(vec!["field:12".into(), "id".into(), "id".into()])),

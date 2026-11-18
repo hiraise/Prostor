@@ -11,10 +11,10 @@ use axum::body::Body;
 use axum::http::{Request, StatusCode, header};
 use axum::response::Response;
 use http_body_util::BodyExt;
+use taskmaster_server::lifecycle::Phase;
+use taskmaster_server::web::Assets;
+use taskmaster_server::{AppState, router};
 use tower::ServiceExt;
-use trackflow_server::lifecycle::Phase;
-use trackflow_server::web::Assets;
-use trackflow_server::{AppState, router};
 
 struct MemoryAssets(HashMap<&'static str, &'static str>);
 
@@ -28,10 +28,10 @@ const SHELL: &str = "<!doctype html><html><body><div id=\"app\"></div></body></h
 
 /// A node that never connects: the pool is lazy and points at a closed port.
 fn state_with(files: &[(&'static str, &'static str)]) -> AppState {
-    let options = trackflow_store::connect_options("postgres://nobody@127.0.0.1:9/none").unwrap();
+    let options = taskmaster_store::connect_options("postgres://nobody@127.0.0.1:9/none").unwrap();
     AppState::new(
         Arc::new(MemoryAssets(files.iter().copied().collect())),
-        trackflow_store::pool(&options, 2),
+        taskmaster_store::pool(&options, 2),
     )
 }
 
@@ -207,8 +207,8 @@ async fn unbuilt_web_app_answers_503_with_a_hint() {
 async fn responses_are_compressed_when_the_client_accepts_it() {
     const BIG: &str = concat!(
         "<!doctype html><html><body>",
-        "trackflow trackflow trackflow trackflow trackflow trackflow trackflow trackflow trackflow trackflow ",
-        "trackflow trackflow trackflow trackflow trackflow trackflow trackflow trackflow trackflow trackflow ",
+        "taskmaster taskmaster taskmaster taskmaster taskmaster taskmaster taskmaster taskmaster taskmaster taskmaster ",
+        "taskmaster taskmaster taskmaster taskmaster taskmaster taskmaster taskmaster taskmaster taskmaster taskmaster ",
         "</body></html>"
     );
     let request = Request::get("/")

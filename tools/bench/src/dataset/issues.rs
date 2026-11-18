@@ -12,7 +12,7 @@ use super::model::{Kind, Model, Project, Role, ValueSet};
 use crate::rng::{Rng, Weighted};
 
 /// The renderer's version, stored with every text the dataset writes.
-const RENDER_VERSION: i16 = trackflow_markup::RENDER_VERSION;
+const RENDER_VERSION: i16 = taskmaster_markup::RENDER_VERSION;
 
 /// The dataset's "now": the newest issue is created just before it.
 pub const END: i64 = datetime!(2026-10-01 0:00 UTC).unix_timestamp();
@@ -890,9 +890,9 @@ mod tests {
         let mut rng = Rng::new(5);
         for words in [1, 5, 40, 300] {
             let text = model.vocabulary.text(&mut rng, words);
-            let rendered = trackflow_markup::render(
+            let rendered = taskmaster_markup::render(
                 &text,
-                trackflow_markup::Profile::Full,
+                taskmaster_markup::Profile::Full,
                 &std::collections::HashMap::new(),
             );
             assert_eq!(paragraph_html(&text), rendered.html, "{text}");

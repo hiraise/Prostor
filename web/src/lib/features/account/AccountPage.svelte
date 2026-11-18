@@ -30,7 +30,7 @@
   const user = $derived(account.current && 'tier' in account.current ? account.current : null);
 </script>
 
-<svelte:head><title>{m.accountTitle()} · trackflow</title></svelte:head>
+<svelte:head><title>{m.accountTitle()} · TaskMaster</title></svelte:head>
 
 <PageHeader title={m.accountTitle()} />
 <div class="page">

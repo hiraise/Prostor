@@ -3,7 +3,7 @@
 //! current members.
 
 use sqlx::{PgConnection, PgExecutor};
-use trackflow_domain::{GroupId, ProjectId, UserId};
+use taskmaster_domain::{GroupId, ProjectId, UserId};
 
 /// Creates the team of a new project, named after it.
 pub async fn create(

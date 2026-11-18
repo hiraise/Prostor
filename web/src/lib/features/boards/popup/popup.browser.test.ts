@@ -69,7 +69,11 @@ describe('BRD-079: the issue popup', () => {
     await expect
       .element(popup.getByRole('heading', { name: 'Login form', level: 1 }))
       .toBeVisible();
-    await expect.element(popup.getByRole('button', { name: 'Open the page' })).toBeVisible();
+    // «Открыть страницей» opens a new tab instead of leaving the board.
+    const openPage = popup.getByRole('link', { name: 'Open the page' });
+    await expect.element(openPage).toHaveAttribute('href', '/issues/WEB-101');
+    await expect.element(openPage).toHaveAttribute('target', '_blank');
+    await expect.element(openPage).toHaveAttribute('rel', 'noopener');
     // No breadcrumbs inside the board.
     await expect
       .element(popup.getByRole('navigation', { name: 'Breadcrumbs' }))
@@ -77,6 +81,27 @@ describe('BRD-079: the issue popup', () => {
     await expectAccessible(popup.element());
     await userEvent.keyboard('{Escape}');
     await expect.element(popup).not.toBeInTheDocument();
+  });
+
+  it('«Ещё» → «Команды…» opens the command dialog over the popup (2026-11-15)', async () => {
+    server({
+      'GET /issues/101/page': { body: issuePage(LOGIN) },
+      'POST /commands/assist': { body: { operations: [], problems: [], suggestions: [] } },
+    });
+    const screen = await render(BoardPage, { board: board() });
+    await screen.getByRole('link', { name: 'WEB-101' }).click();
+    const popup = screen.getByRole('dialog', { name: 'WEB-101 Login form' });
+    await popup.getByRole('button', { name: 'More' }).click();
+    await screen.getByRole('menuitem', { name: 'Commands…' }).click();
+    const commands = screen.getByRole('dialog', { name: 'Commands' });
+    await expect.element(commands).toBeVisible();
+    await expect.element(commands.getByRole('combobox', { name: 'Command' })).toBeVisible();
+  });
+
+  it('the `issue` param of the address reopens the card after a reload (2026-11-15)', async () => {
+    server({ 'GET /issues/101/page': { body: issuePage(LOGIN) } });
+    const screen = await render(BoardPage, { board: board(), card: '101' });
+    await expect.element(screen.getByRole('dialog', { name: 'WEB-101 Login form' })).toBeVisible();
   });
 
   it('Ctrl+click keeps the link to the page', async () => {

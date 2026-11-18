@@ -1,13 +1,13 @@
 [package]
-name = "trackflow-testkit"
-description = "Test support for trackflow: a fresh migrated database per test"
+name = "taskmaster-testkit"
+description = "Test support for taskmaster: a fresh migrated database per test"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
-trackflow-store.workspace = true
+taskmaster-store.workspace = true
 sqlx.workspace = true
 tokio.workspace = true
 uuid.workspace = true

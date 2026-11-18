@@ -8,8 +8,8 @@
 //! `project = …` made the planner multiply the two selectivities (D-035).
 
 use sqlx::{Postgres, QueryBuilder};
-use trackflow_domain::access::Projects;
-use trackflow_domain::{GroupId, ProjectId, UserId};
+use taskmaster_domain::access::Projects;
+use taskmaster_domain::{GroupId, ProjectId, UserId};
 
 /// What one viewer may see of issues and of what is inside them.
 #[derive(Debug, Clone, PartialEq, Eq)]

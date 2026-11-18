@@ -18,14 +18,14 @@ use hyper_util::client::legacy::Client;
 use hyper_util::client::legacy::connect::HttpConnector;
 use hyper_util::rt::TokioExecutor;
 use sha2::{Digest, Sha256};
-use trackflow_domain::access::Access;
-use trackflow_domain::access::permission::Permission;
-use trackflow_domain::files::Kind;
-use trackflow_domain::validation::Problem;
-use trackflow_domain::{ProjectId, UploadId, UserId};
-use trackflow_files::FileStore;
-use trackflow_store::uploads::{self, Upload};
-use trackflow_store::{PgPool, projects, users};
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::permission::Permission;
+use taskmaster_domain::files::Kind;
+use taskmaster_domain::validation::Problem;
+use taskmaster_domain::{ProjectId, UploadId, UserId};
+use taskmaster_files::FileStore;
+use taskmaster_store::uploads::{self, Upload};
+use taskmaster_store::{PgPool, projects, users};
 
 use crate::images::{self, Encoded, Unusable};
 use crate::people::{Names, Shown};
@@ -97,7 +97,7 @@ impl Gravatar {
             .map_err(|e| Error::GravatarUnavailable(e.to_string()))?;
         url.set_query(Some("s=256&d=404"));
         let request = http::Request::get(url.as_str())
-            .header(http::header::USER_AGENT, "trackflow")
+            .header(http::header::USER_AGENT, "taskmaster")
             .body(Empty::<Bytes>::new())
             .map_err(|e| Error::GravatarUnavailable(e.to_string()))?;
         let work = async {
@@ -262,7 +262,7 @@ pub async fn import_gravatar(
         .ok_or(Error::NotFound("no such account"))?;
     let email = account.email.ok_or(Error::GravatarNotFound)?;
     let bytes = gravatar.fetch(&email).await?;
-    let kind = trackflow_domain::files::sniff(&bytes);
+    let kind = taskmaster_domain::files::sniff(&bytes);
     if !kind.is_image() {
         return Err(Error::GravatarUnavailable(
             "the answer is not a picture".to_owned(),

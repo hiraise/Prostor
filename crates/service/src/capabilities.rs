@@ -2,12 +2,12 @@
 //! changing them `system.write`.
 
 use serde_json::json;
-use trackflow_domain::GroupId;
-use trackflow_domain::access::Access;
-use trackflow_domain::access::capability::Capability;
-use trackflow_domain::access::permission::Permission;
-use trackflow_domain::validation::Problem;
-use trackflow_store::{PgPool, access as assignments, audit, groups};
+use taskmaster_domain::GroupId;
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::capability::Capability;
+use taskmaster_domain::access::permission::Permission;
+use taskmaster_domain::validation::Problem;
+use taskmaster_store::{PgPool, access as assignments, audit, groups};
 
 use crate::access::changed;
 use crate::{Error, Result};
@@ -61,7 +61,7 @@ pub async fn set(
     let old = assignments::set_capability_groups(&mut tx, capability.key(), &ids).await?;
     audit::record(
         &mut tx,
-        trackflow_domain::Actor::User(actor.user()),
+        taskmaster_domain::Actor::User(actor.user()),
         "capability.changed",
         &format!("capability:{}", capability.key()),
         json!({ "old": old, "new": ids }),

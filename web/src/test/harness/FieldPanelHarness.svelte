@@ -5,12 +5,8 @@
 
   let { id }: { id: number } = $props();
   const row = $derived(issueRow(id));
-
-  function toggle(): void {
-    // The panel stays expanded in these tests.
-  }
 </script>
 
 {#if row}
-  <FieldPanel issue={row} collapsed={false} side="end" ontoggle={toggle} />
+  <FieldPanel issue={row} />
 {/if}

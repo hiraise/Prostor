@@ -3,7 +3,7 @@
 //! comments and project descriptions.
 
 use sqlx::{PgConnection, PgExecutor};
-use trackflow_domain::{CommentId, FieldId, IssueId, ProjectId, UserId};
+use taskmaster_domain::{CommentId, FieldId, IssueId, ProjectId, UserId};
 
 /// A text rendered by the crate `markup`.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]

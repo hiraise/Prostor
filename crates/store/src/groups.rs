@@ -1,10 +1,10 @@
 //! Groups and their members (ACC-021…ACC-032). Members of the built-in groups are implicit
-//! (`trackflow_domain::access::group::BuiltinGroup`): queries add them instead of storing a row per
+//! (`taskmaster_domain::access::group::BuiltinGroup`): queries add them instead of storing a row per
 //! account.
 
 use sqlx::{PgConnection, PgExecutor};
+use taskmaster_domain::{GroupId, ProjectId, UserId};
 use time::OffsetDateTime;
-use trackflow_domain::{GroupId, ProjectId, UserId};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Group {

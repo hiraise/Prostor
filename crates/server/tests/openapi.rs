@@ -9,8 +9,8 @@ const DOCUMENT: &str = concat!(
 
 #[test]
 fn int_056_the_committed_api_document_is_current() {
-    let current = serde_json::to_string_pretty(&trackflow_server::openapi()).unwrap() + "\n";
-    if std::env::var_os("TRACKFLOW_UPDATE_API").is_some() {
+    let current = serde_json::to_string_pretty(&taskmaster_server::openapi()).unwrap() + "\n";
+    if std::env::var_os("TASKMASTER_UPDATE_API").is_some() {
         std::fs::write(DOCUMENT, &current).unwrap();
         return;
     }

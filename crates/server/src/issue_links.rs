@@ -1,25 +1,25 @@
 //! `/link-types` and `/issues/{id}/links`: link types and their administration, the links of an
-//! issue (LNK). Rules and flows live in `trackflow_service::issue_links`.
+//! issue (LNK). Rules and flows live in `taskmaster_service::issue_links`.
 
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use trackflow_api::error::ErrorBody;
-use trackflow_api::links::{
+use taskmaster_api::error::ErrorBody;
+use taskmaster_api::links::{
     AddLinks, BuiltinLinkType, IssueBrief, IssueLinks, LinkDirection, LinkGroup, LinkSide,
     LinkType, LinkTypeImpact, LinkTypeList, LinkTypePatch, LinkTypeRef, LinkedIssue, LinksAdded,
     LinksRemoved, NewLinkType, RemoveLinkQuery,
 };
-use trackflow_api::page::{PageQuery, encode_cursor};
-use trackflow_domain::auth::Scope;
-use trackflow_domain::issues;
-use trackflow_domain::links::{BuiltinType, Direction, Side};
-use trackflow_domain::{IssueId, LinkId, LinkTypeId};
-use trackflow_service::issue_links::{
+use taskmaster_api::page::{PageQuery, encode_cursor};
+use taskmaster_domain::auth::Scope;
+use taskmaster_domain::issues;
+use taskmaster_domain::links::{BuiltinType, Direction, Side};
+use taskmaster_domain::{IssueId, LinkId, LinkTypeId};
+use taskmaster_service::issue_links::{
     self as service, Group, GroupCursor, NewLinks, Panel, TypeInput, TypeRow, TypeUpdate,
 };
-use trackflow_store::links::{LinkType as StoredType, Linked};
-use trackflow_store::projects::Project;
+use taskmaster_store::links::{LinkType as StoredType, Linked};
+use taskmaster_store::projects::Project;
 
 use crate::AppState;
 use crate::access::Viewer;

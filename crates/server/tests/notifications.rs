@@ -6,8 +6,8 @@ use std::time::Duration;
 
 use axum::http::{Method, StatusCode};
 use serde_json::{Value, json};
+use taskmaster_server::throttle::Throttle;
 use time::OffsetDateTime;
-use trackflow_server::throttle::Throttle;
 
 mod common;
 
@@ -120,10 +120,10 @@ impl World {
 
     /// Fires the sweep past the batching window, as its task would.
     async fn fire(&self) {
-        trackflow_service::notifications::sweep(
+        taskmaster_service::notifications::sweep(
             &self.node.state.db,
             OffsetDateTime::now_utc() + Duration::from_secs(70),
-            &trackflow_service::mail::Outgoing::default(),
+            &taskmaster_service::mail::Outgoing::default(),
         )
         .await
         .unwrap();

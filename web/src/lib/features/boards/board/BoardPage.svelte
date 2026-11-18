@@ -54,7 +54,7 @@
   import BoardGrid from './BoardGrid.svelte';
   import BoardToolbar from './BoardToolbar.svelte';
   import HealthNotice from './HealthNotice.svelte';
-  import { boardAddress, headerFilter } from './header-filter.svelte.ts';
+  import { boardAddress, cardAddress, headerFilter } from './header-filter.svelte.ts';
   import { BoardLive, type LiveSource } from './live.svelte.ts';
   import { BoardZoom, type Zoom } from './zoom.svelte.ts';
 
@@ -68,11 +68,21 @@
     sprint?: number | null;
     /** The header filter of the address; `null` when it has none. */
     q?: string | null;
+    /** The `issue` param of the address — the card whose popup reopens (2026-11-15). */
+    card?: string | null;
     /** The current time, for tests of the schedule. */
     now?: number;
   }
 
-  let { board, openSettings = false, live, sprint = null, q = null, now }: Props = $props();
+  let {
+    board,
+    openSettings = false,
+    live,
+    sprint = null,
+    q = null,
+    card = null,
+    now,
+  }: Props = $props();
 
   // The address's filter, else the one kept from another board.
   const query = $derived(q ?? headerFilter.value);
@@ -136,12 +146,31 @@
   // The filter changes the address in place: no new history entry, focus and scroll stay.
   const IN_PLACE = { replace: true, reset: false } as const;
 
-  // A filter kept from another board joins the address.
+  // A filter kept from another board joins the address; the card of the address reopens.
   onMount(() => {
     if (q === null && headerFilter.value !== '') {
       // eslint-disable-next-line svelte/no-navigation-without-resolve -- boardAddress() resolves
       void goto(boardAddress(board.id, sprint, headerFilter.value), IN_PLACE);
     }
+    const reopen = Number(card);
+    if (card !== null && Number.isSafeInteger(reopen) && reopen > 0) model.openIssue(reopen);
+  });
+
+  // The open card joins the address in place, so a reload reopens it (2026-11-15). Only the
+  // popup's own changes write: the board's navigations (a sprint or filter change) close the
+  // popup with the remount and own their addresses themselves.
+  let addressedCard: number | null = null;
+  $effect(() => {
+    const open = model.popup?.issue ?? null;
+    if (open === addressedCard) return;
+    addressedCard = open;
+    const base = boardAddress(
+      board.id,
+      untrack(() => chosen),
+      untrack(() => query),
+    );
+    // eslint-disable-next-line svelte/no-navigation-without-resolve -- boardAddress() resolves
+    void goto(cardAddress(base, open), IN_PLACE);
   });
 
   function search(text: string): void {
@@ -211,7 +240,7 @@
   const zoom = $derived(narrow.current ? zoomed.value : null);
 
   // The backlog panel (BRD-089): open or closed is kept in this browser per board.
-  const backlogKey = (id: number) => `trackflow.board-backlog.${String(id)}`;
+  const backlogKey = (id: number) => `taskmaster.board-backlog.${String(id)}`;
   let backlogOpen = $state(untrack(() => readStored(backlogKey(board.id)) === 'open'));
   const backlog = $derived(new BacklogState(board.id));
   $effect(() => {
@@ -334,7 +363,7 @@
   />
 {/snippet}
 
-<svelte:head><title>{board.name} · trackflow</title></svelte:head>
+<svelte:head><title>{board.name} · TaskMaster</title></svelte:head>
 
 <div class="page">
   {#if model.gone}
@@ -547,7 +576,11 @@
   }
 
   h1 {
+    /* Grows over the free row, so the switcher's `max-width: 100%` has a definite width to
+       resolve against; a genuinely long name still ellipsizes inside it. */
+    flex: 1 1 auto;
     min-width: 0;
+    max-width: 100%;
     font-size: var(--text-xl);
   }
 

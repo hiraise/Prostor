@@ -45,7 +45,9 @@ test('HIST-001, CNT-001, CNT-005, CNT-017, CNT-020, CNT-022, CNT-054, LNK-005, L
     page.getByRole('heading', { level: 1, name: 'Checkout button is slow' }),
   ).toBeVisible();
 
-  // CNT-001, CNT-054, CNT-017: a comment with a mention and a dropped file.
+  // CNT-001, CNT-054, CNT-017: a comment with a mention and a dropped file. The box opens
+  // from its resting line; a sent comment folds it back.
+  await page.getByRole('button', { name: 'Write a comment…' }).click();
   const box = page.getByRole('form', { name: 'New comment' });
   const field = box.getByRole('textbox', { name: /^Comment/ });
   await field.fill('Slow for ');
@@ -67,7 +69,7 @@ test('HIST-001, CNT-001, CNT-005, CNT-017, CNT-020, CNT-022, CNT-054, LNK-005, L
   await expect(card).toBeVisible();
   await expect(card.getByText(new RegExp(ADMIN.fullName)).first()).toBeVisible();
   await expect(card.getByText('trace.txt').first()).toBeVisible();
-  await expect(field).toHaveValue('');
+  await expect(page.getByRole('button', { name: 'Write a comment…' })).toBeVisible();
 
   // CNT-003, CNT-005: edit, delete and restore it.
   await card.getByRole('button', { name: 'Comment actions' }).click();
@@ -104,10 +106,8 @@ test('HIST-001, CNT-001, CNT-005, CNT-017, CNT-020, CNT-022, CNT-054, LNK-005, L
     .click();
   await expect(open).toBeHidden();
 
-  // LNK-005, LNK-008: link the two issues, then remove the link.
-  if (phone) await fromMenu(page, 'Link');
-  else
-    await page.getByRole('main').getByRole('button', { name: 'Link', exact: true }).first().click();
+  // LNK-005, LNK-008: link the two issues, then remove the link (the link icon in the title row).
+  await page.getByRole('main').getByRole('button', { name: 'Link', exact: true }).first().click();
   const dialog = page.getByRole('dialog', { name: 'Link issues' });
   await dialog.getByRole('searchbox', { name: 'Find an issue' }).fill('Payment provider');
   await dialog.getByRole('checkbox', { name: new RegExp(other.readable_id ?? '') }).click();
@@ -149,7 +149,7 @@ test('HIST-001, CNT-001, CNT-005, CNT-017, CNT-020, CNT-022, CNT-054, LNK-005, L
   }
   const panel = page.getByRole('complementary', { name: 'Fields' });
   await expect(fieldButton(panel, 'Priority')).toHaveText(/High/);
-  // The comment box is at the stream's newest end, so the new comment is appended or announced.
+  // The comment box sits above the entries, so the new comment is appended or announced.
   const shown = page.getByRole('article').filter({ hasText: 'Reproduced on the staging server' });
   const notice = page.getByRole('button', { name: 'Show', exact: true });
   await expect(shown.or(notice)).toBeVisible();
@@ -164,7 +164,7 @@ test('HIST-001, CNT-001, CNT-005, CNT-017, CNT-020, CNT-022, CNT-054, LNK-005, L
   await expect(
     page.getByRole('heading', { level: 1, name: 'Measure the checkout time' }),
   ).toBeVisible();
-  // The parent above the metadata, and in the links panel.
+  // The parent under the title, and in the links panel.
   const parent = page.getByRole('paragraph').filter({ hasText: 'Subtask of' });
   await expect(
     parent.getByRole('link', { name: new RegExp(main.readable_id ?? '') }),

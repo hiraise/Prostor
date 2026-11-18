@@ -152,7 +152,7 @@
 </script>
 
 <svelte:head>
-  <title>{field?.name ?? m.fieldsTitle()} · trackflow</title>
+  <title>{field?.name ?? m.fieldsTitle()} · TaskMaster</title>
 </svelte:head>
 
 {#if !canSeeFields()}

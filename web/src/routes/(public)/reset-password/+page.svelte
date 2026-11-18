@@ -17,7 +17,7 @@
   }
 </script>
 
-<svelte:head><title>{m.resetTitle()} · trackflow</title></svelte:head>
+<svelte:head><title>{m.resetTitle()} · TaskMaster</title></svelte:head>
 
 <PublicFrame title={m.resetTitle()}>
   <ResetPasswordForm ondone={done} />

@@ -5,14 +5,23 @@
   // are a table on wide screens and cards on phones, with the person's columns (QRY-075…QRY-078).
   import PanelLeft from '@lucide/svelte/icons/panel-left';
   import SearchX from '@lucide/svelte/icons/search-x';
-  import { untrack } from 'svelte';
-  import { MediaQuery } from 'svelte/reactivity';
+  import { goto } from '$app/navigation';
+  import { onMount, untrack } from 'svelte';
+  import { MediaQuery, SvelteMap } from 'svelte/reactivity';
 
   import type { FieldRef, Issue, IssueCount, QueryProblem } from '#lib/api/schema.gen.ts';
   import { loadQueryEngine } from '#lib/query/index.ts';
+  import {
+    claim,
+    enter,
+    leave,
+    setFocusedEntity,
+    type FocusedEntity,
+  } from '#lib/shortcuts/registry.svelte.ts';
   import { preferences } from '#lib/session/index.ts';
   import { liveConnection, type ListHandle, type LiveSource } from '#lib/store/index.ts';
   import { NARROW } from '#lib/theme/breakpoints.ts';
+  import { announce } from '#lib/ui/announce.svelte.ts';
   import { projectHref } from '#lib/features/projects/index.ts';
   import Breadcrumbs from '#lib/ui/Breadcrumbs.svelte';
   import Button from '#lib/ui/Button.svelte';
@@ -26,23 +35,35 @@
   import TextField from '#lib/ui/TextField.svelte';
   import { showError, toasts } from '#lib/ui/toast.svelte.ts';
 
+  import { assignToMe, setStar } from '../actions.ts';
+  import CommandDialog from '../commands/CommandDialog.svelte';
+  import { recentCommands } from '../commands/recent.svelte.ts';
+  import { issueHref } from '../issues.ts';
   import ColumnsDialog from './ColumnsDialog.svelte';
   import { defaultColumns, issueFields, shownColumns, type ShownColumn } from './columns.ts';
+  import { createRowKeys } from './keyboard.ts';
   import IssueCard from './IssueCard.svelte';
   import IssueTable from './IssueTable.svelte';
   import {
     contextOf,
     copiedHref,
     frozenQuery,
+    ListFocus,
+    ListSelection,
     type ListContext,
     type ListParams,
     type ResolvedContext,
-  } from './list-state.ts';
+  } from './list-state.svelte.ts';
   import * as m from './messages.ts';
   import QueryBar from './QueryBar.svelte';
+  import SelectionBar from './SelectionBar.svelte';
+  import SelectionPicker from './SelectionPicker.svelte';
+  import { exportIssues, type ExportFormat } from './export.ts';
   import {
     countSearch,
     ensureSearch,
+    params,
+    PAGE,
     queryProblems,
     saveSearch,
     searchMeta,
@@ -178,6 +199,21 @@
 
   let showConditions = $state(false);
 
+  // Applying commands (step 2.1 §6, CMD-026; step 2.2 §8.2): the query's worth from the header's
+  // «Применить команду ко всем…», or the selection from the toolbar — explicit IDs while a page's
+  // worth is chosen, the bulk job once everything the query matches is.
+  let commanding = $state(false);
+  /** What an open dialog applies to. */
+  let commandTarget = $state<'query' | 'selection'>('query');
+  /** The line the dialog opens with; `undefined` shows the last applied one. */
+  let commandPreset = $state<string | undefined>(undefined);
+
+  function openCommands(on: 'query' | 'selection', preset?: string): void {
+    commandTarget = on;
+    commandPreset = preset;
+    commanding = true;
+  }
+
   // Columns (QRY-075, QRY-078): the person's, or ID, summary and three fields of the context.
   const narrow = new MediaQuery(NARROW, false);
   const contextProject = $derived(context.kind === 'project' ? context.id : null);
@@ -264,6 +300,233 @@
     } catch (error) {
       showError(error);
     }
+  }
+
+  // ---- The list on the keyboard (step 2.2 §6, QRY-085, UI-022) ----
+
+  /** The rows live under this element; the roving focus finds a row's element by its issue ID. */
+  let pageEl: HTMLElement | undefined = $state();
+  const focus = new ListFocus();
+
+  /** Moves the roving focus (§6): the row's element takes the DOM focus — which scrolls it into
+   * view — and the move is announced politely. */
+  function focusRow(id: number | null): void {
+    focus.current = id;
+    if (id === null) return;
+    const row = list?.items.find((issue) => issue.id === id);
+    pageEl?.querySelector<HTMLElement>(`[data-row="${String(id)}"]`)?.focus();
+    if (row) {
+      announce(m.focusedRow({ id: row.readable_id ?? String(row.id), summary: row.summary }));
+    }
+  }
+
+  /** `,` and `.` (§6): one page of rows back or forward; the step past what is loaded brings the
+   * next page in and lands on its first row. */
+  function turnPage(step: 1 | -1): void {
+    const shown = list?.items ?? [];
+    if (shown.length === 0) return;
+    const at = shown.findIndex((row) => row.id === focus.current);
+    const next = Math.floor((at === -1 ? 0 : at) / PAGE) + step;
+    if (next < 0) return;
+    const target = next * PAGE;
+    const landed = shown[target];
+    if (landed) {
+      focusRow(landed.id);
+      return;
+    }
+    if (!list?.hasMore) return;
+    void list
+      .loadMore()
+      .then(() => {
+        const loaded = list?.items[target];
+        // The row renders with the loaded page; its element takes the focus one frame later.
+        if (loaded) requestAnimationFrame(() => focusRow(loaded.id));
+      })
+      .catch(() => undefined);
+  }
+
+  /** `b` (§6): the sidebar hides or shows; on a phone it is the drawer. */
+  function toggleSidebar(): void {
+    if (narrow.current) {
+      drawer = !drawer;
+      return;
+    }
+    preferences.set({ list_sidebar: sidebarMode === 'closed' ? 'open' : 'closed' });
+  }
+
+  /** The rows' shared keys (§6): the actions are the ones `RowMenu` and `RowStar` call. */
+  const rowKeys = createRowKeys({
+    rows: () => list?.items ?? [],
+    focus: focusRow,
+    open: (row: Issue, newTab: boolean) => {
+      if (newTab) window.open(issueHref(row), '_blank');
+      // eslint-disable-next-line svelte/no-navigation-without-resolve -- issueHref resolves it.
+      else void goto(issueHref(row));
+    },
+    // eslint-disable-next-line svelte/no-navigation-without-resolve -- issueHref resolves it.
+    edit: (row: Issue) => void goto(`${issueHref(row)}?edit`),
+    star: (row: Issue) => {
+      setStar(row, !row.starred).catch((error: unknown) => {
+        showError(error);
+      });
+    },
+    assignMe: assignToMe,
+    sidebar: toggleSidebar,
+    page: turnPage,
+    select: {
+      toggle: toggleSelection,
+      extend: extendSelection,
+      page: choosePage,
+    },
+  });
+
+  // The list's context (§6): the framework's global keys act here — the copy trio works on the
+  // focused row — and the overlay lists the list's keys while this page is shown. The lifecycle,
+  // not an effect: `enter` mutates the registry's reactive stack, and an effect that touches it
+  // would never settle. The command combo (§8.2) is claimed for the selection; with none chosen
+  // it opens the header's flow over the query, and bare letters wait for a selection.
+  onMount(() => {
+    enter('list');
+    setFocusedEntity(() => entityOf(focus.current));
+    const releaseCommand = claim('command', (preset?: string) => {
+      if (preset !== undefined && selection.empty) return false;
+      // With nothing chosen the combo still opens — over the query, as the header's entry does.
+      openCommands(selection.empty ? 'query' : 'selection', preset);
+    });
+    const releaseRepeat = claim('command.repeat', () => {
+      if (selection.empty || recentCommands.last() === null) return false;
+      openCommands('selection', recentCommands.last() ?? undefined);
+    });
+    return () => {
+      leave('list');
+      setFocusedEntity(null);
+      releaseCommand();
+      releaseRepeat();
+    };
+  });
+
+  // ---- The selection and its toolbar (step 2.2 §8, QRY-083, QRY-084) ----
+
+  const selection = new ListSelection();
+  /** The phone's selection mode (§8.1): «Выбрать» in the list's settings menu turns it on. */
+  let choosingRows = $state(false);
+
+  const pageIds = $derived((list?.items ?? []).map((issue) => issue.id));
+  /** The rows the list has shown, by ID: a chosen row keeps its issue for the command dialog even
+   * after a refresh takes it off the page (§8.1 — the selection survives by IDs). A `SvelteMap`,
+   * not `$state`: Svelte's deep proxy does not take collections. */
+  const known = new SvelteMap<number, Issue>();
+  $effect(() => {
+    for (const issue of list?.items ?? []) known.set(issue.id, issue);
+  });
+  const chosenIssues = $derived.by(() =>
+    selection.idsOf().flatMap((id) => {
+      const issue = known.get(id);
+      return issue === undefined ? [] : [issue];
+    }),
+  );
+  const chosenCount = $derived(
+    selection.allMatching ? (shownCount ?? selection.size) : selection.size,
+  );
+  /** The offer of §8.1: more issues match than the page shows. */
+  const matchingOffer = $derived(
+    !selection.allMatching && shownCount !== null && shownCount > pageIds.length
+      ? shownCount
+      : null,
+  );
+  /** «Удалить» needs the delete right on something chosen; the server checks anyway (§8.2). */
+  const canDeleteChosen = $derived(selection.allMatching || chosenIssues.some((i) => i.can.delete));
+
+  // The toolbar's pickers (step 2.2 §8.3, QRY-084): which of the three is open, and the right
+  // their flows need — the same rule as «Удалить»'s, for the update right. The kind stays while
+  // the dialog closes, so its title does not flash to another picker's.
+  let picking = $state(false);
+  let pickerKind = $state<'tag' | 'assignee' | 'link'>('tag');
+  const canChangeChosen = $derived(selection.allMatching || chosenIssues.some((i) => i.can.update));
+  /** The assignee field's name as the person sees it; the picker's line names the field (§8.3). */
+  const assigneeFieldName = $derived(
+    allFields.find((field) => field.builtin === 'assignee')?.name ?? null,
+  );
+
+  function openPicker(kind: 'tag' | 'assignee' | 'link'): void {
+    pickerKind = kind;
+    picking = true;
+  }
+
+  /** The count of the new state, politely (§8.1) — every change of the selection passes here. */
+  function announceSelection(): void {
+    announce(m.selectedCount({ count: chosenCount }));
+  }
+
+  function toggleSelection(row: Issue): void {
+    selection.click(row.id, pageIds);
+    announceSelection();
+  }
+
+  /** `Shift+↑/↓` (§8.1): the focus moves, the range reaches the row it lands on. */
+  function extendSelection(row: Issue, step: 1 | -1): void {
+    const shown = list?.items ?? [];
+    const at = shown.findIndex((issue) => issue.id === row.id);
+    const landed = shown[at + step];
+    if (!landed) return;
+    focusRow(landed.id);
+    selection.keyExtend(row.id, landed.id, pageIds);
+    announceSelection();
+  }
+
+  /** `Ctrl/⌘+A` (§8.1): the page's issues chosen; the toolbar then offers all matching. */
+  function choosePage(): void {
+    selection.selectPage(true, pageIds);
+    announceSelection();
+  }
+
+  function takeAllMatching(): void {
+    selection.selectAllMatching();
+    announceSelection();
+  }
+
+  /** «Снять выделение» — on a phone it also leaves the selection mode (§8.1). */
+  function clearChosen(): void {
+    selection.clear();
+    choosingRows = false;
+    announceSelection();
+  }
+
+  // The toolbar's export (§9, QRY-084): the chosen issues, or — when everything matches — the
+  // query as the list runs it. Fewer rows in the file than matches is the cap or invisible
+  // issues; the note says so, the counts come from the answer's headers.
+  let exporting = $state<ExportFormat | null>(null);
+
+  async function exportChosen(format: ExportFormat): Promise<void> {
+    exporting = format;
+    try {
+      const done = await exportIssues(
+        selection.allMatching
+          ? { query: { ...params(spec), hide_resolved: spec.hideResolved || undefined }, format }
+          : { ids: selection.idsOf(), format },
+      );
+      if (done.exported !== null && done.total !== null && done.exported < done.total) {
+        toasts.show({
+          tone: 'info',
+          message: m.exportTruncated({ exported: done.exported, total: done.total }),
+        });
+      }
+    } catch (error) {
+      showError(error);
+    } finally {
+      exporting = null;
+    }
+  }
+
+  function toggleChoosing(): void {
+    if (choosingRows) selection.clear();
+    choosingRows = !choosingRows;
+  }
+
+  function entityOf(id: number | null): FocusedEntity | null {
+    const row = id === null ? null : (list?.items.find((issue) => issue.id === id) ?? null);
+    if (row === null) return null;
+    return { id: row.readable_id ?? String(row.id), href: issueHref(row), summary: row.summary };
   }
 
   // Saving (QRY-054).
@@ -365,7 +628,7 @@
       {/snippet}
     </PageHeader>
 
-    <div class="page">
+    <div class="page" bind:this={pageEl}>
       <QueryBar
         {q}
         {context}
@@ -382,6 +645,19 @@
         oncopylink={() => void copy()}
         oncolumns={() => {
           choosing = true;
+        }}
+        applyAll={shownCount === null ? null : { count: shownCount }}
+        onapplyall={() => {
+          openCommands('query');
+        }}
+        onselect={narrow.current ? toggleChoosing : undefined}
+        selecting={choosingRows}
+        ontolist={() => {
+          // Tab enters the list at its first row (§6); without rows the key moves on.
+          const first = list?.items[0];
+          if (!first) return false;
+          focusRow(first.id);
+          return true;
         }}
       />
 
@@ -469,12 +745,69 @@
         </Notice>
       {/if}
 
+      <!-- The toolbar of the selection (§8.2): a bar over the rows, a bottom sheet on a phone. -->
+      {#if !selection.empty}
+        <SelectionBar
+          count={chosenCount}
+          allMatching={selection.allMatching}
+          matching={matchingOffer}
+          canDelete={canDeleteChosen}
+          canChange={canChangeChosen}
+          oncommands={() => openCommands('selection')}
+          onlink={() => openPicker('link')}
+          ontag={() => openPicker('tag')}
+          onassignee={() => openPicker('assignee')}
+          onexport={(format: ExportFormat) => void exportChosen(format)}
+          {exporting}
+          ondelete={() => openCommands('selection', 'delete')}
+          onclear={clearChosen}
+          onallmatching={takeAllMatching}
+        />
+      {/if}
+
       {#if refused === null && list}
         {#if list.ids.length > 0}
           {#if narrow.current}
             <ul class="rows" aria-label={m.rows()} aria-busy={list.refreshing}>
-              {#each list.items as issue (issue.id)}
-                <li class="row"><IssueCard {issue} {columns} /></li>
+              {#each list.items as issue, index (issue.id)}
+                {@const tab =
+                  focus.current === null
+                    ? index === 0
+                      ? 0
+                      : -1
+                    : focus.current === issue.id
+                      ? 0
+                      : -1}
+                <!-- A card is the row of the keyboard (§6): roving tabindex carries the list's
+                     keys to an attached keyboard, as the table's grid does on a wide screen. In
+                     the selection mode of §8.1 its checkbox comes before the card. -->
+                <!-- svelte-ignore a11y_no_noninteractive_tabindex, a11y_no_noninteractive_element_interactions -->
+                <li
+                  class="row"
+                  class:choosing={choosingRows}
+                  data-row={issue.id}
+                  tabindex={tab}
+                  onfocusin={() => {
+                    focus.current = issue.id;
+                  }}
+                  onkeydown={(event: KeyboardEvent) => {
+                    rowKeys(event, issue);
+                  }}
+                >
+                  {#if choosingRows}
+                    <input
+                      type="checkbox"
+                      class="choose"
+                      checked={selection.has(issue.id)}
+                      aria-label={m.selectRow({ id: issue.readable_id ?? String(issue.id) })}
+                      onclick={(event: MouseEvent) => {
+                        selection.click(issue.id, pageIds, event.shiftKey);
+                        announceSelection();
+                      }}
+                    />
+                  {/if}
+                  <IssueCard {issue} {columns} />
+                </li>
               {/each}
             </ul>
           {:else}
@@ -484,6 +817,10 @@
               sort={meta?.sort ?? []}
               busy={list.refreshing}
               onsort={(column: ShownColumn) => void sortBy(column)}
+              {focus}
+              onrowkeydown={rowKeys}
+              {selection}
+              onselected={announceSelection}
             />
           {/if}
           {#if list.hasMore}
@@ -521,6 +858,11 @@
           </EmptyState>
         {/if}
       {/if}
+      <!-- The phone's fixed sheet (§8.1): the list ends with room for it, so its last rows and
+           «Показать ещё» stay reachable above the sheet. -->
+      {#if !selection.empty && narrow.current}
+        <div class="sheet-space" aria-hidden="true"></div>
+      {/if}
     </div>
   </div>
 </div>
@@ -550,6 +892,33 @@
     <Button variant="primary" type="submit" form="{id}-save" loading={saving}>{m.save()}</Button>
   {/snippet}
 </Dialog>
+
+<CommandDialog
+  bind:open={commanding}
+  preset={commandPreset}
+  issues={commandTarget === 'selection' && !selection.allMatching ? chosenIssues : []}
+  bulk={commandTarget === 'query' || selection.allMatching
+    ? {
+        query: q,
+        project: contextProject,
+        hideResolved,
+        count: shownCount ?? 0,
+      }
+    : null}
+  onclose={() => {
+    commanding = false;
+  }}
+/>
+
+<!-- The toolbar's pickers (§8.3): a choice becomes the line the dialog above previews. -->
+<SelectionPicker
+  bind:open={picking}
+  mode={pickerKind}
+  assigneeName={assigneeFieldName}
+  onchosen={(line: string) => {
+    openCommands('selection', line);
+  }}
+/>
 
 <ColumnsDialog
   bind:open={choosing}
@@ -635,10 +1004,31 @@
     border-top: 1px solid var(--color-border);
   }
 
+  /* The selection mode of §8.1: the card's checkbox before it, on the row's top line. */
+  .row.choosing {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-2);
+    padding-inline-start: var(--space-2);
+  }
+
+  .row.choosing .choose {
+    /* A 44 px target the thumb reaches (D-019); the card keeps its own padding. */
+    min-width: 44px;
+    min-height: 44px;
+    margin: var(--space-1) 0 0;
+    accent-color: var(--color-ink);
+  }
+
   .more,
   .loading {
     display: flex;
     justify-content: center;
+  }
+
+  /* The sheet publishes its height on the body; the spacer matches it (§8.1). */
+  .sheet-space {
+    height: var(--selection-sheet, 0px);
   }
 
   .hints {

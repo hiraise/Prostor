@@ -10,6 +10,7 @@ pub mod admin;
 pub mod auth;
 pub mod boards;
 pub mod bootstrap;
+pub mod commands;
 pub mod comments;
 pub mod content;
 pub mod error;

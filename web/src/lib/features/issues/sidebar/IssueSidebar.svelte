@@ -22,7 +22,7 @@
   import Resizer from '#lib/ui/Resizer.svelte';
   import { showError, toasts } from '#lib/ui/toast.svelte.ts';
 
-  import { listHref, type ListContext, type ResolvedContext } from '../list/list-state.ts';
+  import { listHref, type ListContext, type ResolvedContext } from '../list/list-state.svelte.ts';
   import { newIssueDialog, openNewIssue } from '../new/open.svelte.ts';
   import * as m from './messages.ts';
   import SearchDialog from './SearchDialog.svelte';
@@ -656,6 +656,14 @@
     margin-top: var(--space-3);
   }
 
+  /* Without the reset the browser default `padding-inline-start: 40px` pushed every child far
+     right of its heading. Items start under the heading's first letter: the panel edge plus the
+     fold's padding, the 16px caret and its gap (`--space-2` + 16px + `--space-1` = 28px). */
+  .items {
+    margin: 0;
+    padding: 0;
+  }
+
   .heading {
     font-size: var(--text-sm);
   }
@@ -692,7 +700,7 @@
     gap: var(--space-2);
     min-width: 0;
     min-height: var(--control-sm);
-    padding: 0 var(--space-2) 0 var(--space-6);
+    padding: 0 var(--space-2) 0 calc(var(--space-6) + var(--space-1));
     border: 0;
     border-radius: var(--radius-md);
     background: none;
@@ -739,13 +747,13 @@
   }
 
   .none {
-    padding: var(--space-1) var(--space-2) var(--space-1) var(--space-6);
+    padding: var(--space-1) var(--space-2) var(--space-1) calc(var(--space-6) + var(--space-1));
     color: var(--color-text-muted);
     font-size: var(--text-sm);
   }
 
   .all {
-    padding-inline-start: var(--space-4);
+    padding-inline-start: calc(var(--space-6) + var(--space-1));
   }
 
   .failed {

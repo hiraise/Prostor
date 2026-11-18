@@ -399,6 +399,46 @@ pub struct IssueCount {
     pub unresolved: i64,
 }
 
+/// What one export runs on besides its format (QRY-084): the chosen issues, or the whole query.
+#[derive(Debug, Clone, PartialEq, Eq, Deserialize, ToSchema)]
+pub struct ExportRequest {
+    /// The chosen issues. Invisible ones are skipped and still counted in the answer's
+    /// `X-Total-Count`; more than the cap truncates the file. Exactly one of `ids` and `query`.
+    #[serde(default)]
+    pub ids: Vec<i64>,
+    /// Everything this query matches, as the list shows it. Exactly one of `ids` and `query`.
+    #[serde(default)]
+    pub query: Option<ExportQuery>,
+    pub format: ExportFormat,
+}
+
+/// The query an export runs on: the list's own parameters.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Deserialize, ToSchema)]
+pub struct ExportQuery {
+    /// The query text; empty is every issue the caller may see.
+    #[serde(default)]
+    pub q: String,
+    #[serde(default)]
+    pub project: Option<i64>,
+    #[serde(default)]
+    pub tag: Option<i64>,
+    #[serde(default)]
+    pub saved_search: Option<i64>,
+    #[serde(default)]
+    pub hide_resolved: bool,
+    /// IANA zone that dates such as `today` are read in; the instance's zone by default.
+    #[serde(default)]
+    pub time_zone: Option<String>,
+}
+
+/// The file format of an export (QRY-084).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, ToSchema)]
+#[serde(rename_all = "snake_case")]
+pub enum ExportFormat {
+    Csv,
+    Xlsx,
+}
+
 /// Whom the audience picker offers (ISS-043).
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 pub struct AudienceCandidates {

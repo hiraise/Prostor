@@ -560,7 +560,7 @@ describe('RolePage', () => {
       .element(screen.getByRole('heading', { level: 1 }))
       .toHaveTextContent('Участник проекта');
     await expect
-      .element(screen.getByText('Эта роль встроена в trackflow', { exact: false }))
+      .element(screen.getByText('Эта роль встроена в TaskMaster', { exact: false }))
       .toBeVisible();
     await expect.element(screen.getByText('Включено 18 из 34')).toBeVisible();
     const boxes = screen.getByRole('checkbox').elements();
@@ -661,11 +661,13 @@ describe('RolePage', () => {
       .toHaveTextContent('Release team (group) · Project 3');
     await expectAccessible(dialog.element());
 
-    // The last way to administer trackflow cannot go.
+    // The last way to administer TaskMaster cannot go.
     await dialog.getByRole('button', { name: 'Delete role' }).click();
     await expect
       .element(
-        dialog.getByText('This would leave nobody able to administer trackflow.', { exact: false }),
+        dialog.getByText('This would leave nobody able to administer TaskMaster.', {
+          exact: false,
+        }),
       )
       .toBeVisible();
     expect(ondeleted).not.toHaveBeenCalled();

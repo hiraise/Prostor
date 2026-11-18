@@ -4,7 +4,7 @@
   import PublicFrame from '#lib/shell/PublicFrame.svelte';
 </script>
 
-<svelte:head><title>{m.verifyTitle()} · trackflow</title></svelte:head>
+<svelte:head><title>{m.verifyTitle()} · TaskMaster</title></svelte:head>
 
 <PublicFrame title={m.verifyTitle()}>
   <VerifyEmail />

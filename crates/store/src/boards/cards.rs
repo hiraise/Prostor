@@ -2,7 +2,7 @@
 //! `(rank, issue_id)`, unranked last; two cards may share a rank after concurrent drops.
 
 use sqlx::{PgConnection, PgExecutor};
-use trackflow_domain::{BoardId, IssueId, SprintId};
+use taskmaster_domain::{BoardId, IssueId, SprintId};
 
 /// Where an issue stands on one board: a sprint and its rank there.
 #[derive(Debug, Clone, PartialEq, Eq)]

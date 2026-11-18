@@ -1,43 +1,47 @@
 //! `/issues` and `/tags`: issues and drafts, their fields, audience, moves, stars, votes, tags and
-//! activity stream (ISS, HIST). Rules and flows live in `trackflow_service::issues`.
+//! activity stream (ISS, HIST). Rules and flows live in `taskmaster_service::issues`.
 
+use axum::body::Body;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
+use axum::http::header::{self, HeaderName, HeaderValue};
 use axum::response::{IntoResponse, Response};
 use serde_json::Value as Json;
-use trackflow_api::error::ErrorBody;
-use trackflow_api::fields::{FieldRef, IssueImpact};
-use trackflow_api::issues::{
+use taskmaster_api::error::ErrorBody;
+use taskmaster_api::fields::{FieldRef, IssueImpact};
+use taskmaster_api::issues::{
     ActivityDirection, ActivityItem, ActivityPage, ActivityQuery, Audience, AudienceCandidates,
     CandidateQuery, ChangeValues, CloneDraftsAnswer, CloneDraftsRequest, CloneOfRef, CommentItem,
-    FieldOptions, FieldOptionsQuery, FieldValueChange, FieldValueInput, FieldValuesChange,
-    HeldValue, HistoryItem, HistoryKind, HistoryOrigin, Issue, IssueAbilities, IssueAnswer,
-    IssueBatch, IssueBatchRequest, IssueField, IssuePage, IssuePatch, IssuePlace, LoggedBoard,
-    LoggedFile, LoggedValue, MentionCandidates, MentionQuery, MoveChange, MoveIssue, MoveOutcome,
-    MovePreview, MovePreviewQuery, MoveResult, NewIssue, NewTag, OptionValue, Tag, TagPatch,
-    TagQuery, TagRef, TagSharing,
+    ExportFormat, ExportRequest, FieldOptions, FieldOptionsQuery, FieldValueChange,
+    FieldValueInput, FieldValuesChange, HeldValue, HistoryItem, HistoryKind, HistoryOrigin, Issue,
+    IssueAbilities, IssueAnswer, IssueBatch, IssueBatchRequest, IssueField, IssuePage, IssuePatch,
+    IssuePlace, LoggedBoard, LoggedFile, LoggedValue, MentionCandidates, MentionQuery, MoveChange,
+    MoveIssue, MoveOutcome, MovePreview, MovePreviewQuery, MoveResult, NewIssue, NewTag,
+    OptionValue, Tag, TagPatch, TagQuery, TagRef, TagSharing,
 };
-use trackflow_api::links::{LoggedLink as ApiLoggedLink, SubtaskCount};
-use trackflow_api::page::{Page, PageQuery};
-use trackflow_domain::access::Access;
-use trackflow_domain::auth::{Credential, Principal, Scope};
-use trackflow_domain::fields::FieldKind;
-use trackflow_domain::issues::history::{
+use taskmaster_api::links::{LoggedLink as ApiLoggedLink, SubtaskCount};
+use taskmaster_api::page::{Page, PageQuery};
+use taskmaster_domain::access::Access;
+use taskmaster_domain::auth::{Credential, Principal, Scope};
+use taskmaster_domain::fields::FieldKind;
+use taskmaster_domain::issues::history::{
     ChangeKind, LoggedLink, Origin, clone_of as clone_source, logged, read_ref,
 };
-use trackflow_domain::issues::moves::Outcome;
-use trackflow_domain::issues::values::{Input, Value};
-use trackflow_domain::{FieldId, IssueId, TagId};
-use trackflow_service::files::Signer;
-use trackflow_service::issue_links::{NewLinks, side_name};
-use trackflow_service::issues::activity::{self, ActivityPage as ServiceActivity, Item};
-use trackflow_service::issues::{
+use taskmaster_domain::issues::moves::Outcome;
+use taskmaster_domain::issues::values::{Input, Value};
+use taskmaster_domain::{FieldId, IssueId, TagId};
+use taskmaster_service::files::Signer;
+use taskmaster_service::issue_links::{NewLinks, side_name};
+use taskmaster_service::issues::activity::{self, ActivityPage as ServiceActivity, Item};
+use taskmaster_service::issues::export::{self, Ask};
+use taskmaster_service::issues::{
     self, AudienceInput, Described, FieldChange, FieldInput, IssueChange, IssueView,
 };
-use trackflow_service::people::Names;
-use trackflow_service::tags;
-use trackflow_store::issue_history::Direction;
-use trackflow_store::tags::Tag as StoredTag;
+use taskmaster_service::people::Names;
+use taskmaster_service::search::SearchInput;
+use taskmaster_service::tags;
+use taskmaster_store::issue_history::Direction;
+use taskmaster_store::tags::Tag as StoredTag;
 
 use crate::AppState;
 use crate::access::Viewer;
@@ -47,6 +51,7 @@ use crate::error::{ApiError, JsonBody, QueryParams, json};
 use crate::fields::field_ref;
 use crate::issue_links::{domain_side, issue_brief, link_type_ref, side};
 use crate::present::{group_ref, project_ref, rule_messages, text_refs, user_ref};
+use crate::search::run_error;
 use crate::sharing::{Shown, shared_with, tag_listing};
 
 const TAGS_MAX_LIMIT: u32 = 200;
@@ -69,7 +74,7 @@ fn input(value: FieldValueInput) -> Input {
     }
 }
 
-pub(crate) fn audience_input(a: trackflow_api::issues::AudienceInput) -> AudienceInput {
+pub(crate) fn audience_input(a: taskmaster_api::issues::AudienceInput) -> AudienceInput {
     AudienceInput {
         users: a.users,
         groups: a.groups,
@@ -118,7 +123,7 @@ async fn tag_shown(state: &AppState, viewer: &Access, row: StoredTag) -> Result<
     tags_shown(state, viewer, std::slice::from_ref(&row))
         .await?
         .pop()
-        .ok_or_else(|| trackflow_service::Error::Internal("the tag is missing".to_owned()).into())
+        .ok_or_else(|| taskmaster_service::Error::Internal("the tag is missing".to_owned()).into())
 }
 
 fn issue_field(names: &Names, viewer: &Access, d: &Described, f: &issues::FieldView) -> IssueField {
@@ -249,14 +254,14 @@ pub(crate) fn issue(
 }
 
 /// A stand-in for an account that is not loaded; never expected, but answers stay well-formed.
-pub(crate) fn placeholder(id: i64) -> trackflow_api::accounts::UserRef {
-    trackflow_api::accounts::UserRef {
+pub(crate) fn placeholder(id: i64) -> taskmaster_api::accounts::UserRef {
+    taskmaster_api::accounts::UserRef {
         id,
         username: "deleted".to_owned(),
         full_name: "Deleted user".to_owned(),
         avatar_color: 0,
         avatar_url: None,
-        kind: trackflow_api::accounts::UserRefKind::Deleted,
+        kind: taskmaster_api::accounts::UserRefKind::Deleted,
         pseudonym: None,
         disabled: true,
     }
@@ -375,6 +380,102 @@ pub async fn batch(
     ))
 }
 
+/// The selection's export (QRY-084, step 2.2 §9): the chosen issues, or everything a query
+/// matches, as a CSV or XLSX file — the fixed columns, then the union of the issues' custom
+/// fields, then the description. Issues the caller may not see are skipped and still counted.
+#[utoipa::path(
+    post,
+    path = "/issues/export",
+    operation_id = "export_issues",
+    tag = "issues",
+    security(("session" = []), ("token" = [])),
+    request_body = ExportRequest,
+    responses(
+        (status = OK, description = "The file: CSV (`text/csv; charset=utf-8`, a BOM first) or XLSX (`application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`). `X-Exported-Count` is the rows in the file, `X-Total-Count` the matches — they differ when issues the caller may not see were skipped or the export cap cut the file", content_type = "application/octet-stream", body = Vec<u8>),
+        (status = BAD_REQUEST, description = "Both or neither of `ids` and `query`, or the query has errors (`invalid_query`)", body = ErrorBody),
+        (status = NOT_FOUND, description = "No such project, tag or saved search", body = ErrorBody),
+    ),
+)]
+pub async fn export(
+    State(state): State<AppState>,
+    viewer: Viewer,
+    JsonBody(request): JsonBody<ExportRequest>,
+) -> Result<Response, ApiError> {
+    require_scope(&viewer.principal, Scope::TrackerRead)?;
+    let ask = match request.query {
+        Some(query) => {
+            if !request.ids.is_empty() {
+                return Err(taskmaster_service::Error::field(
+                    "ids",
+                    taskmaster_domain::validation::Problem::Invalid,
+                    "export issues or a query, not both",
+                )
+                .into());
+            }
+            Ask::Query(SearchInput {
+                text: query.q,
+                project: query.project,
+                tag: query.tag,
+                saved_search: query.saved_search,
+                hide_resolved: query.hide_resolved,
+                time_zone: query.time_zone,
+                ..SearchInput::default()
+            })
+        }
+        None => {
+            if request.ids.is_empty() {
+                return Err(taskmaster_service::Error::field(
+                    "ids",
+                    taskmaster_domain::validation::Problem::Invalid,
+                    "export issues or a query, not neither",
+                )
+                .into());
+            }
+            Ask::Ids(request.ids)
+        }
+    };
+    let text = match &ask {
+        Ask::Ids(_) => String::new(),
+        Ask::Query(input) => input.text.clone(),
+    };
+    let out = taskmaster_service::issues::export::collect(&state.db, &viewer.access, ask)
+        .await
+        .map_err(|e| run_error(&text, e))?;
+    let (content_type, bytes) = match request.format {
+        ExportFormat::Csv => ("text/csv; charset=utf-8", export::csv(&out)),
+        ExportFormat::Xlsx => (
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            export::xlsx(&out)?,
+        ),
+    };
+    let exported = out.rows.len();
+    let mut response = Response::new(Body::from(bytes));
+    let headers = response.headers_mut();
+    headers.insert(header::CONTENT_TYPE, HeaderValue::from_static(content_type));
+    headers.insert(
+        header::CONTENT_DISPOSITION,
+        disposition(match request.format {
+            ExportFormat::Csv => "issues.csv",
+            ExportFormat::Xlsx => "issues.xlsx",
+        }),
+    );
+    headers.insert(
+        HeaderName::from_static("x-exported-count"),
+        HeaderValue::from_str(&exported.to_string()).unwrap_or(HeaderValue::from_static("0")),
+    );
+    headers.insert(
+        HeaderName::from_static("x-total-count"),
+        HeaderValue::from_str(&out.total.to_string()).unwrap_or(HeaderValue::from_static("0")),
+    );
+    Ok(response)
+}
+
+/// `attachment` with a fixed ASCII name; the export's names never need the RFC 6266 fallback.
+fn disposition(name: &str) -> HeaderValue {
+    let value = format!("attachment; filename=\"{name}\"");
+    HeaderValue::from_str(&value).unwrap_or(HeaderValue::from_static("attachment"))
+}
+
 /// What a field of an issue may hold for the caller (FLD-001…FLD-014), filtered by `q`.
 #[utoipa::path(
     get,
@@ -406,7 +507,7 @@ pub async fn field_options(
         Some(limit) if (1..=max).contains(&i64::from(limit)) => i64::from(limit),
         Some(_) => {
             return Err(ApiError::invalid(vec![
-                trackflow_api::error::FieldError::new(
+                taskmaster_api::error::FieldError::new(
                     "limit",
                     "out_of_range",
                     format!("limit must be between 1 and {max}"),
@@ -441,7 +542,7 @@ pub async fn field_options(
     ))
 }
 
-pub(crate) fn held_value(v: &trackflow_store::value_sets::Value) -> HeldValue {
+pub(crate) fn held_value(v: &taskmaster_store::value_sets::Value) -> HeldValue {
     HeldValue {
         id: v.id,
         name: v.name.clone(),
@@ -452,7 +553,7 @@ pub(crate) fn held_value(v: &trackflow_store::value_sets::Value) -> HeldValue {
     }
 }
 
-fn option_value(v: &trackflow_store::value_sets::Value) -> OptionValue {
+fn option_value(v: &taskmaster_store::value_sets::Value) -> OptionValue {
     OptionValue {
         id: v.id,
         name: v.name.clone(),
@@ -585,7 +686,7 @@ pub async fn clone(
     Path(id): Path<IssueId>,
 ) -> Result<Response, ApiError> {
     require_scope(&viewer.principal, Scope::TrackerWrite)?;
-    let done = trackflow_service::rules::clone::clone_issue(
+    let done = taskmaster_service::rules::clone::clone_issue(
         &state.db,
         &viewer.access,
         origin(&viewer.principal),
@@ -624,7 +725,7 @@ pub async fn clone_drafts(
 ) -> Result<Response, ApiError> {
     require_scope(&viewer.principal, Scope::TrackerWrite)?;
     let done =
-        trackflow_service::rules::clone::clone_drafts(&state.db, &viewer.access, &request.issues)
+        taskmaster_service::rules::clone::clone_drafts(&state.db, &viewer.access, &request.issues)
             .await?;
     let names = state.names();
     let signer = state.signer();
@@ -870,21 +971,21 @@ enum Lookups<'a> {
 }
 
 impl Lookups<'_> {
-    fn user(&self, id: i64) -> Option<&trackflow_store::users::User> {
+    fn user(&self, id: i64) -> Option<&taskmaster_store::users::User> {
         match self {
             Lookups::Issue(d) => d.user(id),
             Lookups::History(h) => h.users.iter().find(|u| u.id == id),
         }
     }
 
-    fn group(&self, id: i64) -> Option<&trackflow_store::groups::Group> {
+    fn group(&self, id: i64) -> Option<&taskmaster_store::groups::Group> {
         match self {
             Lookups::Issue(d) => d.group(id),
             Lookups::History(h) => h.groups.iter().find(|g| g.id == id),
         }
     }
 
-    fn value(&self, id: i64) -> Option<&trackflow_store::value_sets::Value> {
+    fn value(&self, id: i64) -> Option<&taskmaster_store::value_sets::Value> {
         match self {
             Lookups::Issue(d) => d.value(id),
             Lookups::History(h) => h.values.iter().find(|v| v.id == id),
@@ -1218,7 +1319,7 @@ fn history_item(
     names: &Names,
     viewer: &Access,
     page: &ServiceActivity,
-    entry: &trackflow_store::issue_history::Entry,
+    entry: &taskmaster_store::issue_history::Entry,
     after_comment: Option<i64>,
 ) -> Option<HistoryItem> {
     let look = Lookups::History(page);
@@ -1487,7 +1588,7 @@ fn activity_query(query: &ActivityQuery) -> Result<activity::Query, ApiError> {
         Some(limit) if (1..=100).contains(&limit) => i64::from(limit),
         Some(_) => {
             return Err(ApiError::invalid(vec![
-                trackflow_api::error::FieldError::new(
+                taskmaster_api::error::FieldError::new(
                     "limit",
                     "out_of_range",
                     "limit must be between 1 and 100",
@@ -1499,7 +1600,7 @@ fn activity_query(query: &ActivityQuery) -> Result<activity::Query, ApiError> {
     let changes = query.changes.unwrap_or(true);
     if !comments && !changes {
         return Err(ApiError::invalid(vec![
-            trackflow_api::error::FieldError::new(
+            taskmaster_api::error::FieldError::new(
                 "changes",
                 "required",
                 "show comments, changes or both",
@@ -1587,7 +1688,7 @@ pub async fn mention_candidates(
         Some(limit) if (1..=20).contains(&limit) => i64::from(limit),
         Some(_) => {
             return Err(ApiError::invalid(vec![
-                trackflow_api::error::FieldError::new(
+                taskmaster_api::error::FieldError::new(
                     "limit",
                     "out_of_range",
                     "limit must be between 1 and 20",
@@ -1595,7 +1696,7 @@ pub async fn mention_candidates(
             ]));
         }
     };
-    let found = trackflow_service::people::mention_candidates(
+    let found = taskmaster_service::people::mention_candidates(
         &state.db,
         &viewer.access,
         id,

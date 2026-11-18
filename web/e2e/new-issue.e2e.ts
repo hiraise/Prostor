@@ -26,7 +26,8 @@ async function openForm(page: Page, from: 'menu' | 'project' = 'menu') {
       .getByRole('button', { name: 'New', exact: true })
       .and(page.locator(':not(main *)'))
       .click();
-    await page.getByRole('menuitem', { name: 'Issue' }).click();
+    // Exact: on an issue page the menu also offers its linked issue («New linked issue…»).
+    await page.getByRole('menuitem', { name: 'Issue', exact: true }).click();
   }
   const draft = ((await (await started).json()) as { issue: Issue }).issue.id;
   const form = page.getByRole('form', { name: 'New issue form' });

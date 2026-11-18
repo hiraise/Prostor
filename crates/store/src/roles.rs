@@ -1,9 +1,9 @@
 //! Roles (ACC-052…ACC-057). Predefined roles have rows (assignments point at them) but take their
-//! permissions from `trackflow_domain::access::role`.
+//! permissions from `taskmaster_domain::access::role`.
 
 use sqlx::{PgConnection, PgExecutor};
+use taskmaster_domain::RoleId;
 use time::OffsetDateTime;
-use trackflow_domain::RoleId;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Role {

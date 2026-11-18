@@ -2,6 +2,7 @@
 // order, paging, deep links and grouping.
 import { createRawSnippet } from 'svelte';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
 
 import type { ActivityPage } from '#lib/api/schema.gen.ts';
@@ -84,7 +85,7 @@ describe('HIST-001: the activity stream', () => {
     // Oldest first is the default: the server's newest-first page is turned around.
     const { screen } = await show(page({ items: [...page().items].reverse() }));
 
-    await expect.element(screen.getByRole('heading', { name: 'Activity' })).toBeVisible();
+    await expect.element(screen.getByRole('region', { name: 'Activity' })).toBeVisible();
     await expect.element(screen.getByText('First comment')).toBeVisible();
     const rows = texts(screen.container);
     expect(rows).toHaveLength(3);
@@ -211,8 +212,8 @@ describe('HIST-003: text changes', () => {
   });
 });
 
-describe('HIST-008: filters', () => {
-  it('saves a filter in preferences and asks for the stream again', async () => {
+describe('HIST-008: the tab strip', () => {
+  it('opens a tab, saves the choice in preferences and asks for the stream again', async () => {
     const { screen, calls } = await show(page(), {
       routes: {
         'GET /issues/501/activity': {
@@ -221,11 +222,16 @@ describe('HIST-008: filters', () => {
       },
     });
 
-    const changes = screen.getByRole('button', { name: 'Changes' });
-    await expect.element(changes).toHaveAttribute('aria-pressed', 'true');
-    await changes.click();
+    const tabs = screen.getByRole('tablist', { name: 'Shown in the activity' });
+    await expect
+      .element(tabs.getByRole('tab', { name: 'All', exact: true }))
+      .toHaveAttribute('aria-selected', 'true');
+    await tabs.getByRole('tab', { name: 'Comments' }).click();
 
-    await expect.element(changes).toHaveAttribute('aria-pressed', 'false');
+    await expect
+      .element(tabs.getByRole('tab', { name: 'Comments' }))
+      .toHaveAttribute('aria-selected', 'true');
+    expect(preferences.value('activity_comments')).toBe(true);
     expect(preferences.value('activity_changes')).toBe(false);
     await expect.poll(() => texts(screen.container)).toHaveLength(2);
     const request = calls.find((call) => call.path === '/issues/501/activity');
@@ -233,13 +239,35 @@ describe('HIST-008: filters', () => {
     expect(request?.query.get('comments')).toBe('true');
   });
 
-  it('shows only the box when both filters are off', async () => {
+  it('arrows walk the tabs and open the one they land on', async () => {
+    const { screen } = await show(page());
+    const tabs = screen.getByRole('tablist', { name: 'Shown in the activity' });
+    const all = tabs.getByRole('tab', { name: 'All', exact: true });
+
+    await all.click();
+    (all.element() as HTMLElement).focus();
+    await userEvent.keyboard('{ArrowRight}');
+    await expect
+      .element(tabs.getByRole('tab', { name: 'Comments' }))
+      .toHaveAttribute('aria-selected', 'true');
+    await userEvent.keyboard('{End}');
+    await expect
+      .element(tabs.getByRole('tab', { name: 'Changes' }))
+      .toHaveAttribute('aria-selected', 'true');
+    expect(preferences.value('activity_comments')).toBe(false);
+    expect(preferences.value('activity_changes')).toBe(true);
+  });
+
+  it('the legacy choice of both filters off reads as «Все»', async () => {
     const { screen } = await show(page(), {
       prefs: { activity_comments: false, activity_changes: false },
     });
 
-    await expect.element(screen.getByText('Comments and changes are hidden.')).toBeVisible();
-    await expect.element(screen.getByRole('form', { name: 'Comment box' })).toBeInTheDocument();
+    const tabs = screen.getByRole('tablist', { name: 'Shown in the activity' });
+    await expect
+      .element(tabs.getByRole('tab', { name: 'All', exact: true }))
+      .toHaveAttribute('aria-selected', 'true');
+    expect(texts(screen.container)).toHaveLength(3);
   });
 });
 
@@ -252,10 +280,10 @@ describe('HIST-009: order and long comments', () => {
     );
   }
 
-  it('puts the comment box at the end of the order', async () => {
+  it('keeps the comment box above the entries in either order', async () => {
     const oldest = await show(page({ items: [...page().items].reverse() }));
     await expect.element(oldest.screen.getByText('First comment')).toBeVisible();
-    expect(boxBeforeList(oldest.screen.container)).toBe(false);
+    expect(boxBeforeList(oldest.screen.container)).toBe(true);
     await oldest.screen.unmount();
 
     const newest = await show(page(), { prefs: { activity_order: 'newest_first' } });

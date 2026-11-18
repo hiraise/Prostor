@@ -6,7 +6,7 @@
 use std::collections::{BTreeMap, HashSet};
 
 use serde::Deserialize;
-use trackflow_query::{Class, ProblemCode, Query, Span, classes, parse, print, utf16};
+use taskmaster_query::{Class, ProblemCode, Query, Span, classes, parse, print, utf16};
 
 #[derive(Debug, Deserialize)]
 struct Case {

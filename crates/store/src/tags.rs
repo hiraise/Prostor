@@ -1,9 +1,9 @@
 //! Tags (ISS-034…ISS-037) and the tags on issues, with the audiences of sharing (D-038).
 
 use sqlx::{PgConnection, PgExecutor};
+use taskmaster_domain::sharing::{Audience, Shared};
+use taskmaster_domain::{GroupId, IssueId, TagId, UserId};
 use time::OffsetDateTime;
-use trackflow_domain::sharing::{Audience, Shared};
-use trackflow_domain::{GroupId, IssueId, TagId, UserId};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Tag {

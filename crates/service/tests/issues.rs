@@ -5,36 +5,36 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use serde_json::json;
-use time::OffsetDateTime;
-use time::macros::datetime;
-use trackflow_domain::access::Access;
-use trackflow_domain::access::permission::Permission;
-use trackflow_domain::access::role::PredefinedRole;
-use trackflow_domain::fields::FieldKind;
-use trackflow_domain::issues::history::Origin;
-use trackflow_domain::issues::values::{Input, Value};
-use trackflow_domain::projects::Template;
-use trackflow_domain::settings::Language;
-use trackflow_domain::validation::Problem;
-use trackflow_domain::{FieldId, IssueId, ProjectId, UserId};
-use trackflow_service::auth::SignedIn;
-use trackflow_service::issues::jobs::{self, FieldWork};
-use trackflow_service::issues::{
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::permission::Permission;
+use taskmaster_domain::access::role::PredefinedRole;
+use taskmaster_domain::fields::FieldKind;
+use taskmaster_domain::issues::history::Origin;
+use taskmaster_domain::issues::values::{Input, Value};
+use taskmaster_domain::projects::Template;
+use taskmaster_domain::settings::Language;
+use taskmaster_domain::validation::Problem;
+use taskmaster_domain::{FieldId, IssueId, ProjectId, UserId};
+use taskmaster_service::auth::SignedIn;
+use taskmaster_service::issues::jobs::{self, FieldWork};
+use taskmaster_service::issues::{
     self, AudienceInput, FieldChange, FieldInput, IssueChange, IssueView, NewIssue,
 };
-use trackflow_service::project_fields;
-use trackflow_service::projects::{self, NewProjectInput, ProjectChange};
-use trackflow_service::search::{self, SearchInput};
-use trackflow_service::setup::{self, Setup};
-use trackflow_service::users::{self, NewAccount};
-use trackflow_service::{Error, Passwords, access, fields, groups, roles, tags, value_sets};
-use trackflow_store::PgPool;
-use trackflow_store::access::Holder;
-use trackflow_store::issue_history::Direction;
-use trackflow_store::sessions::Origin as SessionOrigin;
-use trackflow_store::tags::Listing;
-use trackflow_store::value_sets::Value as SetValue;
-use trackflow_testkit::TestDb;
+use taskmaster_service::project_fields;
+use taskmaster_service::projects::{self, NewProjectInput, ProjectChange};
+use taskmaster_service::search::{self, SearchInput};
+use taskmaster_service::setup::{self, Setup};
+use taskmaster_service::users::{self, NewAccount};
+use taskmaster_service::{Error, Passwords, access, fields, groups, roles, tags, value_sets};
+use taskmaster_store::PgPool;
+use taskmaster_store::access::Holder;
+use taskmaster_store::issue_history::Direction;
+use taskmaster_store::sessions::Origin as SessionOrigin;
+use taskmaster_store::tags::Listing;
+use taskmaster_store::value_sets::Value as SetValue;
+use taskmaster_testkit::TestDb;
+use time::OffsetDateTime;
+use time::macros::datetime;
 
 /// A project's issues as the list shows them, newest first (the search with a project context).
 async fn list(pool: &PgPool, viewer: &Access, project: ProjectId, limit: u32) -> issues::Described {
@@ -159,7 +159,7 @@ async fn grant(
     role: PredefinedRole,
     of: &[ProjectId],
 ) {
-    let role = trackflow_store::roles::builtin_id(pool, role.key())
+    let role = taskmaster_store::roles::builtin_id(pool, role.key())
         .await
         .unwrap()
         .unwrap();
@@ -200,7 +200,7 @@ fn field_id(view: &IssueView, name: &str) -> FieldId {
 /// Values of the set a field uses in the issue's project.
 async fn values_of(pool: &PgPool, view: &IssueView, name: &str) -> Vec<SetValue> {
     let set = field(view, name).field.attached.set_id.unwrap();
-    trackflow_store::value_sets::values_of(pool, &[set])
+    taskmaster_store::value_sets::values_of(pool, &[set])
         .await
         .unwrap()
 }
@@ -213,7 +213,7 @@ fn problems(error: Error) -> Vec<(String, Problem)> {
 }
 
 async fn kinds(pool: &PgPool, issue: IssueId) -> Vec<String> {
-    trackflow_store::issue_history::all_of(pool, issue)
+    taskmaster_store::issue_history::all_of(pool, issue)
         .await
         .unwrap()
         .into_iter()
@@ -223,7 +223,7 @@ async fn kinds(pool: &PgPool, issue: IssueId) -> Vec<String> {
 
 /// Change records of a page of the activity stream, with the cursor of the next page.
 struct History {
-    entries: Vec<trackflow_store::issue_history::Entry>,
+    entries: Vec<taskmaster_store::issue_history::Entry>,
     next: Option<i64>,
 }
 
@@ -443,7 +443,7 @@ async fn iss_003_prj_005_former_ids_lead_to_the_issue() {
         issues::resolve(pool, &admin, "APP-9").await,
         Err(Error::NotFound(_))
     ));
-    let records = trackflow_store::issue_history::all_of(pool, id)
+    let records = taskmaster_store::issue_history::all_of(pool, id)
         .await
         .unwrap();
     let last = records.last().unwrap();
@@ -588,7 +588,7 @@ async fn fld_001_fld_057_iss_019_iss_023_field_changes_and_resolution() {
         Err(Error::Invalid(_))
     ));
     // Each value separately in history (HIST-004).
-    let last = trackflow_store::issue_history::all_of(pool, id)
+    let last = taskmaster_store::issue_history::all_of(pool, id)
         .await
         .unwrap();
     let last = last.last().unwrap();
@@ -717,7 +717,7 @@ async fn iss_051_text_edits_carry_their_version() {
     )
     .await
     .unwrap();
-    let records = trackflow_store::issue_history::all_of(pool, id)
+    let records = taskmaster_store::issue_history::all_of(pool, id)
         .await
         .unwrap();
     let texts: Vec<_> = records
@@ -944,7 +944,7 @@ async fn acc_049_sql_and_rust_agree() {
             .map(|v| v.issue.id)
             .collect();
         listed.sort_unstable();
-        let project = trackflow_store::projects::get(pool, web)
+        let project = taskmaster_store::projects::get(pool, web)
             .await
             .unwrap()
             .unwrap();
@@ -1123,13 +1123,13 @@ async fn iss_025_fld_059_moves_keep_drop_and_reset_values() {
         .await
         .unwrap();
     let app_set =
-        trackflow_store::fields::lock_attached(&mut pool.acquire().await.unwrap(), app, priority)
+        taskmaster_store::fields::lock_attached(&mut pool.acquire().await.unwrap(), app, priority)
             .await
             .unwrap()
             .unwrap()
             .set_id
             .unwrap();
-    let copy_of_high = trackflow_store::value_sets::values_of(pool, &[app_set])
+    let copy_of_high = taskmaster_store::value_sets::values_of(pool, &[app_set])
         .await
         .unwrap()
         .into_iter()
@@ -1171,7 +1171,7 @@ async fn iss_025_fld_059_moves_keep_drop_and_reset_values() {
         .done
         .unwrap()
         .0;
-    let app_normal = trackflow_store::value_sets::values_of(pool, &[app_set])
+    let app_normal = taskmaster_store::value_sets::values_of(pool, &[app_set])
         .await
         .unwrap()
         .into_iter()
@@ -1385,7 +1385,7 @@ async fn iss_028_deleted_issues_disappear() {
     ));
     assert!(list(pool, &admin, web, 50).await.issues.is_empty());
     // It stays whole for the trash.
-    let row = trackflow_store::issues::get(pool, issue.issue.id)
+    let row = taskmaster_store::issues::get(pool, issue.issue.id)
         .await
         .unwrap()
         .unwrap();
@@ -1440,7 +1440,7 @@ async fn fld_032_fld_046_value_changes_reach_issues_in_the_background() {
         field(&view, "Priority").value,
         Some(Value::Refs(vec![low.id]))
     );
-    let records = trackflow_store::issue_history::all_of(pool, id)
+    let records = taskmaster_store::issue_history::all_of(pool, id)
         .await
         .unwrap();
     let last = records.last().unwrap();
@@ -1511,7 +1511,7 @@ async fn fld_023_fld_054_detaching_and_deleting_fields_erase_values() {
         .unwrap();
     }
     assert_eq!(
-        trackflow_service::fields::deletion_impact(pool, &admin, estimation)
+        taskmaster_service::fields::deletion_impact(pool, &admin, estimation)
             .await
             .unwrap(),
         (2, 2, 0)
@@ -1539,7 +1539,7 @@ async fn fld_023_fld_054_detaching_and_deleting_fields_erase_values() {
     .unwrap();
     let view = issues::get(pool, &admin, a.issue.id).await.unwrap().0;
     assert!(field(&view, "Estimation").value.is_none());
-    trackflow_service::fields::delete(pool, &admin, estimation)
+    taskmaster_service::fields::delete(pool, &admin, estimation)
         .await
         .unwrap();
     jobs::run(
@@ -1551,10 +1551,12 @@ async fn fld_023_fld_054_detaching_and_deleting_fields_erase_values() {
     )
     .await
     .unwrap();
-    let rows =
-        trackflow_store::issue_values::of_issues(&mut pool.acquire().await.unwrap(), &[b.issue.id])
-            .await
-            .unwrap();
+    let rows = taskmaster_store::issue_values::of_issues(
+        &mut pool.acquire().await.unwrap(),
+        &[b.issue.id],
+    )
+    .await
+    .unwrap();
     assert!(rows.iter().all(|r| r.field != estimation));
 }
 
@@ -1604,7 +1606,7 @@ async fn acc_006_acc_032_deleted_accounts_and_groups_in_issues() {
     .0;
     let id = issue.issue.id;
     let assignee = field_id(&issue, "Assignee");
-    trackflow_service::teams::add(pool, &admin, web, &[leaver.user()], &[])
+    taskmaster_service::teams::add(pool, &admin, web, &[leaver.user()], &[])
         .await
         .unwrap();
     set(
@@ -1625,7 +1627,7 @@ async fn acc_006_acc_032_deleted_accounts_and_groups_in_issues() {
     groups::delete(pool, &admin, &[group.id], new_group.id)
         .await
         .unwrap();
-    let row = trackflow_store::issues::get(pool, id)
+    let row = taskmaster_store::issues::get(pool, id)
         .await
         .unwrap()
         .unwrap();
@@ -1660,14 +1662,14 @@ async fn prj_064_deleting_a_project_removes_its_issues() {
         .await
         .unwrap();
     assert!(
-        trackflow_store::projects::get(pool, web)
+        taskmaster_store::projects::get(pool, web)
             .await
             .unwrap()
             .is_none()
     );
     assert!(issues::get(pool, &admin, moved.issue.id).await.is_ok());
     assert_eq!(
-        trackflow_store::issues::count_of_project(pool, web)
+        taskmaster_store::issues::count_of_project(pool, web)
             .await
             .unwrap(),
         0
@@ -1742,7 +1744,7 @@ async fn iss_043_audience_candidates() {
     let admin = admin(pool).await;
     let web = project(pool, &admin, "Web", "WEB").await;
     let member = create_user(pool, &admin, "mia").await;
-    trackflow_service::teams::add(pool, &admin, web, &[member], &[])
+    taskmaster_service::teams::add(pool, &admin, web, &[member], &[])
         .await
         .unwrap();
     let candidates = issues::audience::candidates(pool, &admin, web, "")
@@ -1936,15 +1938,15 @@ async fn fld_001_options_groups_and_private_fields() {
     let pool = db.pool();
     let admin = admin(pool).await;
     let web = project(pool, &admin, "Web", "WEB").await;
-    let created = trackflow_service::fields::create(
+    let created = taskmaster_service::fields::create(
         pool,
         &admin,
-        trackflow_service::fields::NewFieldInput {
+        taskmaster_service::fields::NewFieldInput {
             name: "Team".to_owned(),
             kind: FieldKind::Group,
             multi: false,
             aliases: Vec::new(),
-            set: trackflow_service::fields::SetSource::New { name: None },
+            set: taskmaster_service::fields::SetSource::New { name: None },
             can_be_empty: true,
             empty_label: String::new(),
             private: false,
@@ -1989,7 +1991,8 @@ async fn fld_001_options_groups_and_private_fields() {
     .await
     .unwrap();
     let member = person(pool, &admin, "mia", PredefinedRole::ProjectMember, &[web]).await;
-    let private_update = trackflow_domain::issues::rights::may_update_private(&member, web).is_ok();
+    let private_update =
+        taskmaster_domain::issues::rights::may_update_private(&member, web).is_ok();
     let answer = options(pool, &member, issue.issue.id, estimation, "", 20).await;
     assert_eq!(answer.is_ok(), private_update);
     assert!(
@@ -2023,7 +2026,7 @@ async fn fld_001_options_can_add_value_needs_every_project_of_the_set() {
     let found = options(pool, &lead, issue.issue.id, priority, "", 20)
         .await
         .unwrap();
-    let only_web = trackflow_store::value_sets::usage(pool, set)
+    let only_web = taskmaster_store::value_sets::usage(pool, set)
         .await
         .unwrap()
         .projects
@@ -2031,7 +2034,7 @@ async fn fld_001_options_can_add_value_needs_every_project_of_the_set() {
     assert_eq!(found.can_add_value, only_web);
     // Shared with a project the lead cannot configure: no new values from the picker.
     let ops = project(pool, &admin, "Ops", "OPS").await;
-    let in_ops = trackflow_store::value_sets::usage(pool, set)
+    let in_ops = taskmaster_store::value_sets::usage(pool, set)
         .await
         .unwrap()
         .projects
@@ -2182,7 +2185,7 @@ async fn qry_078_fields_of_readable_projects() {
     .unwrap()
     .field
     .id;
-    let names = |found: &[(trackflow_store::fields::Field, i64)]| -> Vec<String> {
+    let names = |found: &[(taskmaster_store::fields::Field, i64)]| -> Vec<String> {
         found.iter().map(|(f, _)| f.name.clone()).collect()
     };
     // The admin: every field, the one-project field last (used by one of two projects).

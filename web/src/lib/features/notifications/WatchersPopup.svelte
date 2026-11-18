@@ -35,7 +35,7 @@
     min-height: 2rem;
     padding: 0 var(--space-1);
     border: none;
-    border-radius: var(--radius-full);
+    border-radius: var(--radius-sm);
     background: transparent;
     color: var(--color-text-muted);
     font: inherit;
@@ -43,10 +43,11 @@
   }
 
   .count:hover {
-    background: var(--color-surface-sunken);
+    background: var(--color-hover);
+    color: var(--color-text);
   }
 
-  @media (width < 48rem) {
+  @media (pointer: coarse) {
     .count {
       min-width: 2.75rem;
       min-height: 2.75rem;

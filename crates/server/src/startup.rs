@@ -6,13 +6,13 @@ use std::sync::atomic::Ordering;
 use std::time::Duration;
 
 use sqlx::migrate::MigrateError;
+use taskmaster_store::PgConnectOptions;
+use taskmaster_store::bus::Bus;
+use taskmaster_store::instance::SetupState;
+use taskmaster_store::jobs::{Handlers, Runner, RunnerConfig};
 use thiserror::Error;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
-use trackflow_store::PgConnectOptions;
-use trackflow_store::bus::Bus;
-use trackflow_store::instance::SetupState;
-use trackflow_store::jobs::{Handlers, Runner, RunnerConfig};
 
 use crate::AppState;
 use crate::lifecycle::Phase;
@@ -27,7 +27,7 @@ pub enum StartupError {
     #[error("database error during startup: {0}")]
     Database(#[from] sqlx::Error),
     #[error("cannot prepare the first-run setup: {0}")]
-    Setup(#[from] trackflow_service::Error),
+    Setup(#[from] taskmaster_service::Error),
     #[error("cannot use the files directory {dir}: {error}")]
     Files { dir: String, error: std::io::Error },
 }
@@ -70,7 +70,7 @@ pub async fn start(
     // Dropping the migration closes its connection, which rolls back an unfinished migration.
     let migrated = tokio::select! {
         () = stop.cancelled() => return Ok(None),
-        migrated = trackflow_store::migrate(options) => migrated,
+        migrated = taskmaster_store::migrate(options) => migrated,
     };
     let report = migrated.map_err(|error| StartupError::Migration(explain(&error)))?;
     let version = report.latest.unwrap_or(0);
@@ -105,22 +105,22 @@ pub async fn start(
     let language = state
         .settings
         .get()
-        .get(&trackflow_domain::settings::SYSTEM_LANGUAGE);
-    if trackflow_service::seed::ensure_default_fields(&state.db, language).await? {
+        .get(&taskmaster_domain::settings::SYSTEM_LANGUAGE);
+    if taskmaster_service::seed::ensure_default_fields(&state.db, language).await? {
         tracing::info!("created the default field set");
     }
     // And the built-in link types (LNK-002).
-    if trackflow_service::issue_links::ensure_default_types(&state.db, language).await? {
+    if taskmaster_service::issue_links::ensure_default_types(&state.db, language).await? {
         tracing::info!("created the built-in link types");
     }
     // Texts rendered with older rules are rendered again in the background (D-031).
-    if trackflow_service::text::ensure_rendered(&state.db).await? {
+    if taskmaster_service::text::ensure_rendered(&state.db).await? {
         tracing::info!("queued rendering of stored texts with the current rules");
     }
     // After the setup state, which creates the instance row the key lives in.
-    let names = trackflow_service::people::Names::load(&state.db).await?;
+    let names = taskmaster_service::people::Names::load(&state.db).await?;
     let _ = state.names.set(names);
-    let signer = trackflow_service::files::Signer::load(&state.db).await?;
+    let signer = taskmaster_service::files::Signer::load(&state.db).await?;
     let _ = state.signer.set(signer);
     state
         .files
@@ -141,7 +141,7 @@ pub async fn start(
     ));
 
     state.lifecycle.set(Phase::Ready);
-    tracing::info!("trackflow is ready");
+    tracing::info!("TaskMaster is ready");
     Ok(Some(Services {
         runner,
         stop: services_stop,
@@ -165,9 +165,12 @@ async fn notify_sweep(
             _ = tick.tick() => {}
         }
         let outgoing = settings.mail();
-        if let Err(error) =
-            trackflow_service::notifications::sweep(&db, time::OffsetDateTime::now_utc(), &outgoing)
-                .await
+        if let Err(error) = taskmaster_service::notifications::sweep(
+            &db,
+            time::OffsetDateTime::now_utc(),
+            &outgoing,
+        )
+        .await
         {
             tracing::warn!(%error, "notification sweep failed");
         }
@@ -177,12 +180,12 @@ async fn notify_sweep(
 /// While nobody has run the first-run setup, prints the code its wizard asks for (ADM-047).
 async fn announce_setup(state: &AppState) -> Result<(), StartupError> {
     let configured = state.setup_code.as_deref();
-    match trackflow_service::setup::prepare(&state.db, configured).await? {
+    match taskmaster_service::setup::prepare(&state.db, configured).await? {
         SetupState::Complete => state.setup_done.store(true, Ordering::Release),
         SetupState::Pending { code } => {
             tracing::warn!(
                 setup_code = %code,
-                "trackflow is not set up yet: open it in a browser and enter the setup code {code}"
+                "TaskMaster is not set up yet: open it in a browser and enter the setup code {code}"
             );
         }
     }
@@ -196,7 +199,7 @@ async fn wait_for_database(state: &AppState, stop: &CancellationToken) -> bool {
     loop {
         let reachable = tokio::select! {
             () = stop.cancelled() => return false,
-            reachable = trackflow_store::ping(&state.db, PING_TIMEOUT) => reachable,
+            reachable = taskmaster_store::ping(&state.db, PING_TIMEOUT) => reachable,
         };
         if reachable {
             if waited {
@@ -218,7 +221,7 @@ async fn wait_for_database(state: &AppState, stop: &CancellationToken) -> bool {
 fn explain(error: &MigrateError) -> String {
     match error {
         MigrateError::VersionMissing(version) => format!(
-            "the database has migration {version}, which this trackflow build does not know: a newer \
+            "the database has migration {version}, which this TaskMaster build does not know: a newer \
              version has run on it. Downgrades are not supported; run that version or restore a backup"
         ),
         MigrateError::VersionMismatch(version) => format!(

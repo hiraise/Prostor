@@ -10,7 +10,7 @@
   let { title }: { title: string } = $props();
 </script>
 
-<svelte:head><title>{title} · trackflow</title></svelte:head>
+<svelte:head><title>{title} · TaskMaster</title></svelte:head>
 
 <PageHeader {title} />
 <EmptyState

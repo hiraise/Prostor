@@ -1,5 +1,5 @@
 //! Searching issues (QRY-*; plan `docs/plans/step-1.5.md` §3–§4): a parsed query
-//! (`trackflow_query`) and a [`Catalog`] of the names it mentions become a [`Filter`] and a sort
+//! (`taskmaster_query`) and a [`Catalog`] of the names it mentions become a [`Filter`] and a sort
 //! the store compiles to SQL.
 //!
 //! The service: parses the text, takes [`needs`], loads the projects, computes [`scope`], loads
@@ -18,7 +18,7 @@ mod tests;
 mod text;
 
 use serde::{Deserialize, Serialize};
-use trackflow_query::{Problem, Span};
+use taskmaster_query::{Problem, Span};
 
 use crate::access::Projects;
 use crate::links::Side;
@@ -71,7 +71,7 @@ pub struct Resolved {
 #[serde(rename_all = "snake_case", tag = "t", content = "v")]
 pub enum Binding {
     Field(FieldId),
-    /// A key of `trackflow_query::words`.
+    /// A key of `taskmaster_query::words`.
     Attribute(String),
     Keyword(String),
     Value(ValueId),

@@ -3,16 +3,16 @@
 //! and edit roles (D-013); nobody gives a role a permission they do not hold (ACC-050).
 
 use serde_json::json;
-use trackflow_domain::access::permission::{Permission, PermissionSet};
-use trackflow_domain::access::role::{
+use taskmaster_domain::access::permission::{Permission, PermissionSet};
+use taskmaster_domain::access::role::{
     PredefinedRole, ROLE_DESCRIPTION_MAX, description, role_name, role_permissions, toggle,
 };
-use trackflow_domain::access::{Access, AssignmentProblem, Scope, check_assignment};
-use trackflow_domain::validation::{Problem, Problems};
-use trackflow_domain::{ProjectId, RoleId};
-use trackflow_store::access::{self as assignments, Assignment, Holder};
-use trackflow_store::roles::{self, Role};
-use trackflow_store::{PgPool, audit, groups, projects, unique_violation, users};
+use taskmaster_domain::access::{Access, AssignmentProblem, Scope, check_assignment};
+use taskmaster_domain::validation::{Problem, Problems};
+use taskmaster_domain::{ProjectId, RoleId};
+use taskmaster_store::access::{self as assignments, Assignment, Holder};
+use taskmaster_store::roles::{self, Role};
+use taskmaster_store::{PgPool, audit, groups, projects, unique_violation, users};
 
 use crate::access::{changed, keep_an_administrator, scope_of};
 use crate::{Error, Result};
@@ -146,7 +146,7 @@ pub async fn create(pool: &PgPool, actor: &Access, input: NewRole) -> Result<Rol
             Some(permission) => permissions.insert(permission),
             None => problems.add(
                 "permissions",
-                trackflow_domain::validation::Rejection::new(
+                taskmaster_domain::validation::Rejection::new(
                     Problem::Invalid,
                     format!("unknown permission {key:?}"),
                 ),
@@ -504,6 +504,6 @@ fn name_taken(error: sqlx::Error) -> Error {
     }
 }
 
-fn actor_of(access: &Access) -> trackflow_domain::Actor {
-    trackflow_domain::Actor::User(access.user())
+fn actor_of(access: &Access) -> taskmaster_domain::Actor {
+    taskmaster_domain::Actor::User(access.user())
 }

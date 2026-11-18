@@ -7,13 +7,13 @@
 
 use serde_json::{Value, json};
 use sqlx::PgConnection;
-use trackflow_domain::Actor;
-use trackflow_domain::access::Access;
-use trackflow_domain::access::permission::Permission;
-use trackflow_domain::secret::Key;
-use trackflow_domain::settings::{self, Change, Definition, SettingError, Snapshot};
-use trackflow_store::PgPool;
-use trackflow_store::{audit, bus, settings as store};
+use taskmaster_domain::Actor;
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::permission::Permission;
+use taskmaster_domain::secret::Key;
+use taskmaster_domain::settings::{self, Change, Definition, SettingError, Snapshot};
+use taskmaster_store::PgPool;
+use taskmaster_store::{audit, bus, settings as store};
 
 /// The keys that belong to the mail screen and its API («Почта», 1.10c), not to the general
 /// settings screen: they never appear in [`admin_view`] and a change set refuses them.
@@ -53,7 +53,7 @@ impl From<SetError> for crate::Error {
                 SettingError::WrongType { key, message } | SettingError::Invalid { key, message },
             ) => crate::Error::field(
                 &key,
-                trackflow_domain::validation::Problem::Invalid,
+                taskmaster_domain::validation::Problem::Invalid,
                 message,
             ),
             SetError::Refused(message) => crate::Error::Refused(message),
@@ -185,7 +185,7 @@ pub async fn save(
         } else if settings::find(key).is_none() {
             return Err(crate::Error::field(
                 key,
-                trackflow_domain::validation::Problem::Invalid,
+                taskmaster_domain::validation::Problem::Invalid,
                 "no such setting",
             ));
         } else {
@@ -213,7 +213,7 @@ pub async fn apply(
     let secret = settings::find(key).is_some_and(Definition::secret);
     if secret && change.value().is_some() && secret_key.is_none() {
         return Err(SetError::Refused(
-            "this instance has no TRACKFLOW_SECRET_KEY: set one (32 bytes, base64) to store secrets"
+            "this instance has no TASKMASTER_SECRET_KEY: set one (32 bytes, base64) to store secrets"
                 .into(),
         ));
     }

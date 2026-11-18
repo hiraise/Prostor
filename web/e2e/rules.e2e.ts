@@ -155,6 +155,7 @@ test('AUT-023, AUT-094, AUT-079, AUT-063: the built-in rules of a project', asyn
   await page.goto(`/issues/${voteIssue.readable_id ?? ''}`);
   const vote = page.getByRole('button', { name: 'Vote' });
   await expect(vote).toHaveAttribute('aria-pressed', 'false');
+  await page.getByRole('button', { name: 'Write a comment…' }).click();
   const box = page.getByRole('form', { name: 'New comment' });
   await box.getByRole('textbox', { name: /^Comment/ }).fill('+1');
   await box.getByRole('button', { name: 'Send' }).click();

@@ -15,7 +15,7 @@
 </script>
 
 <svelte:head>
-  {#if !project}<title>{states.notFoundTitle()} · trackflow</title>{/if}
+  {#if !project}<title>{states.notFoundTitle()} · TaskMaster</title>{/if}
 </svelte:head>
 
 {#if project}

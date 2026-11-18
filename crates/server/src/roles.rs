@@ -4,21 +4,21 @@
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use trackflow_api::access::{
+use taskmaster_api::access::{
     AccessMap, Assignment, AssignmentQuery, Assignments, Capabilities, Capability,
     CapabilityChange, CapabilityKey, GroupRef, Holder, NewAssignment, NewRole, PermissionCatalog,
     PermissionKey, ProjectAccess, Role, RolePatch, RoleQuery,
 };
-use trackflow_api::error::ErrorBody;
-use trackflow_api::page::{Page, PageQuery};
-use trackflow_domain::RoleId;
-use trackflow_domain::access::Access;
-use trackflow_domain::access::capability;
-use trackflow_domain::access::permission::Permission;
-use trackflow_domain::auth::Scope;
-use trackflow_service::people::Names;
-use trackflow_service::roles::{self, Described};
-use trackflow_store::access as store_access;
+use taskmaster_api::error::ErrorBody;
+use taskmaster_api::page::{Page, PageQuery};
+use taskmaster_domain::RoleId;
+use taskmaster_domain::access::Access;
+use taskmaster_domain::access::capability;
+use taskmaster_domain::access::permission::Permission;
+use taskmaster_domain::auth::Scope;
+use taskmaster_service::people::Names;
+use taskmaster_service::roles::{self, Described};
+use taskmaster_store::access as store_access;
 
 use crate::AppState;
 use crate::access::Viewer;
@@ -385,7 +385,7 @@ fn holder(user: Option<i64>, group: Option<i64>) -> Result<store_access::Holder,
         (Some(user), None) => Ok(store_access::Holder::User(user)),
         (None, Some(group)) => Ok(store_access::Holder::Group(group)),
         _ => Err(ApiError::invalid(vec![
-            trackflow_api::error::FieldError::new(
+            taskmaster_api::error::FieldError::new(
                 "user",
                 "invalid",
                 "give exactly one of user and group",
@@ -470,8 +470,8 @@ fn domain_capability(key: CapabilityKey) -> capability::Capability {
 }
 
 fn capability_answer(
-    item: &trackflow_service::capabilities::CapabilityGroups,
-    groups: &[trackflow_store::groups::Group],
+    item: &taskmaster_service::capabilities::CapabilityGroups,
+    groups: &[taskmaster_store::groups::Group],
 ) -> Capability {
     Capability {
         key: capability_key(item.capability),
@@ -502,9 +502,9 @@ pub async fn capabilities(
     viewer: Viewer,
 ) -> Result<Response, ApiError> {
     require_scope(&viewer.principal, Scope::AdminRead)?;
-    let list = trackflow_service::capabilities::list(&state.db, &viewer.access).await?;
+    let list = taskmaster_service::capabilities::list(&state.db, &viewer.access).await?;
     let ids: Vec<i64> = list.iter().flat_map(|item| item.groups.clone()).collect();
-    let groups = trackflow_service::groups::refs(&state.db, &ids).await?;
+    let groups = taskmaster_service::groups::refs(&state.db, &ids).await?;
     let items = list
         .iter()
         .map(|item| capability_answer(item, &groups))
@@ -534,7 +534,7 @@ pub async fn set_capability(
     JsonBody(request): JsonBody<CapabilityChange>,
 ) -> Result<Response, ApiError> {
     require_scope(&viewer.principal, Scope::AdminWrite)?;
-    let item = trackflow_service::capabilities::set(
+    let item = taskmaster_service::capabilities::set(
         &state.db,
         &viewer.access,
         domain_capability(key),
@@ -542,7 +542,7 @@ pub async fn set_capability(
     )
     .await?;
     state.access.clear();
-    let groups = trackflow_service::groups::refs(&state.db, &item.groups).await?;
+    let groups = taskmaster_service::groups::refs(&state.db, &item.groups).await?;
     Ok(json(StatusCode::OK, capability_answer(&item, &groups)))
 }
 

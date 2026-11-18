@@ -42,11 +42,11 @@ export function safeNext(raw: string | null): string | null {
   if (!raw?.startsWith('/') || raw.startsWith('//') || raw.includes('\\')) return null;
   let url: URL;
   try {
-    url = new URL(raw, 'http://trackflow.invalid');
+    url = new URL(raw, 'http://taskmaster.invalid');
   } catch {
     return null;
   }
-  if (url.origin !== 'http://trackflow.invalid') return null;
+  if (url.origin !== 'http://taskmaster.invalid') return null;
   const outside: string[] = [
     resolve('/(public)/signin'),
     resolve('/(public)/setup'),

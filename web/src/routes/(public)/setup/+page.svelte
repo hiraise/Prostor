@@ -14,7 +14,7 @@
   }
 </script>
 
-<svelte:head><title>{m.setupTitle()} · trackflow</title></svelte:head>
+<svelte:head><title>{m.setupTitle()} · TaskMaster</title></svelte:head>
 
 <PublicFrame title={m.setupTitle()} width="wide">
   <SetupForm ondone={done} />

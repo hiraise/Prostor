@@ -98,7 +98,7 @@
   }
 </script>
 
-<svelte:head><title>{m.setsTitle()} · trackflow</title></svelte:head>
+<svelte:head><title>{m.setsTitle()} · TaskMaster</title></svelte:head>
 
 {#if !sets || !canSeeFields()}
   <ForbiddenState {home} />

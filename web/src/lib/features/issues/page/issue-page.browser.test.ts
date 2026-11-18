@@ -1,17 +1,25 @@
 // The issue page in read form on a desktop and on a phone (step 1.7a; ISS-001, ISS-003, ISS-016,
-// ISS-020, FLD-057, FLD-062, UI-005).
+// ISS-020, FLD-057, FLD-062, UI-005) and its keys (step 2.2 §7, ISS-047).
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
 
-import type { AccessMap, Attachment, Comment, Issue } from '#lib/api/schema.gen.ts';
+import type { AccessMap, Attachment, Comment, Issue, Session } from '#lib/api/schema.gen.ts';
 import { BASE_LOCALE, setLocale } from '#lib/i18n/locale.svelte.ts';
+import { setSessionForTests } from '#lib/session/index.ts';
 import { preferences, setAccessForTests, setPreferencesForTests } from '#lib/session/index.ts';
+import {
+  dispatchClaim,
+  focusedEntity,
+  resetShortcutsForTests,
+} from '#lib/shortcuts/registry.svelte.ts';
 import { store } from '#lib/store/index.ts';
 
 import { expectAccessible, isPhone, smallTargets } from '../../../../test/a11y.ts';
 import { fakeApi } from '../../../../test/fake-api.ts';
-import { field, issue, issuePage, BORIS } from '../test-data.ts';
+import { recentCommands } from '../commands/recent.svelte.ts';
+import { issueCreateExtra } from '../new/create-extra.svelte.ts';
+import { ASSIGNEE, PRIORITY, field, issue, issuePage, ANNA, BORIS } from '../test-data.ts';
 import { forgetIssuePages, openIssue } from '../issues.ts';
 import IssuePage from './IssuePage.svelte';
 
@@ -32,6 +40,23 @@ const LEAD: AccessMap = {
   capabilities: [],
 };
 
+/** Comments, attaches and creates issues in project 1 — the keys that need the rights. */
+const WRITER: AccessMap = {
+  global: [],
+  projects: [
+    { project_id: 1, permissions: ['project.basic', 'comment.create', 'attachment.create'] },
+  ],
+  capabilities: [],
+};
+
+/** The signed-in Anna of the `m`, `r` and `f` keys. */
+const SESSION = {
+  created_at: '2026-11-14T09:00:00Z',
+  password_change_required: false,
+  remember: false,
+  user: { ...ANNA, email: null, email_verified: true, version: 1 },
+} as unknown as Session;
+
 function show(shown: Issue, access: AccessMap = READER, requested?: string) {
   setAccessForTests(access);
   setPreferencesForTests({});
@@ -45,6 +70,9 @@ afterEach(() => {
   store.entities.table('comment').clear();
   store.entities.table('attachment').clear();
   forgetIssuePages();
+  recentCommands.reset();
+  resetShortcutsForTests();
+  setSessionForTests(null);
   setAccessForTests(null);
   setPreferencesForTests(null);
   setLocale(BASE_LOCALE);
@@ -64,9 +92,15 @@ describe('IssuePage', () => {
     const details = screen.getByRole('group', { name: 'About the issue' });
     await expect.element(details.getByText('Anna Admin')).toBeVisible();
     await expect.element(details.getByText('Boris Lead')).toBeVisible();
+    // The issue's visibility sits behind the lock beside «Изменить».
+    const lock = screen.getByRole('button', { name: 'Visibility', exact: true });
+    await expect.element(lock).toHaveAttribute('aria-pressed', 'false');
+    await lock.click();
+    const visibility = screen.getByRole('dialog', { name: 'Visibility' });
     await expect
-      .element(details.getByText('Visible to everyone who sees the project'))
-      .toBeVisible();
+      .element(visibility.getByRole('radio', { name: 'Everyone who sees the project' }))
+      .toBeChecked();
+    await userEvent.keyboard('{Escape}');
     await expect.element(details.getByText('3 votes')).toBeInTheDocument();
     // NTF-015: the count next to the star is the button that opens the watcher list.
     await expect.element(details.getByRole('button', { name: '2 watchers' })).toBeInTheDocument();
@@ -101,11 +135,15 @@ describe('IssuePage', () => {
       }),
     );
 
-    const details = screen.getByRole('group', { name: 'About the issue' });
-    await expect.element(details.getByText('Restricted', { exact: true })).toBeVisible();
-    await expect
-      .element(details.getByText('Visible to Developers, Boris Lead and the reporter'))
-      .toBeVisible();
+    // A restricted issue: the lock is on, and its popover names the audience with the reporter.
+    const lock = screen.getByRole('button', { name: 'Visibility', exact: true });
+    await expect.element(lock).toHaveAttribute('aria-pressed', 'true');
+    await lock.click();
+    const visibility = screen.getByRole('dialog', { name: 'Visibility' });
+    await expect.element(visibility.getByRole('radio', { name: 'Only the chosen' })).toBeChecked();
+    // The audience with the reporter: ISS-041's words live in the picker now.
+    await expect.element(visibility.getByRole('checkbox', { name: /Developers/ })).toBeChecked();
+    await expect.element(visibility.getByRole('checkbox', { name: /Boris Lead/ })).toBeChecked();
   });
 
   it('ISS-020: the panel shows the project first, then the fields in order', async () => {
@@ -117,27 +155,30 @@ describe('IssuePage', () => {
       .elements()
       .map((term) => term.textContent.trim());
     expect(names).toEqual(['Project', 'Priority', 'Assignee', 'Estimation', 'Due date']);
-    expect(panel.getByRole('link', { name: 'Web' }).element().getAttribute('href')).toMatch(
-      /\/projects\/WEB$/,
-    );
-    // PRJ-016: people who configure the project reach its settings from here.
-    expect(
-      panel.getByRole('link', { name: 'Settings of Web' }).element().getAttribute('href'),
-    ).toMatch(/\/projects\/WEB\/settings\/general$/);
+    // The project's value opens the move dropdown; its settings live in the project itself.
+    const project = panel.getByRole('button', { name: 'Web' });
+    await expect.element(project).toBeVisible();
+    expect(project.element().textContent).toContain('Web');
     await expect.element(panel.getByText('Major')).toBeVisible();
     await expect.element(panel.getByText('Boris Lead')).toBeVisible();
     await expect.element(panel.getByText('1h 30m')).toBeVisible();
     expect(panel.element().querySelector('time')?.getAttribute('datetime')).toBe('2026-11-02');
   });
 
-  it('ISS-020: a reader has no link to the settings; empty fields show their label', async () => {
+  it('ISS-020: a reader gets a link to the project, no dropdown; empty fields show their label', async () => {
     const screen = await show(
-      issue({ fields: [field(12, 'Assignee', 'user', { empty_label: 'Unassigned' })] }),
+      issue({
+        fields: [field(12, 'Assignee', 'user', { empty_label: 'Unassigned' })],
+        can: { ...issue().can, update: false },
+      }),
     );
     const panel = screen.getByRole('complementary', { name: 'Fields' });
 
     await expect.element(panel.getByText('Unassigned')).toBeVisible();
-    expect(panel.getByRole('link', { name: 'Settings of Web' }).query()).toBeNull();
+    expect(panel.getByRole('link', { name: 'Web' }).element().getAttribute('href')).toMatch(
+      /\/projects\/WEB$/,
+    );
+    expect(panel.getByRole('button', { name: 'Web' }).query()).toBeNull();
   });
 
   it('FLD-057, FLD-062: empty required fields say so; private fields carry a lock', async () => {
@@ -157,7 +198,7 @@ describe('IssuePage', () => {
     expect(panel.getByRole('img', { name: 'Hidden field' }).elements()).toHaveLength(1);
   });
 
-  it('ISS-020: side, width and collapsed state come from personal settings (desktop)', async () => {
+  it('ISS-020: side and width come from personal settings (desktop)', async () => {
     if (isPhone()) return;
     setAccessForTests(READER);
     setPreferencesForTests({ issue_panel_side: 'start', issue_panel_width: 300 });
@@ -179,24 +220,16 @@ describe('IssuePage', () => {
     expect(preferences.value('issue_panel_width')).toBe(310);
     await userEvent.keyboard('{End}');
     expect(preferences.value('issue_panel_width')).toBe(400);
-
-    await screen.getByRole('button', { name: 'Collapse the field panel' }).click();
-    expect(preferences.value('issue_panel_collapsed')).toBe(true);
-    expect(panel.getByRole('term').query()).toBeNull();
-    expect(screen.getByRole('separator').query()).toBeNull();
-    await screen.getByRole('button', { name: 'Expand the field panel' }).click();
-    expect(preferences.chosen('issue_panel_collapsed')).toBeUndefined();
-    await expect.element(panel.getByText('Priority')).toBeVisible();
   });
 
-  it('ISS-020: on phones the fields are a section above the content, never collapsed', async () => {
+  it('ISS-020: on phones the fields are a section above the content', async () => {
     if (!isPhone()) return;
     setAccessForTests(READER);
-    setPreferencesForTests({ issue_panel_collapsed: true });
     const screen = await render(IssuePage, { issue: issue() });
     const panel = screen.getByRole('complementary', { name: 'Fields' });
 
-    await expect.element(panel.getByRole('heading', { level: 2, name: 'Fields' })).toBeVisible();
+    // No heading of its own: the properties start at once.
+    expect(panel.getByRole('heading').query()).toBeNull();
     await expect.element(panel.getByText('Priority')).toBeVisible();
     expect(panel.element().getBoundingClientRect().bottom).toBeLessThanOrEqual(
       screen.getByRole('region', { name: 'Description' }).element().getBoundingClientRect().top,
@@ -242,6 +275,129 @@ describe('IssuePage', () => {
     await show(issue(), READER, 'WEB-12');
     await new Promise((settle) => setTimeout(settle, 50));
     expect(navigation.goto).not.toHaveBeenCalled();
+  });
+});
+
+describe('ISS-047: the keys of the issue view', () => {
+  /** Renders the page as Anna, with her page data, the store loaded and the API the keys touch. */
+  async function keys(shown: Issue = issue(), routes: Record<string, unknown> = {}) {
+    const calls = fakeApi({
+      'PATCH /users/me/preferences': { body: {} },
+      'POST /commands/assist': { body: { operations: [], problems: [], suggestions: [] } },
+      'GET /issues/501/activity': { body: { items: [], older: null, newer: null } },
+      ...routes,
+    });
+    setSessionForTests(SESSION);
+    setAccessForTests(WRITER);
+    setPreferencesForTests({});
+    store.entities.table('issue').upsert(shown, 'full');
+    const screen = await render(IssuePage, { issue: shown, page: issuePage(shown) });
+    // Keys need the frame's focus: another file's iframe may hold it in a full run.
+    await screen.getByRole('heading', { level: 1 }).click();
+    return { screen, calls };
+  }
+
+  it('`e` opens the edit form, Escape closes it', async () => {
+    const { screen } = await keys();
+    await userEvent.keyboard('e');
+    await expect.element(screen.getByRole('textbox', { name: 'Summary' })).toBeVisible();
+    await userEvent.keyboard('{Escape}');
+    await expect.element(screen.getByRole('textbox', { name: 'Summary' }).query()).toBeNull();
+  });
+
+  it('`r` opens the comment box with the caret in the text', async () => {
+    const { screen } = await keys();
+    await userEvent.keyboard('r');
+    const form = screen.getByRole('form', { name: 'New comment' });
+    await expect.element(form).toBeVisible();
+    expect(document.activeElement).toBe(form.element().querySelector('textarea'));
+  });
+
+  it('`h` and `u` toggle history and comments in the activity stream', async () => {
+    const { calls } = await keys();
+    await userEvent.keyboard('h');
+    expect(preferences.value('activity_changes')).toBe(false);
+    await userEvent.keyboard('h');
+    expect(preferences.value('activity_changes')).toBe(true);
+    await userEvent.keyboard('u');
+    expect(preferences.value('activity_comments')).toBe(false);
+    await userEvent.keyboard('u');
+    expect(preferences.value('activity_comments')).toBe(true);
+    // Each toggle reloads the stream with the new tab's filters.
+    expect(calls.filter((call) => call.path === '/issues/501/activity')).toHaveLength(4);
+  });
+
+  it('`m` assigns to me, `s` takes the star off', async () => {
+    // `m` writes the builtin assignee field, so the row carries it.
+    const withAssignee = issue({
+      fields: [PRIORITY, { ...ASSIGNEE, field: { ...ASSIGNEE.field, builtin: 'assignee' } }],
+    });
+    const { calls } = await keys(withAssignee, {
+      'PUT /issues/501/fields/12': { status: 204 },
+      'DELETE /issues/501/star': { status: 204 },
+    });
+    await userEvent.keyboard('s');
+    await userEvent.keyboard('m');
+    await vi.waitFor(() => {
+      expect(calls.map((call) => [call.method, call.path])).toEqual(
+        expect.arrayContaining([
+          ['DELETE', '/issues/501/star'],
+          ['PUT', '/issues/501/fields/12'],
+        ]),
+      );
+    });
+    expect(calls.find((call) => call.path === '/issues/501/fields/12')?.body).toEqual({ value: 1 });
+  });
+
+  it('`f` opens the file picker, `t` the tag picker', async () => {
+    const { screen } = await keys();
+    const picker = screen.container.querySelector('input[type="file"]');
+    expect(picker).not.toBeNull();
+    let clicked = 0;
+    picker?.addEventListener('click', () => {
+      clicked += 1;
+    });
+    await userEvent.keyboard('f');
+    expect(clicked).toBe(1);
+    await userEvent.keyboard('t');
+    await expect.element(screen.getByRole('dialog', { name: 'Add tag' })).toBeVisible();
+  });
+
+  it('the open issue is the focused entity, and «Создать» gains its entries', async () => {
+    const shown = issue();
+    setSessionForTests(SESSION);
+    setAccessForTests({
+      global: [],
+      projects: [{ project_id: 1, permissions: ['project.basic', 'issue.create'] }],
+      capabilities: [],
+    });
+    setPreferencesForTests({});
+    fakeApi({});
+    await render(IssuePage, {
+      issue: shown,
+      page: issuePage(shown, { links: { groups: [], can_link: true } }),
+    });
+    const entity = focusedEntity();
+    expect(entity?.id).toBe('WEB-12');
+    expect(entity?.summary).toBe(shown.summary);
+    expect(entity?.href).toContain('WEB-12');
+    expect(issueCreateExtra().map((entry) => (entry.type === 'action' ? entry.label : ''))).toEqual(
+      ['New subtask', 'New linked issue…'],
+    );
+  });
+
+  it('the command claim opens the dialog with the typed letter; the edit form refuses it', async () => {
+    const { screen } = await keys();
+    expect(dispatchClaim('command', 'q')).toBe(true);
+    const dialog = screen.getByRole('dialog', { name: 'Commands' });
+    await expect.element(dialog).toBeVisible();
+    await expect.element(dialog.getByRole('combobox')).toHaveValue('q');
+    await userEvent.keyboard('{Escape}');
+    await expect.element(dialog.query()).toBeNull();
+
+    // While the edit form is shown, a letter never opens the dialog over it (the rule of 2.1).
+    await userEvent.keyboard('e');
+    expect(dispatchClaim('command', 'z')).toBe(false);
   });
 });
 

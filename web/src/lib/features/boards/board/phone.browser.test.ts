@@ -16,7 +16,7 @@ import BoardPage from './BoardPage.svelte';
 
 vi.mock('$app/navigation', () => ({ goto: vi.fn(() => Promise.resolve()) }));
 
-const ZOOM_KEY = 'trackflow.board-zoom.9';
+const ZOOM_KEY = 'taskmaster.board-zoom.9';
 
 function server(routes: Record<string, FakeRoute> = {}): FakeRequest[] {
   setSessionForTests(SESSION);

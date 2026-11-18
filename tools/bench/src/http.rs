@@ -1,4 +1,4 @@
-//! A trackflow node inside the benchmark's process, called as a client calls the server: whole
+//! A taskmaster node inside the benchmark's process, called as a client calls the server: whole
 //! requests through the router, from authentication to the compressed JSON answer (D-035).
 //!
 //! Requests skip TCP and HTTP parsing, which the server's own work dwarfs. The client asks for gzip
@@ -13,16 +13,16 @@ use anyhow::{Context, bail};
 use http::{Method, Request, StatusCode, header};
 use http_body_util::BodyExt;
 use serde_json::Value;
+use taskmaster_server::startup::{self, Services};
+use taskmaster_server::web::NoAssets;
+use taskmaster_server::{AppState, router};
+use taskmaster_store::PgConnectOptions;
+use taskmaster_store::jobs::{Handlers, RunnerConfig};
 use tokio_util::sync::CancellationToken;
 use tower::{Layer as _, ServiceExt as _};
 use tower_http::decompression::{Decompression, DecompressionLayer};
-use trackflow_server::startup::{self, Services};
-use trackflow_server::web::NoAssets;
-use trackflow_server::{AppState, router};
-use trackflow_store::PgConnectOptions;
-use trackflow_store::jobs::{Handlers, RunnerConfig};
 
-pub const HOST: &str = "bench.trackflow.test";
+pub const HOST: &str = "bench.taskmaster.test";
 /// Requests one client sends at once: the issue page's four.
 pub const REQUESTS_AT_ONCE: usize = 4;
 
@@ -42,10 +42,10 @@ impl Node {
     /// schema is current, the settings and caches load, the job runner starts without handlers,
     /// so nothing queued runs.
     pub async fn start(options: &PgConnectOptions, clients: usize) -> anyhow::Result<Self> {
-        let pool = trackflow_store::pool(options, u32::try_from(clients * REQUESTS_AT_ONCE)? + 2);
+        let pool = taskmaster_store::pool(options, u32::try_from(clients * REQUESTS_AT_ONCE)? + 2);
         let files = tempfile::tempdir()?;
         let state = AppState::new(Arc::new(NoAssets), pool).with_files(
-            trackflow_files::FileStore::new(files.path()),
+            taskmaster_files::FileStore::new(files.path()),
             1 << 20,
             None,
         );
@@ -56,7 +56,14 @@ impl Node {
             shutdown_grace: Duration::from_secs(1),
             ..RunnerConfig::default()
         };
-        let services = startup::start(&state, options, Handlers::new(), runner, &stop)
+        // A real node's kinds: the ones the scenarios enqueue (the bulk job of step 2.1).
+        let mut handlers = Handlers::new();
+        let jobs_pool = state.db.clone();
+        handlers.add::<taskmaster_service::commands::bulk::BulkWork, _, _>(move |context, job| {
+            let pool = jobs_pool.clone();
+            async move { taskmaster_service::commands::bulk::run(&pool, &context, job).await }
+        });
+        let services = startup::start(&state, options, handlers, runner, &stop)
             .await
             .context("the node did not start")?
             .context("the node stopped while starting")?;
@@ -67,6 +74,35 @@ impl Node {
             stop,
             _files: files,
         })
+    }
+
+    /// Sends one request as `token`'s owner and answers the raw file: the status, the headers
+    /// (the export's counts live there) and the bytes, undecoded beyond the transport's gzip.
+    pub async fn download(
+        &self,
+        method: Method,
+        path: &str,
+        token: &str,
+        body: &Value,
+    ) -> anyhow::Result<(StatusCode, http::HeaderMap, Vec<u8>)> {
+        let request = Request::builder()
+            .method(method.clone())
+            .uri(format!("/api/v1{path}"))
+            .header(header::HOST, HOST)
+            .header(header::AUTHORIZATION, format!("Bearer {token}"))
+            .header(header::ACCEPT_ENCODING, "gzip")
+            .header(header::CONTENT_TYPE, "application/json")
+            .body(axum::body::Body::from(serde_json::to_vec(body)?))?;
+        let response = self.service.clone().oneshot(request).await?;
+        let status = response.status();
+        let headers = response.headers().clone();
+        let bytes = response
+            .into_body()
+            .collect()
+            .await
+            .map_err(|error| anyhow::anyhow!("{method} {path}: {error}"))?
+            .to_bytes();
+        Ok((status, headers, bytes.to_vec()))
     }
 
     /// Sends one request as `token`'s owner and answers the decoded JSON; an answer other than

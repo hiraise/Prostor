@@ -6,13 +6,13 @@ use std::time::Instant;
 use axum::extract::State;
 use axum::http::{HeaderValue, StatusCode, header};
 use axum::response::{IntoResponse, Response};
+use taskmaster_api::auth::{CurrentUser, Session, SignInRequest};
+use taskmaster_api::error::ErrorBody;
+use taskmaster_domain::auth::cookie_lifetime;
+use taskmaster_domain::settings::session_policy;
+use taskmaster_service::auth::{SessionInfo, SignIn, SignedIn};
+use taskmaster_store::users::User;
 use time::OffsetDateTime;
-use trackflow_api::auth::{CurrentUser, Session, SignInRequest};
-use trackflow_api::error::ErrorBody;
-use trackflow_domain::auth::cookie_lifetime;
-use trackflow_domain::settings::session_policy;
-use trackflow_service::auth::{SessionInfo, SignIn, SignedIn};
-use trackflow_store::users::User;
 
 use crate::AppState;
 use crate::auth::{PendingSession, RequestInfo, clear_session_cookie, session_cookie};
@@ -54,7 +54,7 @@ pub async fn sign_in(
         password: request.password,
         remember: request.remember,
     };
-    let signed_in = match trackflow_service::auth::sign_in(
+    let signed_in = match taskmaster_service::auth::sign_in(
         &state.db,
         &state.passwords,
         attempt,
@@ -66,7 +66,7 @@ pub async fn sign_in(
     {
         Ok(signed_in) => signed_in,
         Err(error) => {
-            if matches!(error, trackflow_service::Error::InvalidCredentials) {
+            if matches!(error, taskmaster_service::Error::InvalidCredentials) {
                 state.throttle.failed(&keys, Instant::now());
             }
             return Err(error.into());
@@ -110,8 +110,8 @@ pub async fn get(
     State(state): State<AppState>,
     PendingSession(caller): PendingSession,
 ) -> Result<Response, ApiError> {
-    let session = trackflow_service::auth::session(&state.db, caller.session).await?;
-    let user = trackflow_service::account::me(&state.db, caller.principal.user).await?;
+    let session = taskmaster_service::auth::session(&state.db, caller.session).await?;
+    let user = taskmaster_service::account::me(&state.db, caller.principal.user).await?;
     let mut response = json(StatusCode::OK, session_body(&user, &session));
     no_store(&mut response);
     Ok(response)
@@ -135,7 +135,7 @@ pub async fn sign_out(
 ) -> Result<Response, ApiError> {
     info.require_same_origin()?;
     if let Some(cookie) = &info.session_cookie {
-        trackflow_service::auth::sign_out_by_cookie(&state.db, cookie).await?;
+        taskmaster_service::auth::sign_out_by_cookie(&state.db, cookie).await?;
     }
     let mut response = StatusCode::NO_CONTENT.into_response();
     response

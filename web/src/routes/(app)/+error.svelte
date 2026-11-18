@@ -12,7 +12,7 @@
 
 <svelte:head>
   <title
-    >{page.status === 404 ? states.notFoundTitle() : states.loadFailedTitle()} · trackflow</title
+    >{page.status === 404 ? states.notFoundTitle() : states.loadFailedTitle()} · TaskMaster</title
   >
 </svelte:head>
 

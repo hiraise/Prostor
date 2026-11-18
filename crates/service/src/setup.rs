@@ -3,20 +3,20 @@
 //! signed in. Also creates the disabled guest account (ACC-001). Runs once.
 
 use serde_json::{Value, json};
-use time::OffsetDateTime;
-use trackflow_domain::Actor;
-use trackflow_domain::access::role::PredefinedRole;
-use trackflow_domain::accounts::{Email, FullName, Username, check_new_password};
-use trackflow_domain::auth::codes;
-use trackflow_domain::settings::{
+use taskmaster_domain::Actor;
+use taskmaster_domain::access::role::PredefinedRole;
+use taskmaster_domain::accounts::{Email, FullName, Username, check_new_password};
+use taskmaster_domain::auth::codes;
+use taskmaster_domain::settings::{
     self, BASE_URL, Change, DEFAULT_TIME_ZONE, Language, SYSTEM_LANGUAGE, SettingError,
 };
-use trackflow_domain::validation::{Problem, Problems, Rejection};
-use trackflow_store::access::{self as assignments, Holder};
-use trackflow_store::instance::{self, SetupState};
-use trackflow_store::sessions::Origin;
-use trackflow_store::users::{self, Builtin, NewUser};
-use trackflow_store::{PgPool, audit, groups, roles};
+use taskmaster_domain::validation::{Problem, Problems, Rejection};
+use taskmaster_store::access::{self as assignments, Holder};
+use taskmaster_store::instance::{self, SetupState};
+use taskmaster_store::sessions::Origin;
+use taskmaster_store::users::{self, Builtin, NewUser};
+use taskmaster_store::{PgPool, audit, groups, roles};
+use time::OffsetDateTime;
 
 use crate::auth::{SignedIn, start_session};
 use crate::passwords::Passwords;
@@ -41,7 +41,7 @@ pub struct Setup {
 }
 
 /// Makes sure a pending setup has a code and returns the state: the code to print in the log, or
-/// that the setup is complete. `configured` comes from `TRACKFLOW_SETUP_CODE`.
+/// that the setup is complete. `configured` comes from `TASKMASTER_SETUP_CODE`.
 pub async fn prepare(pool: &PgPool, configured: Option<&str>) -> Result<SetupState> {
     let generated = secrets::setup_code()?;
     Ok(instance::prepare_setup(pool, &generated, configured).await?)

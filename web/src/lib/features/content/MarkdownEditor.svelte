@@ -34,6 +34,10 @@
   } from '#lib/api/schema.gen.ts';
   import { PersonName } from '#lib/features/access/index.ts';
   import { preferences } from '#lib/session/index.ts';
+  import { createMatchState, match } from '#lib/shortcuts/match.ts';
+  import { enter, leave } from '#lib/shortcuts/registry.svelte.ts';
+  import { tables } from '#lib/shortcuts/tables/index.ts';
+  import { isTypingFocus } from '#lib/shortcuts/typing.ts';
   import { announce } from '#lib/ui/announce.svelte.ts';
   import IconButton from '#lib/ui/IconButton.svelte';
   import Menu, { type MenuEntry } from '#lib/ui/Menu.svelte';
@@ -104,7 +108,7 @@
     { action: 'heading', icon: HeadingIcon },
     { action: 'bold', icon: BoldIcon, keys: keys('B') },
     { action: 'italic', icon: ItalicIcon, keys: keys('I') },
-    { action: 'strikethrough', icon: StrikethroughIcon, keys: keys('Shift+X') },
+    { action: 'strikethrough', icon: StrikethroughIcon, keys: keys('Shift+S') },
     { action: 'code', icon: CodeIcon, keys: keys('E') },
     { action: 'link', icon: LinkIcon, keys: keys('K') },
     { action: 'quote', icon: TextQuoteIcon },
@@ -114,7 +118,6 @@
     { action: 'codeBlock', icon: SquareCodeIcon },
     { action: 'table', icon: TableIcon },
   ];
-  const SHORTCUTS: Record<string, FormatAction> = { b: 'bold', i: 'italic', e: 'code', k: 'link' };
 
   const id = $props.id();
   let textarea: HTMLTextAreaElement | undefined = $state();
@@ -391,6 +394,13 @@
 
   // ---- Keys ----
 
+  // The editor context (§3): while the field holds the focus its bindings act over the guard's
+  // inverted side — letters go to the text, the modifier combos of the binding table (§4, step
+  // 2.2) format it. The table is the single source; `Ctrl/⌘+K` for a link stays the field's own
+  // key (CNT-029), like the mention list's arrows.
+  const EDITOR_TABLES = { ...tables, global: [] };
+  const editorKeys = createMatchState(isTypingFocus);
+
   function keydown(event: KeyboardEvent): void {
     if (listOpen) {
       const count = listCount;
@@ -418,21 +428,44 @@
         return;
       }
     }
-    const mod = event.ctrlKey || event.metaKey;
-    if (!mod || event.altKey) return;
-    if (event.key === 'Enter') {
-      if (onsubmit) {
+    const binding = match(event, EDITOR_TABLES, 'editor', editorKeys);
+    if (binding === null) {
+      // The link key of CNT-029, the field's own: physical position, like the table's keys.
+      if (
+        !readonly &&
+        (event.ctrlKey || event.metaKey) &&
+        !event.altKey &&
+        !event.shiftKey &&
+        event.code === 'KeyK'
+      ) {
         event.preventDefault();
-        onsubmit();
+        format('link');
       }
       return;
     }
-    const key = event.key.toLowerCase();
-    const action = event.shiftKey ? (key === 'x' ? 'strikethrough' : undefined) : SHORTCUTS[key];
-    if (action && !readonly) {
-      event.preventDefault();
-      format(action);
+    if (readonly) return;
+    switch (binding.id) {
+      case 'editor.bold':
+        format('bold');
+        break;
+      case 'editor.italic':
+        format('italic');
+        break;
+      case 'editor.strike':
+        format('strikethrough');
+        break;
+      case 'editor.code':
+        format('code');
+        break;
+      case 'editor.submit':
+        if (!onsubmit) return; // the key keeps its native meaning
+        onsubmit();
+        break;
+      default:
+        // editor.cancel: the form around the field owns Esc (the box folds, the edit cancels).
+        return;
     }
+    event.preventDefault();
   }
 
   function toolbarKeydown(event: KeyboardEvent): void {
@@ -617,6 +650,9 @@
         aria-autocomplete={readonly ? undefined : 'list'}
         aria-controls={listOpen ? `${id}-mentions` : undefined}
         aria-activedescendant={listOpen ? `${id}-mention-${String(active)}` : undefined}
+        onfocus={() => {
+          enter('editor');
+        }}
         onkeydown={keydown}
         onpaste={paste}
         oninput={() => {
@@ -627,7 +663,10 @@
         onkeyup={(event: KeyboardEvent) => {
           if (['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) findSuggestion();
         }}
-        onblur={closeMention}></textarea>
+        onblur={() => {
+          leave('editor');
+          closeMention();
+        }}></textarea>
       {#if languageOpen}
         <ul class="mentions" role="listbox" id="{id}-mentions" aria-label={m.languageList()}>
           {#each languages as language, index (language)}

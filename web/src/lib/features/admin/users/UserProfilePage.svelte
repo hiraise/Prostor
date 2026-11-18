@@ -201,7 +201,7 @@
 </script>
 
 <svelte:head>
-  <title>{account ? personName(account) : m.deletedTitle()} · trackflow</title>
+  <title>{account ? personName(account) : m.deletedTitle()} · TaskMaster</title>
 </svelte:head>
 
 {#if replacedBy}

@@ -1,19 +1,12 @@
 <script lang="ts">
   // The issue popup of a board (BRD-079, BRD-080): the issue page in a large dialog, a sheet on
   // phones. A click, Enter or a double click on a card opens it, F2 opens it in edit mode; Esc,
-  // the backdrop and × close it. «Открыть страницей» leaves the board for the issue's page.
-  import { goto } from '$app/navigation';
-  import ExternalLink from '@lucide/svelte/icons/external-link';
-
+  // the backdrop and × close it. The page itself carries the corner controls — «Открыть страницей»
+  // opens the issue's page in a new tab and keeps the board with its popup in place — so the
+  // dialog has no title row of its own (`bare`).
   import type { Issue } from '#lib/api/schema.gen.ts';
-  import {
-    IssuePage,
-    issueHref,
-    openIssue,
-    type IssuePageData,
-  } from '#lib/features/issues/index.ts';
+  import { IssuePage, openIssue, type IssuePageData } from '#lib/features/issues/index.ts';
   import type { EntityHandle } from '#lib/store/index.ts';
-  import Button from '#lib/ui/Button.svelte';
   import Dialog from '#lib/ui/Dialog.svelte';
   import EmptyState from '#lib/ui/EmptyState.svelte';
   import ErrorState from '#lib/ui/ErrorState.svelte';
@@ -61,34 +54,28 @@
       current = false;
     };
   });
-
-  function expand(): void {
-    if (!issue) return;
-    onclose();
-    // issueHref resolves the address.
-    // eslint-disable-next-line svelte/no-navigation-without-resolve
-    void goto(issueHref(issue));
-  }
 </script>
 
 <Dialog
   open={target !== null}
   title={issue ? `${issue.readable_id ?? ''} ${issue.summary}`.trim() : m.issuePopup()}
   hideTitle
-  size="lg"
+  size="xl"
+  bare
   onclose={() => {
     if (target !== null) onclose();
   }}
 >
   <div class="popup">
     {#if issue && target && loaded.kind === 'found'}
-      <div class="bar">
-        <Button size="sm" variant="ghost" icon={ExternalLink} onclick={expand}
-          >{m.openIssuePage()}</Button
-        >
-      </div>
       {#key issue.id}
-        <IssuePage {issue} page={loaded.page} embedded edit={target.edit} />
+        <IssuePage
+          {issue}
+          page={loaded.page}
+          embedded
+          edit={target.edit}
+          onclose={() => onclose()}
+        />
       {/key}
     {:else if loaded.kind === 'missing'}
       <EmptyState title={m.issueGone()} level={2} />
@@ -110,12 +97,6 @@
   .popup {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
     min-height: 12rem;
-  }
-
-  .bar {
-    display: flex;
-    justify-content: flex-end;
   }
 </style>

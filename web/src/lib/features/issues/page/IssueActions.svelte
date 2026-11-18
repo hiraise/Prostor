@@ -1,18 +1,19 @@
 <script lang="ts">
-  // «Ещё» of the issue page (ISS-017, P1 part): the copy actions (UI-006), «Добавить тег» on phones
-  // where the header has no room for it, «Клонировать» when the project allows it (AUT-066), and
-  // «Удалить» for those who may delete. Items without the right are not shown.
+  // «Ещё» of the issue page (ISS-017, P1 part): the copy actions (UI-006), «Прикрепить файлы»,
+  // «Клонировать» when the project allows it (AUT-066), and «Удалить» for those who may delete.
+  // Items without the right are not shown; «Изменить», «Добавить тег» and «Связать» are icon
+  // buttons in the title row on every width and are not repeated here.
   import Copy from '@lucide/svelte/icons/copy';
   import CopyPlus from '@lucide/svelte/icons/copy-plus';
   import Ellipsis from '@lucide/svelte/icons/ellipsis';
+  import History from '@lucide/svelte/icons/history';
+  import Terminal from '@lucide/svelte/icons/terminal';
   import Files from '@lucide/svelte/icons/files';
   import FileStack from '@lucide/svelte/icons/file-stack';
   import Link from '@lucide/svelte/icons/link';
-  import Link2 from '@lucide/svelte/icons/link-2';
   import ListTree from '@lucide/svelte/icons/list-tree';
   import SquarePlus from '@lucide/svelte/icons/square-plus';
   import Paperclip from '@lucide/svelte/icons/paperclip';
-  import Tag from '@lucide/svelte/icons/tag';
   import Trash2 from '@lucide/svelte/icons/trash-2';
 
   import type { Issue } from '#lib/api/schema.gen.ts';
@@ -28,22 +29,30 @@
 
   interface Props {
     issue: Issue;
-    /** Shown as an item when set (phones). */
-    onaddtag?: () => unknown;
     ondelete: () => unknown;
     /** «Прикрепить файлы», for those who may (CNT-017). */
     onattach?: () => unknown;
-    /** «Связать» (phones, where the header has no room for it; LNK-005). */
-    onlink?: () => unknown;
     /** «Новая подзадача», «Новая связанная задача…» (ISS-009). */
     onsubtask?: () => unknown;
     onnewlinked?: () => unknown;
     /** «Отметить как дубликат…» (LNK-015). */
     onduplicate?: () => unknown;
+    /** «Команды…» (step 2.1 §6, ISS-017). */
+    oncommands?: () => unknown;
+    /** «Повторить последнюю команду»; absent when nothing was applied in this tab yet. */
+    onrepeat?: () => unknown;
   }
 
-  let { issue, onaddtag, ondelete, onattach, onlink, onsubtask, onnewlinked, onduplicate }: Props =
-    $props();
+  let {
+    issue,
+    ondelete,
+    onattach,
+    onsubtask,
+    onnewlinked,
+    onduplicate,
+    oncommands,
+    onrepeat,
+  }: Props = $props();
 
   // The project's `clone_issue` toggle (AUT-066), looked up before the menu can open and cached
   // per project in the clone module: the items appear when it lands.
@@ -79,14 +88,6 @@
         },
       );
     }
-    if (onaddtag) {
-      entries.push({
-        type: 'action',
-        label: m.addTag(),
-        icon: Tag,
-        onSelect: () => void onaddtag(),
-      });
-    }
     if (onattach) {
       entries.push({
         type: 'action',
@@ -96,13 +97,21 @@
       });
     }
     const before = entries.length;
-    if (onlink) {
+    if (oncommands) {
       entries.push({
         type: 'action',
-        label: m.linkAction(),
-        icon: Link2,
-        onSelect: () => void onlink(),
+        label: m.commandsMenu(),
+        icon: Terminal,
+        onSelect: () => void oncommands(),
       });
+      if (onrepeat) {
+        entries.push({
+          type: 'action',
+          label: m.repeatMenu(),
+          icon: History,
+          onSelect: () => void onrepeat(),
+        });
+      }
     }
     if (onsubtask) {
       entries.push({

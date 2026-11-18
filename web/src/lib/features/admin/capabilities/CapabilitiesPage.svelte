@@ -169,7 +169,7 @@
   onMount(() => void load());
 </script>
 
-<svelte:head><title>{m.capabilitiesTitle()} · trackflow</title></svelte:head>
+<svelte:head><title>{m.capabilitiesTitle()} · TaskMaster</title></svelte:head>
 
 <div class="capabilities-page">
   <PageHeader title={m.capabilitiesTitle()} />

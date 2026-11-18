@@ -10,20 +10,20 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
   setPreferencesForTests(null);
-  localStorage.removeItem('trackflow.nav.collapsed');
-  localStorage.removeItem('trackflow.editor.toolbar');
+  localStorage.removeItem('taskmaster.nav.collapsed');
+  localStorage.removeItem('taskmaster.editor.toolbar');
 });
 
 describe('UI-018: personal interface settings', () => {
   it('UI-018: unset keys and keys before the load read as defaults', async () => {
     fakeApi({ 'GET /users/me/preferences': { body: { issue_panel_side: 'start' } } });
     expect(preferences.value('issue_panel_side')).toBe('end');
-    expect(preferences.value('issue_panel_width')).toBe(220);
+    expect(preferences.value('issue_panel_width')).toBe(180);
     expect(preferences.chosen('issue_panel_side')).toBeUndefined();
 
     await preferences.ensure();
     expect(preferences.value('issue_panel_side')).toBe('start');
-    expect(preferences.value('issue_panel_width')).toBe(220);
+    expect(preferences.value('issue_panel_width')).toBe(180);
     expect(preferences.value('recent_issues')).toEqual([]);
   });
 
@@ -78,7 +78,7 @@ describe('UI-018: personal interface settings', () => {
     setPreferencesForTests({});
     // Opens this tab's channel, as a load or a change does.
     preferences.set({ links_collapsed: true });
-    const other = new BroadcastChannel('trackflow-preferences');
+    const other = new BroadcastChannel('taskmaster-preferences');
     other.postMessage({ issue_panel_side: 'start', links_collapsed: null });
     other.close();
 
@@ -89,8 +89,8 @@ describe('UI-018: personal interface settings', () => {
 
   it('UI-018: what this browser kept moves to the server once, unless the server has its own', async () => {
     vi.useFakeTimers();
-    localStorage.setItem('trackflow.nav.collapsed', 'true');
-    localStorage.setItem('trackflow.editor.toolbar', 'hidden');
+    localStorage.setItem('taskmaster.nav.collapsed', 'true');
+    localStorage.setItem('taskmaster.editor.toolbar', 'hidden');
     const calls = fakeApi({
       'GET /users/me/preferences': { body: { editor_toolbar: true } },
       'PATCH /users/me/preferences': ({ body }) => ({ body }),
@@ -102,7 +102,7 @@ describe('UI-018: personal interface settings', () => {
     expect(preferences.value('rail_collapsed')).toBe(true);
     expect(preferences.value('editor_toolbar')).toBe(true);
     expect(calls.at(-1)?.body).toEqual({ rail_collapsed: true });
-    expect(localStorage.getItem('trackflow.nav.collapsed')).toBeNull();
-    expect(localStorage.getItem('trackflow.editor.toolbar')).toBeNull();
+    expect(localStorage.getItem('taskmaster.nav.collapsed')).toBeNull();
+    expect(localStorage.getItem('taskmaster.editor.toolbar')).toBeNull();
   });
 });

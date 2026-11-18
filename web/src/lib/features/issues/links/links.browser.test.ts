@@ -161,16 +161,15 @@ function sent(calls: FakeRequest[]) {
 
 const narrow = () => matchMedia(NARROW).matches;
 
-/** «Ещё» of the header, then one of its items. */
+/** «Ещё» of the head, then one of its items. */
 async function fromMenu(item: string) {
   await page.getByRole('button', { name: 'More', exact: true }).click();
   await page.getByRole('menuitem', { name: item }).click();
 }
 
-/** «Связать»: a header button on wide screens, an item of «Ещё» on phones. */
+/** «Связать»: the link icon in the title row on every width. */
 async function openLinkDialog() {
-  if (narrow()) await fromMenu('Link');
-  else await page.getByRole('button', { name: 'Link', exact: true }).click();
+  await page.getByRole('button', { name: 'Link', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Link issues' });
   await expect.element(dialog).toBeVisible();
   return dialog;

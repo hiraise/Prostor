@@ -7,13 +7,13 @@
 use std::collections::BTreeMap;
 
 use sqlx::PgConnection;
-use trackflow_domain::fields::FieldKind;
-use trackflow_domain::issues::values::Value;
-use trackflow_domain::links::BuiltinType;
-use trackflow_domain::rules::{FIX_VERSIONS, Rule};
-use trackflow_domain::{IssueId, ProjectId};
-use trackflow_store::issues::Issue;
-use trackflow_store::{issues, links, value_sets};
+use taskmaster_domain::fields::FieldKind;
+use taskmaster_domain::issues::values::Value;
+use taskmaster_domain::links::BuiltinType;
+use taskmaster_domain::rules::{FIX_VERSIONS, Rule};
+use taskmaster_domain::{IssueId, ProjectId};
+use taskmaster_store::issues::Issue;
+use taskmaster_store::{issues, links, value_sets};
 
 use crate::Error;
 use crate::issues::values::{self, ProjectField, ProjectFields};
@@ -87,10 +87,10 @@ async fn copy_to_subtasks(
     conn: &mut PgConnection,
     batch: &mut Batch,
     ctx: &mut Ctx<'_>,
-    children: &[(IssueId, trackflow_store::links::Linked)],
+    children: &[(IssueId, taskmaster_store::links::Linked)],
     names: &[String],
 ) -> Result<(), Error> {
-    let open: Vec<&trackflow_store::links::Linked> = children
+    let open: Vec<&taskmaster_store::links::Linked> = children
         .iter()
         .map(|(_, child)| child)
         .filter(|child| {
@@ -207,7 +207,7 @@ async fn copy_from_parent(
     batch: &mut Batch,
     ctx: &mut Ctx<'_>,
     child: &Issue,
-    parent: trackflow_domain::IssueId,
+    parent: taskmaster_domain::IssueId,
 ) -> Result<(), Error> {
     let child_fields = ctx.fields(&mut *conn, child.project_id).await?;
     let Some(child_field) = find_field(&child_fields, ctx.language) else {
@@ -261,7 +261,7 @@ async fn names_of(conn: &mut PgConnection, refs: &[i64]) -> Result<Vec<String>, 
 /// The project's fix-versions field (§3.4): by built-in key first, else by name.
 fn find_field(
     fields: &ProjectFields,
-    language: trackflow_domain::settings::Language,
+    language: taskmaster_domain::settings::Language,
 ) -> Option<&ProjectField> {
     super::find_field(fields, &FIX_VERSIONS, language)
 }

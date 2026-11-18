@@ -1,9 +1,9 @@
-//! Comments on issues (CNT-001…CNT-005). Rules: `trackflow_domain::comments`; their records in
+//! Comments on issues (CNT-001…CNT-005). Rules: `taskmaster_domain::comments`; their records in
 //! the history: `issue_history`.
 
 use sqlx::{PgConnection, PgExecutor};
+use taskmaster_domain::{CommentId, GroupId, IssueId, UserId};
 use time::OffsetDateTime;
-use trackflow_domain::{CommentId, GroupId, IssueId, UserId};
 
 use crate::content::Rendered;
 

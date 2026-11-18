@@ -43,7 +43,9 @@
 
   const items = $derived(files.items);
   const collapsed = $derived(preferences.value('attachments_collapsed'));
-  const shown = $derived(items.length > 0 || files.pending.length > 0 || canAttach);
+  // With no files yet the whole section stays away — no empty header, no button. Attaching
+  // begins from «Ещё», a drop or a paste; the section appears with the first file.
+  const shown = $derived(items.length > 0 || files.pending.length > 0);
 
   function toggle(): void {
     preferences.set({ attachments_collapsed: collapsed ? null : true });
@@ -163,8 +165,6 @@
             </li>
           {/each}
         </ul>
-      {:else if files.pending.length === 0}
-        <p class="muted">{m.noAttachments()}</p>
       {/if}
       {#if files.hasMore}
         <Button
@@ -319,9 +319,5 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-  }
-
-  .muted {
-    color: var(--color-text-muted);
   }
 </style>

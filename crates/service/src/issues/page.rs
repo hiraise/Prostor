@@ -2,10 +2,10 @@
 //! activity, its links panel and its files. The issue, its project and the viewer's access are
 //! loaded and checked once, on one connection, instead of once per part.
 
-use trackflow_domain::IssueId;
-use trackflow_domain::access::Access;
-use trackflow_store::PgPool;
-use trackflow_store::issues;
+use taskmaster_domain::IssueId;
+use taskmaster_domain::access::Access;
+use taskmaster_store::PgPool;
+use taskmaster_store::issues;
 
 use super::activity::{self, ActivityPage};
 use super::{One, checked, one};

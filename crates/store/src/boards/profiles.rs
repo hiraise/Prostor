@@ -4,7 +4,7 @@ use sqlx::{PgConnection, PgExecutor};
 use std::collections::BTreeMap;
 use time::OffsetDateTime;
 
-use trackflow_domain::{BoardId, ColumnId, IssueId, UserId};
+use taskmaster_domain::{BoardId, ColumnId, IssueId, UserId};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Profile {

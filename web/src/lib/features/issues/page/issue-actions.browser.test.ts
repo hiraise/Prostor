@@ -201,7 +201,10 @@ describe('ISS-018: edit mode', () => {
     expect(sent(calls)).toEqual([
       ['PATCH', '/issues/501', { audience: { users: [], groups: [7] } }],
     ]);
-    await expect.element(screen.getByText('Restricted', { exact: true })).toBeVisible();
+    // The lock beside «Изменить» shows the narrowed visibility.
+    await expect
+      .element(screen.getByRole('button', { name: 'Visibility', exact: true }))
+      .toHaveAttribute('aria-pressed', 'true');
   });
 });
 
@@ -320,12 +323,8 @@ describe('ISS-034, ISS-035: tags', () => {
       },
     });
 
-    if (isPhone()) {
-      await screen.getByRole('button', { name: 'More' }).click();
-      await page.getByRole('menuitem', { name: 'Add tag' }).click();
-    } else {
-      await screen.getByRole('button', { name: 'Add tag' }).click();
-    }
+    // The tag picker's trigger is the tag icon in the title row on every width.
+    await screen.getByRole('button', { name: 'Add tag' }).click();
     const picker = page.getByRole('dialog', { name: 'Add tag' });
     await expect.element(picker.getByRole('checkbox', { name: 'triage' })).toBeVisible();
     // ISS-035: a tag shared only for viewing is not offered.
@@ -472,14 +471,17 @@ describe('ISS-020: moving to another project', () => {
   it('previews the changes, moves and follows the issue to its new ID', async () => {
     const { screen, calls } = await show(issue({ fields: [] }), routes(true));
 
-    await screen.getByRole('button', { name: 'Project: Web. Move to another' }).click();
-    const dialog = page.getByRole('dialog', { name: 'Move to another project' });
+    // The project value opens the dropdown of the projects that would take the issue.
+    await screen.getByRole('button', { name: 'Web' }).click();
+    const picker = page.getByRole('dialog', { name: 'Choose another project' });
     // Only active projects other than the issue's own.
-    await expect.element(dialog.getByRole('radio', { name: 'Site' })).toBeVisible();
-    expect(dialog.getByRole('radio', { name: 'Web' }).query()).toBeNull();
-    expect(dialog.getByRole('radio', { name: 'Old' }).query()).toBeNull();
-    await dialog.getByRole('radio', { name: 'Site' }).click();
+    await expect.element(picker.getByRole('radio', { name: /^Site/ })).toBeVisible();
+    expect(picker.getByRole('radio', { name: 'Web' }).query()).toBeNull();
+    expect(picker.getByRole('radio', { name: 'Old' }).query()).toBeNull();
 
+    // The move erases a field: the preview dialog opens with the project already chosen.
+    await picker.getByRole('radio', { name: /^Site/ }).click();
+    const dialog = page.getByRole('dialog', { name: 'Move to another project' });
     await expect.element(dialog.getByText('In Site these fields change:')).toBeVisible();
     await expect
       .element(dialog.getByRole('listitem'))
@@ -496,12 +498,40 @@ describe('ISS-020: moving to another project', () => {
     expect(toasts.items.map((toast) => toast.message)).toEqual(['Moved, now SITE-4']);
   });
 
+  it('moves at once when nothing changes, without the preview dialog', async () => {
+    const clean = JSON.parse(JSON.stringify(routes(true))) as ReturnType<typeof routes>;
+    const preview = clean['GET /issues/501/move-preview'] as { body: { changes: unknown[] } };
+    preview.body.changes = [];
+    const { screen, calls } = await show(issue({ fields: [] }), clean);
+
+    await screen.getByRole('button', { name: 'Web' }).click();
+    await page
+      .getByRole('dialog', { name: 'Choose another project' })
+      .getByRole('radio', { name: /^Site/ })
+      .click();
+
+    await expect
+      .poll(() => page.getByRole('dialog', { name: 'Move to another project' }).query())
+      .toBeNull();
+    expect(sent(calls)).toEqual([['POST', '/issues/501/move', { project: 2 }]]);
+    await vi.waitFor(() => {
+      expect(navigation.goto).toHaveBeenCalledWith(
+        expect.stringMatching(/\/issues\/SITE-4$/),
+        expect.objectContaining({ replaceState: true }),
+      );
+    });
+    expect(toasts.items.map((toast) => toast.message)).toEqual(['Moved, now SITE-4']);
+  });
+
   it('warns when the viewer would lose the issue and then leaves for the projects', async () => {
     const { screen } = await show(issue({ fields: [] }), routes(false));
 
-    await screen.getByRole('button', { name: 'Project: Web. Move to another' }).click();
+    await screen.getByRole('button', { name: 'Web' }).click();
+    await page
+      .getByRole('dialog', { name: 'Choose another project' })
+      .getByRole('radio', { name: /^Site/ })
+      .click();
     const dialog = page.getByRole('dialog', { name: 'Move to another project' });
-    await dialog.getByRole('radio', { name: 'Site' }).click();
     await expect
       .element(dialog.getByText('You will not see the issue in that project.'))
       .toBeVisible();

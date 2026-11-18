@@ -4,17 +4,17 @@
 use std::collections::HashMap;
 
 use sqlx::PgConnection;
-use trackflow_domain::fields::FieldKind;
-use trackflow_domain::fields::builtin::{BuiltinField, FieldSeed, SetSeed, SharedSet};
-use trackflow_domain::fields::templates::{
+use taskmaster_domain::fields::FieldKind;
+use taskmaster_domain::fields::builtin::{BuiltinField, FieldSeed, SetSeed, SharedSet};
+use taskmaster_domain::fields::templates::{
     SetChoice, TemplateFieldRef, auto_attach_set, fields_of,
 };
-use trackflow_domain::projects::Template;
-use trackflow_domain::settings::Language;
-use trackflow_domain::{GroupId, ProjectId, SetId, rank};
-use trackflow_store::fields::{self, Attachment, Field, NewField};
-use trackflow_store::value_sets::{self, NewValue};
-use trackflow_store::{PgPool, instance};
+use taskmaster_domain::projects::Template;
+use taskmaster_domain::settings::Language;
+use taskmaster_domain::{GroupId, ProjectId, SetId, rank};
+use taskmaster_store::fields::{self, Attachment, Field, NewField};
+use taskmaster_store::value_sets::{self, NewValue};
+use taskmaster_store::{PgPool, instance};
 
 use crate::{Error, Result};
 
@@ -171,7 +171,7 @@ async fn create_set(
 /// Set names are limited; a long project name is cut, not refused.
 fn truncate(name: &str) -> String {
     name.chars()
-        .take(trackflow_domain::fields::SET_NAME_MAX - 6)
+        .take(taskmaster_domain::fields::SET_NAME_MAX - 6)
         .collect()
 }
 
