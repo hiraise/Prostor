@@ -2,27 +2,27 @@
 //! fields in projects, and who may change what.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::role::PredefinedRole;
-use taskmaster_domain::fields::{FieldKind, SetKind};
-use taskmaster_domain::projects::Template;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::validation::Problem;
-use taskmaster_domain::{FieldId, ProjectId, UserId};
-use taskmaster_service::access;
-use taskmaster_service::auth::SignedIn;
-use taskmaster_service::fields::{self, FieldUpdate, NewFieldInput, SetSource};
-use taskmaster_service::project_fields::{self, AttachInput, SetUse, SettingsChange};
-use taskmaster_service::projects::{self, NewProjectInput};
-use taskmaster_service::roles;
-use taskmaster_service::setup::{self, Setup};
-use taskmaster_service::users::{self, NewAccount};
-use taskmaster_service::value_sets::{self, ValueInput};
-use taskmaster_service::{Error, Passwords};
-use taskmaster_store::PgPool;
-use taskmaster_store::access::Holder;
-use taskmaster_store::sessions::Origin;
-use taskmaster_testkit::TestDb;
+use prostor_domain::access::Access;
+use prostor_domain::access::role::PredefinedRole;
+use prostor_domain::fields::{FieldKind, SetKind};
+use prostor_domain::projects::Template;
+use prostor_domain::settings::Language;
+use prostor_domain::validation::Problem;
+use prostor_domain::{FieldId, ProjectId, UserId};
+use prostor_service::access;
+use prostor_service::auth::SignedIn;
+use prostor_service::fields::{self, FieldUpdate, NewFieldInput, SetSource};
+use prostor_service::project_fields::{self, AttachInput, SetUse, SettingsChange};
+use prostor_service::projects::{self, NewProjectInput};
+use prostor_service::roles;
+use prostor_service::setup::{self, Setup};
+use prostor_service::users::{self, NewAccount};
+use prostor_service::value_sets::{self, ValueInput};
+use prostor_service::{Error, Passwords};
+use prostor_store::PgPool;
+use prostor_store::access::Holder;
+use prostor_store::sessions::Origin;
+use prostor_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::{date, datetime};
 
@@ -98,7 +98,7 @@ async fn project(pool: &PgPool, actor: &Access, name: &str, key: &str) -> Projec
 /// A project administrator of these projects.
 async fn project_admin(pool: &PgPool, actor: &Access, username: &str, of: &[ProjectId]) -> Access {
     let user = create_user(pool, actor, username).await;
-    let role = taskmaster_store::roles::builtin_id(pool, PredefinedRole::ProjectAdmin.key())
+    let role = prostor_store::roles::builtin_id(pool, PredefinedRole::ProjectAdmin.key())
         .await
         .unwrap()
         .unwrap();
@@ -726,7 +726,7 @@ async fn fld_051_to_058_fields_in_a_project() {
         .await
         .unwrap();
     assert!(
-        taskmaster_store::value_sets::get(pool, set)
+        prostor_store::value_sets::get(pool, set)
             .await
             .unwrap()
             .is_none()

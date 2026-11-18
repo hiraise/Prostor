@@ -3,7 +3,7 @@
 
 use std::time::Duration;
 
-use taskmaster_testkit::TestDb;
+use prostor_testkit::TestDb;
 
 async fn exists(name: &str) -> bool {
     let probe = TestDb::empty().await;

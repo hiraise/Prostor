@@ -1,8 +1,8 @@
 //! Roles (ACC-052…ACC-057). Predefined roles have rows (assignments point at them) but take their
-//! permissions from `taskmaster_domain::access::role`.
+//! permissions from `prostor_domain::access::role`.
 
+use prostor_domain::RoleId;
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::RoleId;
 use time::OffsetDateTime;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

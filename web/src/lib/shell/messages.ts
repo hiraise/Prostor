@@ -1,7 +1,7 @@
 // Texts of the application shell: navigation, preferences, notices (UI-001, UI-035).
 import { msg } from '#lib/i18n/message.ts';
 
-export const homeLink = msg({ en: 'TaskMaster, home page', ru: 'TaskMaster, главная страница' });
+export const homeLink = msg({ en: 'Prostor, home page', ru: 'Простор, главная страница' });
 export const skipToContent = msg({
   en: 'Skip to main content',
   ru: 'Перейти к основному содержимому',
@@ -31,13 +31,13 @@ export const sectionInProgress = msg({
   ru: 'Раздел в разработке',
 });
 export const sectionInProgressText = msg({
-  en: 'It will appear in one of the next versions of TaskMaster.',
-  ru: 'Он появится в одной из следующих версий TaskMaster.',
+  en: 'It will appear in one of the next versions of Prostor.',
+  ru: 'Он появится в одной из следующих версий Простора.',
 });
 
 export const oldBrowser = msg({
-  en: 'Your browser is older than TaskMaster supports, so some things may not work. Update it to the latest version.',
-  ru: 'Ваш браузер старее, чем поддерживает TaskMaster, поэтому что-то может не работать. Обновите его до последней версии.',
+  en: 'Your browser is older than Prostor supports, so some things may not work. Update it to the latest version.',
+  ru: 'Ваш браузер старее, чем поддерживает Простор, поэтому что-то может не работать. Обновите его до последней версии.',
 });
 export const serverUnavailable = msg({
   en: 'The server is not available yet',

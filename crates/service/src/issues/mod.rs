@@ -16,27 +16,27 @@ pub mod values;
 
 use std::collections::BTreeMap;
 
+use prostor_domain::access::Access;
+use prostor_domain::access::visibility::Audience;
+use prostor_domain::fields::FieldKind;
+use prostor_domain::issues::history::{ChangeKind, Origin, Record};
+use prostor_domain::issues::rights::{self, Facts, VoteRefusal};
+use prostor_domain::issues::values::{self as rules, Input, Value};
+use prostor_domain::issues::{self as domain, ReadableId};
+use prostor_domain::live::Change;
+use prostor_domain::validation::{Problem, Problems};
+use prostor_domain::{FieldId, GroupId, IssueId, ProjectId, TagId, UploadId, UserId};
+use prostor_markup::Profile;
+use prostor_store::PgPool;
+use prostor_store::content::{self, TextValueHtml};
+use prostor_store::groups::{self, Group};
+use prostor_store::issue_history::{self, Author};
+use prostor_store::issues::{self, Issue, NewDraft};
+use prostor_store::projects::{self, Project};
+use prostor_store::tags::{self as store_tags, Tag};
+use prostor_store::users::{self, User};
+use prostor_store::value_sets::{self, Value as SetValue};
 use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::visibility::Audience;
-use taskmaster_domain::fields::FieldKind;
-use taskmaster_domain::issues::history::{ChangeKind, Origin, Record};
-use taskmaster_domain::issues::rights::{self, Facts, VoteRefusal};
-use taskmaster_domain::issues::values::{self as rules, Input, Value};
-use taskmaster_domain::issues::{self as domain, ReadableId};
-use taskmaster_domain::live::Change;
-use taskmaster_domain::validation::{Problem, Problems};
-use taskmaster_domain::{FieldId, GroupId, IssueId, ProjectId, TagId, UploadId, UserId};
-use taskmaster_markup::Profile;
-use taskmaster_store::PgPool;
-use taskmaster_store::content::{self, TextValueHtml};
-use taskmaster_store::groups::{self, Group};
-use taskmaster_store::issue_history::{self, Author};
-use taskmaster_store::issues::{self, Issue, NewDraft};
-use taskmaster_store::projects::{self, Project};
-use taskmaster_store::tags::{self as store_tags, Tag};
-use taskmaster_store::users::{self, User};
-use taskmaster_store::value_sets::{self, Value as SetValue};
 use time::OffsetDateTime;
 
 use self::values::{ProjectField, ProjectFields};
@@ -94,7 +94,7 @@ pub struct IssueView {
     /// Its subtasks the viewer may see (LNK-014).
     pub subtasks: crate::issue_links::Subtasks,
     /// Its parent, when the viewer may see it (LNK-013); filled for one issue in full.
-    pub parent: Option<(taskmaster_store::links::Linked, Project)>,
+    pub parent: Option<(prostor_store::links::Linked, Project)>,
 }
 
 impl IssueView {
@@ -515,7 +515,7 @@ pub async fn delete_drafts(pool: &PgPool, viewer: &Access) -> Result<()> {
     let mut tx = pool.begin().await?;
     let me = [viewer.user()];
     let drafts = issues::draft_ids_of(&mut *tx, &me).await?;
-    let keys = taskmaster_store::attachments::keys_of_issues(&mut *tx, &drafts).await?;
+    let keys = prostor_store::attachments::keys_of_issues(&mut *tx, &drafts).await?;
     crate::files::queue_removal(&mut tx, keys).await?;
     issues::delete_drafts_of(&mut tx, &me).await?;
     tx.commit().await?;
@@ -649,13 +649,13 @@ async fn initial_values(
             out.insert(f.id(), value);
         }
     }
-    let schedule = taskmaster_domain::duration::Schedule::default();
+    let schedule = prostor_domain::duration::Schedule::default();
     for input in given {
         let path = format!("fields.{}", input.field);
         let Some(f) = fields.get(input.field) else {
             problems.add(
                 &path,
-                taskmaster_domain::validation::Rejection::new(
+                prostor_domain::validation::Rejection::new(
                     Problem::Invalid,
                     "the project has no such field",
                 ),
@@ -665,7 +665,7 @@ async fn initial_values(
         if (f.private() && !private_update) || !rules::editable(f.field.builtin.as_deref()) {
             problems.add(
                 &path,
-                taskmaster_domain::validation::Rejection::new(
+                prostor_domain::validation::Rejection::new(
                     Problem::Invalid,
                     "you may not set this field",
                 ),
@@ -792,7 +792,7 @@ pub(crate) async fn publish_locked(
     crate::issue_links::record_published(tx, batch, author, issue.id).await?;
     batch.issue(issue.id, Change::Created);
     // A draft's files were hidden with it: now they are new to everyone else.
-    for file in taskmaster_store::attachments::of_issue(&mut *tx, issue.id).await? {
+    for file in prostor_store::attachments::of_issue(&mut *tx, issue.id).await? {
         batch.attachment(file.id, Change::Created);
     }
     Ok(())
@@ -808,10 +808,10 @@ pub async fn create(
     input: NewIssue,
 ) -> Result<crate::rules::Answer<One>> {
     let mut problems = Problems::new();
-    if input.links.len() > taskmaster_domain::links::ADD_MAX {
+    if input.links.len() > prostor_domain::links::ADD_MAX {
         problems.add(
             "links",
-            taskmaster_domain::validation::Rejection::new(
+            prostor_domain::validation::Rejection::new(
                 Problem::TooLong,
                 "too many links for one issue at once",
             ),
@@ -879,7 +879,7 @@ pub async fn create(
         let draft = issues::get(&mut *tx, id)
             .await?
             .ok_or(Error::NotFound("no such issue"))?;
-        taskmaster_domain::attachments::may_attach(actor, &facts(&draft))?;
+        prostor_domain::attachments::may_attach(actor, &facts(&draft))?;
         // Files of a draft have no history; publishing records the issue as it is.
         crate::attachments::attach_locked(&mut tx, &mut batch, actor, &draft, None, &input.uploads)
             .await?;
@@ -1223,12 +1223,10 @@ pub(crate) async fn set_field_locked(
     let mut held = values::of_issue(&mut *conn, issue, &fields).await?;
     let old = held.get(&field).cloned();
     let new = match change {
-        FieldChange::Set(input) => rules::parse(
-            f.kind,
-            input,
-            taskmaster_domain::duration::Schedule::default(),
-        )
-        .map_err(|r| Error::rejected("value", r))?,
+        FieldChange::Set(input) => {
+            rules::parse(f.kind, input, prostor_domain::duration::Schedule::default())
+                .map_err(|r| Error::rejected("value", r))?
+        }
         FieldChange::Add(ids) | FieldChange::Remove(ids) if !f.kind.multi => {
             let _ = ids;
             return Err(Error::field(
@@ -1290,7 +1288,7 @@ pub(crate) async fn delete_conn(
     issue: &Issue,
 ) -> Result<()> {
     if issue.is_draft() {
-        let keys = taskmaster_store::attachments::keys_of_issues(&mut *conn, &[issue.id]).await?;
+        let keys = prostor_store::attachments::keys_of_issues(&mut *conn, &[issue.id]).await?;
         crate::files::queue_removal(&mut *conn, keys).await?;
         issues::delete_draft(&mut *conn, issue.id).await?;
     } else {

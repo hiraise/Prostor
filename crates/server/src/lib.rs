@@ -1,4 +1,4 @@
-//! taskmaster server: the HTTP router and its parts. The binary in `main.rs` only wires them together,
+//! prostor server: the HTTP router and its parts. The binary in `main.rs` only wires them together,
 //! so integration tests can build the same router with test doubles and a test database.
 
 pub mod access;
@@ -53,12 +53,12 @@ use axum::http::{Extensions, HeaderMap, HeaderValue, Request, StatusCode, Versio
 use axum::middleware;
 use axum::response::IntoResponse;
 use axum::routing::{any, get};
-use taskmaster_files::FileStore;
-use taskmaster_service::Passwords;
-use taskmaster_service::files::Signer;
-use taskmaster_service::people::Names;
-use taskmaster_service::pictures::Gravatar;
-use taskmaster_store::PgPool;
+use prostor_files::FileStore;
+use prostor_service::Passwords;
+use prostor_service::files::Signer;
+use prostor_service::people::Names;
+use prostor_service::pictures::Gravatar;
+use prostor_store::PgPool;
 use tower_http::LatencyUnit;
 use tower_http::catch_panic::CatchPanicLayer;
 use tower_http::compression::predicate::{DefaultPredicate, Predicate};
@@ -91,9 +91,9 @@ pub struct AppState {
     pub throttle: Arc<Throttle>,
     /// Set once the first-run setup is known to be complete; it never becomes pending again.
     pub setup_done: Arc<AtomicBool>,
-    /// Reverse proxies whose `X-Forwarded-For` is believed (`TASKMASTER_TRUSTED_PROXIES`).
+    /// Reverse proxies whose `X-Forwarded-For` is believed (`PROSTOR_TRUSTED_PROXIES`).
     pub trusted_proxies: Arc<[IpRange]>,
-    /// The setup code from `TASKMASTER_SETUP_CODE`, instead of a random one.
+    /// The setup code from `PROSTOR_SETUP_CODE`, instead of a random one.
     pub setup_code: Option<Arc<str>>,
     /// Compiled access per person (ACC-062).
     pub access: AccessCache,
@@ -103,7 +103,7 @@ pub struct AppState {
     pub files: FileStore,
     /// Signs file links; keyed by the instance secret, loaded at startup.
     pub signer: Arc<OnceLock<Signer>>,
-    /// The largest upload whatever the settings say (`TASKMASTER_UPLOAD_CEILING_BYTES`).
+    /// The largest upload whatever the settings say (`PROSTOR_UPLOAD_CEILING_BYTES`).
     pub upload_ceiling: u64,
     /// The Gravatar import; `None` when turned off (ACC-017).
     pub gravatar: Option<Gravatar>,
@@ -127,7 +127,7 @@ impl AppState {
             access: AccessCache::default(),
             names: Arc::new(OnceLock::new()),
             // Nodes that keep files are given their directory with `with_files`.
-            files: FileStore::new(std::env::temp_dir().join("taskmaster-files")),
+            files: FileStore::new(std::env::temp_dir().join("prostor-files")),
             signer: Arc::new(OnceLock::new()),
             upload_ceiling: config::DEFAULT_UPLOAD_CEILING,
             gravatar: None,
@@ -145,7 +145,7 @@ impl AppState {
     pub fn with_secret_mail(
         mut self,
         env_mail: Option<crate::settings::EnvMail>,
-        secret_key: Option<taskmaster_domain::secret::Key>,
+        secret_key: Option<prostor_domain::secret::Key>,
     ) -> Self {
         self.settings = self
             .settings
@@ -180,7 +180,7 @@ impl AppState {
     pub fn upload_limit(&self) -> u64 {
         self.settings
             .get()
-            .get(&taskmaster_domain::settings::UPLOAD_MAX_BYTES)
+            .get(&prostor_domain::settings::UPLOAD_MAX_BYTES)
             .min(self.upload_ceiling)
     }
 

@@ -14,32 +14,32 @@ use axum::response::IntoResponse;
 use axum::routing::get;
 use bytes::Bytes;
 use image::{DynamicImage, ImageFormat, Rgb, RgbImage};
+use prostor_domain::access::capability::CapabilitySet;
+use prostor_domain::access::role::PredefinedRole;
+use prostor_domain::access::{Access, Grant, Scope};
+use prostor_domain::files::ui_link_expiry;
+use prostor_domain::issues::history::Origin;
+use prostor_domain::projects::Template;
+use prostor_domain::settings::Language;
+use prostor_domain::{IssueId, ProjectId, UploadId, UserId};
+use prostor_files::FileStore;
+use prostor_service::auth::SignedIn;
+use prostor_service::comments::{self, CommentChange, NewComment};
+use prostor_service::files::{self, LinkQuery, Signer};
+use prostor_service::issues::activity::{self, Item, Query};
+use prostor_service::issues::{self, AudienceInput, NewIssue};
+use prostor_service::people::Names;
+use prostor_service::pictures::{self, Gravatar};
+use prostor_service::projects::{self, NewProjectInput};
+use prostor_service::setup::{self, Setup};
+use prostor_service::users::{self, NewAccount};
+use prostor_service::{Error, Passwords, access, attachments, groups, roles, uploads};
+use prostor_store::PgPool;
+use prostor_store::access::Holder;
+use prostor_store::issue_history::Direction;
+use prostor_store::sessions::Origin as SessionOrigin;
+use prostor_testkit::TestDb;
 use serde_json::json;
-use taskmaster_domain::access::capability::CapabilitySet;
-use taskmaster_domain::access::role::PredefinedRole;
-use taskmaster_domain::access::{Access, Grant, Scope};
-use taskmaster_domain::files::ui_link_expiry;
-use taskmaster_domain::issues::history::Origin;
-use taskmaster_domain::projects::Template;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::{IssueId, ProjectId, UploadId, UserId};
-use taskmaster_files::FileStore;
-use taskmaster_service::auth::SignedIn;
-use taskmaster_service::comments::{self, CommentChange, NewComment};
-use taskmaster_service::files::{self, LinkQuery, Signer};
-use taskmaster_service::issues::activity::{self, Item, Query};
-use taskmaster_service::issues::{self, AudienceInput, NewIssue};
-use taskmaster_service::people::Names;
-use taskmaster_service::pictures::{self, Gravatar};
-use taskmaster_service::projects::{self, NewProjectInput};
-use taskmaster_service::setup::{self, Setup};
-use taskmaster_service::users::{self, NewAccount};
-use taskmaster_service::{Error, Passwords, access, attachments, groups, roles, uploads};
-use taskmaster_store::PgPool;
-use taskmaster_store::access::Holder;
-use taskmaster_store::issue_history::Direction;
-use taskmaster_store::sessions::Origin as SessionOrigin;
-use taskmaster_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::datetime;
 
@@ -123,7 +123,7 @@ async fn person(
     of: &[ProjectId],
 ) -> Access {
     let user = create_user(pool, actor, username).await;
-    let role = taskmaster_store::roles::builtin_id(pool, role.key())
+    let role = prostor_store::roles::builtin_id(pool, role.key())
         .await
         .unwrap()
         .unwrap();
@@ -228,7 +228,7 @@ async fn attach(
     issue: IssueId,
     name: &str,
     bytes: &[u8],
-) -> taskmaster_store::attachments::Attachment {
+) -> prostor_store::attachments::Attachment {
     let id = upload(pool, files, actor, name, bytes).await;
     let listed = attachments::attach(pool, actor, WEB, issue, &[id], false)
         .await
@@ -610,7 +610,7 @@ async fn cnt_022_pictures_get_sizes_and_thumbnails() {
         .unwrap();
     }
     let get = |id| async move {
-        taskmaster_store::attachments::get(pool, id)
+        prostor_store::attachments::get(pool, id)
             .await
             .unwrap()
             .unwrap()
@@ -636,7 +636,7 @@ fn link_of(
     signer: &Signer,
     viewer: &Access,
     secret: &[u8],
-    file: &taskmaster_store::attachments::Attachment,
+    file: &prostor_store::attachments::Attachment,
 ) -> LinkQuery {
     let link = signer.link(
         viewer.user(),
@@ -758,7 +758,7 @@ async fn cnt_024_cnt_026_links_follow_the_person_and_the_file() {
         &admin,
         &[member.user()],
         "",
-        taskmaster_domain::accounts::DisabledLabel::Left,
+        prostor_domain::accounts::DisabledLabel::Left,
     )
     .await
     .unwrap();
@@ -1104,7 +1104,7 @@ async fn acc_006_acc_032_prj_064_deletions_take_files_along() {
         .unwrap()
         .unwrap();
     let staged = upload(pool, &files, &leaver, "later.txt", b"later").await;
-    let staged_key = taskmaster_store::uploads::get(pool, staged)
+    let staged_key = prostor_store::uploads::get(pool, staged)
         .await
         .unwrap()
         .unwrap()
@@ -1137,7 +1137,7 @@ async fn acc_006_acc_032_prj_064_deletions_take_files_along() {
     groups::delete(pool, &admin, &[old.id], new.id)
         .await
         .unwrap();
-    let row = taskmaster_store::attachments::get(pool, file.id)
+    let row = prostor_store::attachments::get(pool, file.id)
         .await
         .unwrap()
         .unwrap();

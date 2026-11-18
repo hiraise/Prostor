@@ -6,14 +6,14 @@
 
 use bytes::Bytes;
 use futures_util::Stream;
+use prostor_domain::access::Access;
+use prostor_domain::files::{self as rules, STAGED_HOURS, STAGED_MAX};
+use prostor_domain::{UploadId, UserId};
+use prostor_files::{FileStore, ReceiveError};
+use prostor_store::jobs::{self, Enqueue, JobError, JobKind};
+use prostor_store::uploads::{self as store, NewUpload, Upload};
+use prostor_store::{PgPool, users};
 use serde::{Deserialize, Serialize};
-use taskmaster_domain::access::Access;
-use taskmaster_domain::files::{self as rules, STAGED_HOURS, STAGED_MAX};
-use taskmaster_domain::{UploadId, UserId};
-use taskmaster_files::{FileStore, ReceiveError};
-use taskmaster_store::jobs::{self, Enqueue, JobError, JobKind};
-use taskmaster_store::uploads::{self as store, NewUpload, Upload};
-use taskmaster_store::{PgPool, users};
 use time::{Duration, OffsetDateTime};
 
 use crate::{Error, Result};
@@ -28,7 +28,7 @@ async fn require_uploader(conn: &mut sqlx::PgConnection, user: UserId) -> Result
         .ok_or(Error::NotFound("the account no longer exists"))?;
     if account.is_guest() || account.is_deleted() || account.disabled_at.is_some() {
         return Err(Error::Forbidden(
-            taskmaster_domain::access::permission::PermissionSet::EMPTY,
+            prostor_domain::access::permission::PermissionSet::EMPTY,
         ));
     }
     Ok(())
@@ -62,7 +62,7 @@ where
         Err(ReceiveError::Body(problem)) => {
             return Err(Error::field(
                 "body",
-                taskmaster_domain::validation::Problem::Invalid,
+                prostor_domain::validation::Problem::Invalid,
                 problem,
             ));
         }

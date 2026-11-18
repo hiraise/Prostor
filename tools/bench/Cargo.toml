@@ -1,22 +1,22 @@
 [package]
-name = "taskmaster-bench"
-description = "taskmaster benchmark: the reference dataset and load scenarios measured against the performance budget"
+name = "prostor-bench"
+description = "prostor benchmark: the reference dataset and load scenarios measured against the performance budget"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
 [[bin]]
-name = "taskmaster-bench"
+name = "prostor-bench"
 path = "src/main.rs"
 
 [dependencies]
-taskmaster-domain.workspace = true
-taskmaster-files.workspace = true
-taskmaster-markup.workspace = true
-taskmaster-server.workspace = true
-taskmaster-service.workspace = true
-taskmaster-store.workspace = true
+prostor-domain.workspace = true
+prostor-files.workspace = true
+prostor-markup.workspace = true
+prostor-server.workspace = true
+prostor-service.workspace = true
+prostor-store.workspace = true
 sqlx.workspace = true
 tokio = { workspace = true, features = ["process", "io-util", "io-std"] }
 tokio-util.workspace = true
@@ -39,7 +39,7 @@ futures-util = { workspace = true, features = ["sink"] }
 rlimit.workspace = true
 
 [dev-dependencies]
-taskmaster-testkit.workspace = true
+prostor-testkit.workspace = true
 
 [lints]
 workspace = true

@@ -1,6 +1,6 @@
 [package]
-name = "taskmaster-domain"
-description = "taskmaster domain model and rules, free of HTTP and SQL"
+name = "prostor-domain"
+description = "prostor domain model and rules, free of HTTP and SQL"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -13,7 +13,7 @@ thiserror.workspace = true
 url.workspace = true
 time.workspace = true
 jiff.workspace = true
-taskmaster-query.workspace = true
+prostor-query.workspace = true
 sha2.workspace = true
 hmac.workspace = true
 aes-gcm.workspace = true

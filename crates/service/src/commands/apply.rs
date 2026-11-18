@@ -6,16 +6,16 @@
 //! author check), never what the rules sent.
 
 use crate::issues::values::ProjectFields;
+use prostor_domain::access::Access;
+use prostor_domain::issues::history::{ChangeKind, Origin};
+use prostor_domain::issues::rights::{self, VoteRefusal};
+use prostor_domain::links::{BuiltinType, Side};
+use prostor_domain::validation::Problem;
+use prostor_domain::{FieldId, IssueId, SetId};
+use prostor_query::command::{CommandCode, Mode};
+use prostor_store::PgPool;
+use prostor_store::links;
 use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::issues::history::{ChangeKind, Origin};
-use taskmaster_domain::issues::rights::{self, VoteRefusal};
-use taskmaster_domain::links::{BuiltinType, Side};
-use taskmaster_domain::validation::Problem;
-use taskmaster_domain::{FieldId, IssueId, SetId};
-use taskmaster_query::command::{CommandCode, Mode};
-use taskmaster_store::PgPool;
-use taskmaster_store::links;
 
 use super::{ApplyInput, IssueOutcome, IssueProblem, Operation, Party, Planned, QuickFix};
 use crate::boards;

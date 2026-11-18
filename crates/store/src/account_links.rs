@@ -1,8 +1,8 @@
 //! Emailed one-time links (AUTH-008, AUTH-014, ACC-004): password resets, email verifications and
 //! invitations. Only the SHA-256 of a link's secret is stored; using a link deletes it.
 
+use prostor_domain::UserId;
 use sqlx::{PgConnection, PgPool};
-use taskmaster_domain::UserId;
 use time::OffsetDateTime;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -10,7 +10,7 @@ pub struct Link {
     pub id: i64,
     pub user_id: UserId,
     /// `password_reset`, `email_verification` or `invitation`
-    /// (`taskmaster_domain::auth::LinkPurpose`).
+    /// (`prostor_domain::auth::LinkPurpose`).
     pub purpose: String,
     pub email: String,
     pub created_at: OffsetDateTime,

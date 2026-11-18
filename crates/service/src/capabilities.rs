@@ -1,13 +1,13 @@
 //! Capabilities switched on per group (ACC-064, ACC-066): seeing them needs `system.read`,
 //! changing them `system.write`.
 
+use prostor_domain::GroupId;
+use prostor_domain::access::Access;
+use prostor_domain::access::capability::Capability;
+use prostor_domain::access::permission::Permission;
+use prostor_domain::validation::Problem;
+use prostor_store::{PgPool, access as assignments, audit, groups};
 use serde_json::json;
-use taskmaster_domain::GroupId;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::capability::Capability;
-use taskmaster_domain::access::permission::Permission;
-use taskmaster_domain::validation::Problem;
-use taskmaster_store::{PgPool, access as assignments, audit, groups};
 
 use crate::access::changed;
 use crate::{Error, Result};
@@ -61,7 +61,7 @@ pub async fn set(
     let old = assignments::set_capability_groups(&mut tx, capability.key(), &ids).await?;
     audit::record(
         &mut tx,
-        taskmaster_domain::Actor::User(actor.user()),
+        prostor_domain::Actor::User(actor.user()),
         "capability.changed",
         &format!("capability:{}", capability.key()),
         json!({ "old": old, "new": ids }),

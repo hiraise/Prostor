@@ -42,7 +42,7 @@
   <p class="working"><Spinner /> {m.verifying()}</p>
 {:else if phase === 'done'}
   <Notice tone="success">{m.verified({ email })}</Notice>
-  <Button href={resolve('/')} variant="primary">{m.openTaskMaster()}</Button>
+  <Button href={resolve('/')} variant="primary">{m.openProstor()}</Button>
 {:else if phase === 'invalid' || phase === 'expired'}
   <LinkProblem problem={phase} expiredText={m.verificationExpired()} />
 {:else}

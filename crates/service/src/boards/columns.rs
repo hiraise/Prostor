@@ -2,17 +2,17 @@
 //! rename a value, move, set WIP limits, remove. A new value and a rename go through
 //! `value_sets` and need its rights (FLD-031); they change the set for every project using it.
 
+use prostor_domain::access::Access;
+use prostor_domain::boards::columns::{Wip, may_add};
+use prostor_domain::rank;
+use prostor_domain::validation::Problem;
+use prostor_domain::{Actor, BoardId, ColumnId, SetId, ValueId};
+use prostor_store::boards::{self as store, Column};
+use prostor_store::fields as store_fields;
+use prostor_store::value_sets;
+use prostor_store::{PgPool, audit, unique_violation};
 use serde_json::json;
 use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::boards::columns::{Wip, may_add};
-use taskmaster_domain::rank;
-use taskmaster_domain::validation::Problem;
-use taskmaster_domain::{Actor, BoardId, ColumnId, SetId, ValueId};
-use taskmaster_store::boards::{self as store, Column};
-use taskmaster_store::fields as store_fields;
-use taskmaster_store::value_sets;
-use taskmaster_store::{PgPool, audit, unique_violation};
 
 use super::{BoardRow, load, lock_edited};
 use crate::seed::internal;
@@ -272,8 +272,7 @@ pub async fn delete(
     if !columns.iter().any(|c| c.id == column) {
         return Err(Error::NotFound("no such column"));
     }
-    if taskmaster_domain::boards::Mode::parse(&board.mode)
-        == Some(taskmaster_domain::boards::Mode::Query)
+    if prostor_domain::boards::Mode::parse(&board.mode) == Some(prostor_domain::boards::Mode::Query)
     {
         // New issues of a query board must land in a column (BRD-028).
         let left: Vec<i64> = columns

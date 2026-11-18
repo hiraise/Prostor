@@ -34,7 +34,7 @@ impl Clock {
         at.to_zoned(self.zone.clone()).ok().map(|z| z.timestamp())
     }
 
-    /// The period a date word names (its key in `taskmaster_query::words`).
+    /// The period a date word names (its key in `prostor_query::words`).
     pub fn word(&self, key: &str) -> Option<Period> {
         let today = self.today();
         let monday = today

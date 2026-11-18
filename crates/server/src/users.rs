@@ -6,17 +6,17 @@ use std::time::Instant;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use taskmaster_api::auth::{
+use prostor_api::auth::{
     ApiToken, ChangePasswordRequest, CreatedApiToken, CurrentUser, NewApiToken, TokenScope,
 };
-use taskmaster_api::error::ErrorBody;
-use taskmaster_api::page::{Page, PageQuery};
-use taskmaster_api::preferences as wire;
-use taskmaster_domain::auth::Scope;
-use taskmaster_domain::preferences as prefs;
-use taskmaster_domain::validation::Problem;
-use taskmaster_service::tokens::NewTokenInput;
-use taskmaster_store::api_tokens;
+use prostor_api::error::ErrorBody;
+use prostor_api::page::{Page, PageQuery};
+use prostor_api::preferences as wire;
+use prostor_domain::auth::Scope;
+use prostor_domain::preferences as prefs;
+use prostor_domain::validation::Problem;
+use prostor_service::tokens::NewTokenInput;
+use prostor_store::api_tokens;
 
 use crate::AppState;
 use crate::auth::{Caller, PendingSession, RequestInfo, SessionCaller};
@@ -43,7 +43,7 @@ pub async fn me(
     State(state): State<AppState>,
     Caller(principal): Caller,
 ) -> Result<Response, ApiError> {
-    let user = taskmaster_service::account::me(&state.db, principal.user).await?;
+    let user = prostor_service::account::me(&state.db, principal.user).await?;
     Ok(json(StatusCode::OK, current_user(&user)))
 }
 
@@ -77,7 +77,7 @@ pub async fn change_password(
         .throttle
         .check(&keys, Instant::now())
         .map_err(ApiError::rate_limited)?;
-    let result = taskmaster_service::account::change_password(
+    let result = prostor_service::account::change_password(
         &state.db,
         &state.passwords,
         &caller.principal,
@@ -85,7 +85,7 @@ pub async fn change_password(
         &request.new_password,
     )
     .await;
-    if let Err(taskmaster_service::Error::Invalid(problems)) = &result
+    if let Err(prostor_service::Error::Invalid(problems)) = &result
         && problems
             .iter()
             .any(|p| p.path == "current_password" && p.problem == Problem::Incorrect)
@@ -119,7 +119,7 @@ pub async fn list_tokens(
     let page = query
         .resolve::<i64>(TOKENS_MAX_LIMIT)
         .map_err(ApiError::invalid)?;
-    let rows = taskmaster_service::tokens::list(
+    let rows = prostor_service::tokens::list(
         &state.db,
         caller.principal.user,
         page.after,
@@ -161,7 +161,7 @@ pub async fn create_token(
             .map(|scope| domain_scope(*scope).key().to_owned())
             .collect(),
     };
-    let created = taskmaster_service::tokens::create(&state.db, &caller.principal, input).await?;
+    let created = prostor_service::tokens::create(&state.db, &caller.principal, input).await?;
     let mut response = json(
         StatusCode::CREATED,
         CreatedApiToken {
@@ -196,7 +196,7 @@ pub async fn delete_token(
     caller: SessionCaller,
     Path(id): Path<i64>,
 ) -> Result<Response, ApiError> {
-    taskmaster_service::tokens::delete(&state.db, &caller.principal, id).await?;
+    prostor_service::tokens::delete(&state.db, &caller.principal, id).await?;
     Ok(StatusCode::NO_CONTENT.into_response())
 }
 
@@ -204,7 +204,7 @@ fn api_token(token: &api_tokens::ApiToken) -> ApiToken {
     ApiToken {
         id: token.id,
         name: token.name.clone(),
-        scopes: taskmaster_domain::auth::Scopes::from_stored(&token.scopes)
+        scopes: prostor_domain::auth::Scopes::from_stored(&token.scopes)
             .iter()
             .map(api_scope)
             .collect(),
@@ -351,7 +351,7 @@ pub async fn preferences(
     State(state): State<AppState>,
     caller: SessionCaller,
 ) -> Result<Response, ApiError> {
-    let found = taskmaster_service::preferences::get(&state.db, caller.principal.user).await?;
+    let found = prostor_service::preferences::get(&state.db, caller.principal.user).await?;
     Ok(json(StatusCode::OK, preferences_out(found)))
 }
 
@@ -377,7 +377,7 @@ pub async fn update_preferences(
     JsonBody(patch): JsonBody<wire::PreferencesPatch>,
 ) -> Result<Response, ApiError> {
     let saved =
-        taskmaster_service::preferences::update(&state.db, caller.principal.user, patch_in(patch))
+        prostor_service::preferences::update(&state.db, caller.principal.user, patch_in(patch))
             .await?;
     Ok(json(StatusCode::OK, preferences_out(saved)))
 }

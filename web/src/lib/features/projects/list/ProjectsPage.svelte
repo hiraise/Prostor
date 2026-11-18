@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // The projects list (PRJ-010…PRJ-013): projects the person may see, their favorites first, the
   // first ten with "Show more"; a search by name or key kept in the address. Every row has a
   // visible star and a menu of what the person may do there (PRJ-011), so nothing depends on
@@ -325,7 +326,7 @@
   };
 </script>
 
-<svelte:head><title>{shared.projects()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{shared.projects()} · {brand()}</title></svelte:head>
 
 <PageHeader title={shared.projects()}>
   {#snippet actions()}

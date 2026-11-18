@@ -7,9 +7,9 @@
 //! so it is left out or becomes `reporter = me`. Repeating `project = any(…)` next to
 //! `project = …` made the planner multiply the two selectivities (D-035).
 
+use prostor_domain::access::Projects;
+use prostor_domain::{GroupId, ProjectId, UserId};
 use sqlx::{Postgres, QueryBuilder};
-use taskmaster_domain::access::Projects;
-use taskmaster_domain::{GroupId, ProjectId, UserId};
 
 /// What one viewer may see of issues and of what is inside them.
 #[derive(Debug, Clone, PartialEq, Eq)]

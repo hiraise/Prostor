@@ -1,14 +1,14 @@
 //! `/markdown`: the preview of rich text (CNT-029, CNT-038). Rendering lives in the crate
-//! `markup`; the flow in `taskmaster_service::text`.
+//! `markup`; the flow in `prostor_service::text`.
 
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::Response;
-use taskmaster_api::content::{MarkdownPreview, MarkdownProfile, Rendered};
-use taskmaster_api::error::ErrorBody;
-use taskmaster_domain::auth::Scope;
-use taskmaster_markup::Profile;
-use taskmaster_service::text;
+use prostor_api::content::{MarkdownPreview, MarkdownProfile, Rendered};
+use prostor_api::error::ErrorBody;
+use prostor_domain::auth::Scope;
+use prostor_markup::Profile;
+use prostor_service::text;
 
 use crate::AppState;
 use crate::access::Viewer;

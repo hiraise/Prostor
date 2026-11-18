@@ -16,14 +16,14 @@ pub struct SetupRequest {
     pub password: String,
     /// Language of query keywords, built-in names and notifications.
     pub system_language: Language,
-    /// The address people open taskmaster at, used in links in emails.
+    /// The address people open prostor at, used in links in emails.
     #[schema(required = true)]
     pub base_url: Option<String>,
     /// Default time zone, an IANA name such as `Europe/Berlin`.
     pub time_zone: String,
 }
 
-/// Languages taskmaster speaks.
+/// Languages prostor speaks.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, ToSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Language {

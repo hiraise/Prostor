@@ -12,8 +12,8 @@
 
 use std::alloc::{Layout, alloc as reserve, dealloc};
 
+use prostor_query::{Class, ProblemCode, Severity, Span, classes, parse, print, utf16};
 use serde::Serialize;
-use taskmaster_query::{Class, ProblemCode, Severity, Span, classes, parse, print, utf16};
 
 #[derive(Debug, Serialize, PartialEq)]
 pub struct Answer {

@@ -2,12 +2,12 @@
 //! the project's default audience, the groups and teams of the actor, and people of the team.
 //! Others can still be added by ID: the list only shortens the choice.
 
-use taskmaster_domain::access::Access;
-use taskmaster_domain::{GroupId, ProjectId, UserId};
-use taskmaster_store::groups::{self, Group};
-use taskmaster_store::teams;
-use taskmaster_store::users::{self, User};
-use taskmaster_store::{PgPool, projects};
+use prostor_domain::access::Access;
+use prostor_domain::{GroupId, ProjectId, UserId};
+use prostor_store::groups::{self, Group};
+use prostor_store::teams;
+use prostor_store::users::{self, User};
+use prostor_store::{PgPool, projects};
 
 use crate::groups::team_visible;
 use crate::{Error, Result};
@@ -43,9 +43,9 @@ pub async fn candidates(
         .await?
         .filter(|p| crate::projects::can_see(actor, p))
         .ok_or(Error::NotFound("no such project"))?;
-    if taskmaster_domain::issues::rights::may_create(actor, project.id).is_err()
+    if prostor_domain::issues::rights::may_create(actor, project.id).is_err()
         && !actor.has_in(
-            taskmaster_domain::access::permission::Permission::IssueUpdate,
+            prostor_domain::access::permission::Permission::IssueUpdate,
             project.id,
         )
     {

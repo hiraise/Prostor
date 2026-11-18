@@ -1,14 +1,14 @@
 //! Administrator recovery from the server's command line (ADM-051, AUTH-073): for whoever runs
 //! the server when nobody can sign in as an administrator. Every use is audited.
 
+use prostor_domain::Actor;
+use prostor_domain::access::role::PredefinedRole;
+use prostor_domain::accounts::{Email, FullName, Username};
+use prostor_domain::validation::{Problem, Problems, Rejection};
+use prostor_store::access::{self as assignments, Holder};
+use prostor_store::users::{self, Builtin, NewUser, User};
+use prostor_store::{PgPool, audit, bus, groups, instance, roles, sessions};
 use serde_json::json;
-use taskmaster_domain::Actor;
-use taskmaster_domain::access::role::PredefinedRole;
-use taskmaster_domain::accounts::{Email, FullName, Username};
-use taskmaster_domain::validation::{Problem, Problems, Rejection};
-use taskmaster_store::access::{self as assignments, Holder};
-use taskmaster_store::users::{self, Builtin, NewUser, User};
-use taskmaster_store::{PgPool, audit, bus, groups, instance, roles, sessions};
 
 use crate::mail::{self, Letters};
 use crate::passwords::Passwords;
@@ -51,7 +51,7 @@ pub async fn recover(
 ) -> Result<Recovered> {
     if !instance::setup_complete(pool).await? {
         return Err(Error::Conflict(
-            "the setup is not complete: open taskmaster in a browser and use the setup code from \
+            "the setup is not complete: open prostor in a browser and use the setup code from \
              the server log",
         ));
     }

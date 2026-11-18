@@ -1,35 +1,35 @@
 //! Turning service results into API shapes, with what each viewer may see (ACC-015, ACC-016).
 
-use taskmaster_api::access as api;
-use taskmaster_api::accounts::{
+use prostor_api::access as api;
+use prostor_api::accounts::{
     Account, AccountSummary, DisabledLabel, DisabledState, PasswordState, ProfileTier, UserRef,
     UserRefKind,
 };
-use taskmaster_api::content::{IssueMention, TextRefs};
-use taskmaster_api::files::{self as api_files, FileKind, FileRef};
-use taskmaster_api::projects::ProjectRef;
-use taskmaster_api::rules;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::group::BuiltinGroup;
-use taskmaster_domain::access::identity::{Tier, tier};
-use taskmaster_domain::access::permission::{Entity, Operation, Permission, PermissionSet};
-use taskmaster_domain::access::role::PredefinedRole;
-use taskmaster_domain::accounts;
-use taskmaster_domain::files::{Kind, ui_link_expiry};
-use taskmaster_service::attachments::AttachmentView;
-use taskmaster_service::files::Signer;
-use taskmaster_service::people::{Names, Shown};
-use taskmaster_service::pictures;
-use taskmaster_service::text::Refs;
-use taskmaster_store::attachments::Attachment;
-use taskmaster_store::groups::Group;
-use taskmaster_store::projects::Project;
-use taskmaster_store::roles::Role;
-use taskmaster_store::uploads::Upload;
-use taskmaster_store::users::User;
+use prostor_api::content::{IssueMention, TextRefs};
+use prostor_api::files::{self as api_files, FileKind, FileRef};
+use prostor_api::projects::ProjectRef;
+use prostor_api::rules;
+use prostor_domain::access::Access;
+use prostor_domain::access::group::BuiltinGroup;
+use prostor_domain::access::identity::{Tier, tier};
+use prostor_domain::access::permission::{Entity, Operation, Permission, PermissionSet};
+use prostor_domain::access::role::PredefinedRole;
+use prostor_domain::accounts;
+use prostor_domain::files::{Kind, ui_link_expiry};
+use prostor_service::attachments::AttachmentView;
+use prostor_service::files::Signer;
+use prostor_service::people::{Names, Shown};
+use prostor_service::pictures;
+use prostor_service::text::Refs;
+use prostor_store::attachments::Attachment;
+use prostor_store::groups::Group;
+use prostor_store::projects::Project;
+use prostor_store::roles::Role;
+use prostor_store::uploads::Upload;
+use prostor_store::users::User;
 
 /// What the project's rules said, as the answer carries it (AUT-023, step 1.9).
-pub fn rule_messages(messages: &[taskmaster_service::rules::Message]) -> Vec<rules::Message> {
+pub fn rule_messages(messages: &[prostor_service::rules::Message]) -> Vec<rules::Message> {
     messages
         .iter()
         .map(|message| rules::Message {
@@ -127,7 +127,7 @@ pub fn account_summary(
 }
 
 /// A profile (ACC-015).
-pub fn account(viewer: &Access, profile: &taskmaster_service::users::Profile) -> Account {
+pub fn account(viewer: &Access, profile: &prostor_service::users::Profile) -> Account {
     let groups = profile.groups.as_deref().unwrap_or_default();
     Account {
         summary: account_summary(viewer, &profile.user, groups, &profile.projects),
@@ -234,7 +234,7 @@ pub fn permission_info(permission: Permission) -> Option<api::PermissionInfo> {
     })
 }
 
-pub fn role(row: &taskmaster_service::roles::RoleRow) -> api::Role {
+pub fn role(row: &prostor_service::roles::RoleRow) -> api::Role {
     api::Role {
         id: row.role.id,
         name: row.role.name.clone(),
@@ -428,7 +428,7 @@ pub fn attachment<'a>(
         thumbnail_url,
         author: person(f.author_id).unwrap_or_else(|| crate::issues::placeholder(f.author_id)),
         created_at: f.created_at,
-        audience: taskmaster_api::issues::Audience {
+        audience: prostor_api::issues::Audience {
             users: f
                 .audience_users
                 .iter()

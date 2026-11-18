@@ -5,19 +5,19 @@
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use taskmaster_api::access::{EffectiveRole, EffectiveRoles, RoleSource};
-use taskmaster_api::accounts::{
+use prostor_api::access::{EffectiveRole, EffectiveRoles, RoleSource};
+use prostor_api::accounts::{
     Account, AccountPatch, AccountState, AccountSummary, DirectoryQuery, DisableRequest, EmailSent,
     InvitationRequest, Invited, NewAccount, UserDeletion, UserDeletionImpact, UserSelection,
 };
-use taskmaster_api::error::ErrorBody;
-use taskmaster_api::page::{Page, PageQuery};
-use taskmaster_domain::UserId;
-use taskmaster_domain::access::permission::Permission;
-use taskmaster_domain::auth::Scope;
-use taskmaster_service::access::Source;
-use taskmaster_service::mail::Letters;
-use taskmaster_service::users::{self, IdentityInput, StateFilter};
+use prostor_api::error::ErrorBody;
+use prostor_api::page::{Page, PageQuery};
+use prostor_domain::UserId;
+use prostor_domain::access::permission::Permission;
+use prostor_domain::auth::Scope;
+use prostor_service::access::Source;
+use prostor_service::mail::Letters;
+use prostor_service::users::{self, IdentityInput, StateFilter};
 use time::OffsetDateTime;
 
 use crate::AppState;
@@ -35,9 +35,9 @@ pub fn letters(state: &AppState, info: &RequestInfo) -> Letters {
     Letters {
         enabled: state.settings.mail().enabled,
         base_url: settings
-            .get(&taskmaster_domain::settings::BASE_URL)
+            .get(&prostor_domain::settings::BASE_URL)
             .or_else(|| info.origin.clone()),
-        language: settings.get(&taskmaster_domain::settings::SYSTEM_LANGUAGE),
+        language: settings.get(&prostor_domain::settings::SYSTEM_LANGUAGE),
     }
 }
 
@@ -230,7 +230,7 @@ pub async fn update(
         require_any_scope(&viewer.principal, &[Scope::TrackerWrite, Scope::AdminWrite])?;
         if request.email.is_some() && viewer.principal.session_id().is_none() {
             return Err(ApiError::new(
-                taskmaster_api::error::ErrorCode::Forbidden,
+                prostor_api::error::ErrorCode::Forbidden,
                 "Changing one's own email needs a signed-in session",
             ));
         }
@@ -498,14 +498,14 @@ pub async fn roles(
         viewer
             .access
             .require(Permission::SystemRead)
-            .map_err(taskmaster_service::Error::from)?;
+            .map_err(prostor_service::Error::from)?;
     }
     let profile = users::profile(&state.db, &viewer.access, id).await?;
-    let roles = taskmaster_service::access::effective_roles(&state.db, &profile.user).await?;
+    let roles = prostor_service::access::effective_roles(&state.db, &profile.user).await?;
     Ok(json(StatusCode::OK, effective_roles(&roles)))
 }
 
-pub fn effective_roles(roles: &[taskmaster_service::access::EffectiveRole]) -> EffectiveRoles {
+pub fn effective_roles(roles: &[prostor_service::access::EffectiveRole]) -> EffectiveRoles {
     EffectiveRoles {
         items: roles
             .iter()
@@ -513,7 +513,7 @@ pub fn effective_roles(roles: &[taskmaster_service::access::EffectiveRole]) -> E
                 role: role_ref(&role.role),
                 project_id: role.scope.project(),
                 permissions: present::permission_keys(role.scope.applied(
-                    taskmaster_domain::access::role::role_permissions(
+                    prostor_domain::access::role::role_permissions(
                         role.role.builtin.as_deref(),
                         &role.role.permissions,
                     ),
@@ -531,7 +531,7 @@ pub fn effective_roles(roles: &[taskmaster_service::access::EffectiveRole]) -> E
                             builtin,
                             team_of,
                         } => RoleSource::Group {
-                            group: taskmaster_api::access::GroupRef {
+                            group: prostor_api::access::GroupRef {
                                 id: *id,
                                 name: name.clone(),
                                 builtin: present::builtin_group(builtin.map(|group| group.key())),
@@ -564,7 +564,7 @@ pub async fn test_email(
 ) -> Result<Response, ApiError> {
     if viewer.principal.session_id().is_none() {
         return Err(ApiError::new(
-            taskmaster_api::error::ErrorCode::Forbidden,
+            prostor_api::error::ErrorCode::Forbidden,
             "This needs a signed-in session",
         ));
     }

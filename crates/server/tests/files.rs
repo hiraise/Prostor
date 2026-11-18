@@ -3,8 +3,8 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use axum::http::{Method, StatusCode, header};
+use prostor_server::throttle::Throttle;
 use serde_json::{Value, json};
-use taskmaster_server::throttle::Throttle;
 
 mod common;
 

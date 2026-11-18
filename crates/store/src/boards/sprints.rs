@@ -1,9 +1,9 @@
 //! Sprints of a board (BRD-097…BRD-104). Every board has at least one: a sprintless board holds
 //! its cards in an internal one (BRD-024). Sprint management is step 1.8b; 1.8a creates the first.
 
+use prostor_domain::boards::sprints::SprintDates;
+use prostor_domain::{BoardId, SprintId};
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::boards::sprints::SprintDates;
-use taskmaster_domain::{BoardId, SprintId};
 use time::{Date, OffsetDateTime};
 
 #[derive(Debug, Clone, PartialEq, Eq)]

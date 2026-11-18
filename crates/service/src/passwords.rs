@@ -116,7 +116,7 @@ fn outdated(stored: &str) -> bool {
 fn dummy_hash() -> &'static str {
     static DUMMY: OnceLock<String> = OnceLock::new();
     DUMMY.get_or_init(|| {
-        hash_now("taskmaster: a password nobody has").unwrap_or_else(|_| {
+        hash_now("prostor: a password nobody has").unwrap_or_else(|_| {
             // Unreachable in practice; a fixed valid hash keeps the timing close.
             "$argon2id$v=19$m=19456,t=2,p=1$c29tZXNhbHRzb21lc2FsdA$\
              0KkBBQkvYYmdsj8tUqDRSWVwXamHGYOUANkZ6U7FlXc"

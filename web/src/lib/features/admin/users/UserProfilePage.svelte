@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // The profile of a person as others see it (UI-010, ACC-015): the name block for everyone who may
   // see the person; the profile, groups, projects (ACC-002) and roles with the details tier. People who manage accounts
   // edit the profile (ACC-009) and act on the account from one menu: disable or enable (ACC-005),
@@ -201,7 +202,7 @@
 </script>
 
 <svelte:head>
-  <title>{account ? personName(account) : m.deletedTitle()} · TaskMaster</title>
+  <title>{account ? personName(account) : m.deletedTitle()} · {brand()}</title>
 </svelte:head>
 
 {#if replacedBy}

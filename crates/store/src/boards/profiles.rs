@@ -4,7 +4,7 @@ use sqlx::{PgConnection, PgExecutor};
 use std::collections::BTreeMap;
 use time::OffsetDateTime;
 
-use taskmaster_domain::{BoardId, ColumnId, IssueId, UserId};
+use prostor_domain::{BoardId, ColumnId, IssueId, UserId};
 
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct Profile {

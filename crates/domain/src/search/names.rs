@@ -3,8 +3,8 @@
 
 use std::collections::BTreeSet;
 
-use taskmaster_query::words::{self, Kind};
-use taskmaster_query::{Atom, Expr, ItemKind, Query, fold, fold_value};
+use prostor_query::words::{self, Kind};
+use prostor_query::{Atom, Expr, ItemKind, Query, fold, fold_value};
 
 use crate::issues::ReadableId;
 
@@ -60,7 +60,7 @@ fn walk(expr: &Expr, out: &mut Needs) {
         Expr::Cond(cond) => {
             boards(cond, out);
             let name = fold(&cond.name.text);
-            let mut whole = cond.op != taskmaster_query::Op::Is;
+            let mut whole = cond.op != prostor_query::Op::Is;
             let text = may_hold_text(&cond.name);
             for item in &cond.items {
                 match &item.kind {
@@ -86,7 +86,7 @@ fn walk(expr: &Expr, out: &mut Needs) {
 }
 
 /// What `board:` and `sprint:` conditions need.
-fn boards(cond: &taskmaster_query::Condition, out: &mut Needs) {
+fn boards(cond: &prostor_query::Condition, out: &mut Needs) {
     if cond.name.quoted {
         return;
     }
@@ -168,7 +168,7 @@ mod tests {
 
     #[test]
     fn collects_names_values_and_ids() {
-        let q = taskmaster_query::parse(
+        let q = prostor_query::parse(
             "Due-Date: 2026-01..2026-03 state: Ёлка, resolved web-7 assignee: \"Anna  Petrova\" sort: Priority",
         );
         let needs = needs(&q);
@@ -186,15 +186,15 @@ mod tests {
 
     #[test]
     fn qry_049_boards_and_sprints() {
-        let needs = needs(&taskmaster_query::parse("доска: Команда, !Ops"));
+        let needs = needs(&prostor_query::parse("доска: Команда, !Ops"));
         assert_eq!(
             needs.boards.iter().collect::<Vec<_>>(),
             vec!["ops", "команда"]
         );
         assert!(!needs.all_boards);
-        assert!(super::needs(&taskmaster_query::parse("board: none")).all_boards);
-        assert!(super::needs(&taskmaster_query::parse("sprint: \"A/B\"")).all_boards);
-        assert!(!super::needs(&taskmaster_query::parse("\"board\": none")).all_boards);
+        assert!(super::needs(&prostor_query::parse("board: none")).all_boards);
+        assert!(super::needs(&prostor_query::parse("sprint: \"A/B\"")).all_boards);
+        assert!(!super::needs(&prostor_query::parse("\"board\": none")).all_boards);
     }
 
     #[test]

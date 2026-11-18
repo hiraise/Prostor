@@ -1,24 +1,24 @@
 //! `/issues/{id}/comments` and `/comments`: posting, reading, editing, deleting and restoring
-//! comments (CNT-001…CNT-005). Rules and flows live in `taskmaster_service::comments`.
+//! comments (CNT-001…CNT-005). Rules and flows live in `prostor_service::comments`.
 
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use taskmaster_api::comments::{
+use prostor_api::comments::{
     Comment, CommentAbilities, CommentAnswer, CommentDeletion, CommentPatch, NewComment,
 };
-use taskmaster_api::error::ErrorBody;
-use taskmaster_api::issues::Audience;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::auth::Scope;
-use taskmaster_domain::{CommentId, GroupId, IssueId, UserId};
-use taskmaster_service::attachments::AttachmentView;
-use taskmaster_service::comments::{self, CommentChange, CommentView};
-use taskmaster_service::files::Signer;
-use taskmaster_service::people::Names;
-use taskmaster_service::text::Refs;
-use taskmaster_store::groups::Group;
-use taskmaster_store::users::User;
+use prostor_api::error::ErrorBody;
+use prostor_api::issues::Audience;
+use prostor_domain::access::Access;
+use prostor_domain::auth::Scope;
+use prostor_domain::{CommentId, GroupId, IssueId, UserId};
+use prostor_service::attachments::AttachmentView;
+use prostor_service::comments::{self, CommentChange, CommentView};
+use prostor_service::files::Signer;
+use prostor_service::people::Names;
+use prostor_service::text::Refs;
+use prostor_store::groups::Group;
+use prostor_store::users::User;
 
 use crate::AppState;
 use crate::access::Viewer;
@@ -63,7 +63,7 @@ pub fn comment_from<'a, 'f>(
                 &c.file_names,
             )
         } else {
-            taskmaster_api::content::TextRefs::default()
+            prostor_api::content::TextRefs::default()
         },
         created_at: c.created_at,
         updated_at: c.updated_at,

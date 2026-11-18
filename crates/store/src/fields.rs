@@ -1,8 +1,8 @@
 //! Custom fields of the instance (FLD-015…FLD-023) and their attachments to projects
-//! (FLD-051…FLD-060). Rules: `taskmaster_domain::fields`.
+//! (FLD-051…FLD-060). Rules: `prostor_domain::fields`.
 
+use prostor_domain::{FieldId, ProjectId, SetId, UserId, ValueId};
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::{FieldId, ProjectId, SetId, UserId, ValueId};
 use time::OffsetDateTime;
 
 /// Name space of the advisory locks taken here (`'fld'`).
@@ -21,7 +21,7 @@ pub async fn lock_templates(conn: &mut PgConnection) -> Result<(), sqlx::Error> 
 pub struct Field {
     pub id: FieldId,
     pub name: String,
-    /// `taskmaster_domain::fields::FieldKind` key.
+    /// `prostor_domain::fields::FieldKind` key.
     pub kind: String,
     pub multi: bool,
     pub aliases: Vec<String>,

@@ -4,7 +4,7 @@ import { msg } from '#lib/i18n/message.ts';
 
 // ---- Sign-in ----
 
-export const signInTitle = msg({ en: 'Sign in to TaskMaster', ru: 'Вход в TaskMaster' });
+export const signInTitle = msg({ en: 'Sign in to Prostor', ru: 'Вход в Простор' });
 export const login = msg({ en: 'Username or email', ru: 'Имя пользователя или почта' });
 export const password = msg({ en: 'Password', ru: 'Пароль' });
 export const rememberMe = msg({
@@ -24,7 +24,7 @@ export const tooManyAttempts = msg({
   en: 'Too many failed attempts. Try again in a few minutes.',
   ru: 'Слишком много неудачных попыток. Попробуйте через несколько минут.',
 });
-export const signedOut = msg({ en: 'You have signed out.', ru: 'Вы вышли из TaskMaster.' });
+export const signedOut = msg({ en: 'You have signed out.', ru: 'Вы вышли из Простора.' });
 export const sessionEnded = msg({
   en: 'Your session has ended. Sign in again.',
   ru: 'Сеанс завершён. Войдите снова.',
@@ -37,15 +37,15 @@ export const forgotPasswordLink = msg({ en: 'Forgot your password?', ru: 'Заб
 
 // ---- Setup ----
 
-export const setupTitle = msg({ en: 'Set up TaskMaster', ru: 'Настройка TaskMaster' });
+export const setupTitle = msg({ en: 'Set up Prostor', ru: 'Настройка Простора' });
 export const setupIntro = msg({
   en: 'Create the administrator account and choose the basics. You can change the address, language and time zone later.',
   ru: 'Создайте учётную запись администратора и выберите основное. Адрес, язык и часовой пояс можно изменить позже.',
 });
 export const setupCode = msg({ en: 'Setup code', ru: 'Код установки' });
 export const setupCodeHint = msg({
-  en: 'Find it in the server log, in the line “TaskMaster is not set up yet”. It shows that the server is yours.',
-  ru: 'Он в журнале сервера, в строке «TaskMaster is not set up yet». Код подтверждает, что сервер ваш.',
+  en: 'Find it in the server log, in the line “Prostor is not set up yet”. It shows that the server is yours.',
+  ru: 'Он в журнале сервера, в строке «Prostor is not set up yet». Код подтверждает, что сервер ваш.',
 });
 export const setupCodeWrong = msg({
   en: 'The setup code is not correct.',
@@ -80,8 +80,8 @@ export const systemLanguageHint = msg({
 });
 export const baseUrl = msg({ en: 'Address', ru: 'Адрес' });
 export const baseUrlHint = msg({
-  en: 'Where people open TaskMaster; used in links in emails.',
-  ru: 'По этому адресу открывают TaskMaster; он нужен для ссылок в письмах.',
+  en: 'Where people open Prostor; used in links in emails.',
+  ru: 'По этому адресу открывают Простор; он нужен для ссылок в письмах.',
 });
 export const timeZone = msg({ en: 'Default time zone', ru: 'Часовой пояс по умолчанию' });
 export const timeZoneHint = msg({
@@ -90,8 +90,8 @@ export const timeZoneHint = msg({
 });
 export const finishSetup = msg({ en: 'Finish setup', ru: 'Завершить настройку' });
 export const setupDone = msg({
-  en: 'TaskMaster is set up. You are signed in as the administrator.',
-  ru: 'TaskMaster настроен. Вы вошли как администратор.',
+  en: 'Prostor is set up. You are signed in as the administrator.',
+  ru: 'Простор настроен. Вы вошли как администратор.',
 });
 
 // ---- Account page ----
@@ -120,8 +120,8 @@ export const passwordChanged = msg({ en: 'Password changed', ru: 'Пароль �
 
 export const tokensTitle = msg({ en: 'API tokens', ru: 'API-токены' });
 export const tokensIntro = msg({
-  en: 'Tokens let scripts and other programs work with TaskMaster on your behalf. A token has your rights, limited to the areas you choose.',
-  ru: 'Токены позволяют скриптам и другим программам работать с TaskMaster от вашего имени. У токена ваши права, ограниченные выбранными областями.',
+  en: 'Tokens let scripts and other programs work with Prostor on your behalf. A token has your rights, limited to the areas you choose.',
+  ru: 'Токены позволяют скриптам и другим программам работать с Простором от вашего имени. У токена ваши права, ограниченные выбранными областями.',
 });
 export const createToken = msg({ en: 'Create token', ru: 'Создать токен' });
 export const noTokens = msg({ en: 'No tokens yet', ru: 'Токенов пока нет' });
@@ -241,8 +241,8 @@ export const registered = msg({ en: 'Registered', ru: 'Дата регистра
 
 export const accessTitle = msg({ en: 'Groups and roles', ru: 'Группы и роли' });
 export const accessIntro = msg({
-  en: 'What you may do in TaskMaster comes from roles, given to you directly or to your groups.',
-  ru: 'Что вы можете делать в TaskMaster, задают роли — выданные вам лично или вашим группам.',
+  en: 'What you may do in Prostor comes from roles, given to you directly or to your groups.',
+  ru: 'Что вы можете делать в Просторе, задают роли — выданные вам лично или вашим группам.',
 });
 export const myGroups = msg({ en: 'Groups', ru: 'Группы' });
 export const myRoles = msg({ en: 'Roles', ru: 'Роли' });
@@ -286,7 +286,7 @@ export const resetFor = msg<{ username: string }>({
 export const setPassword = msg({ en: 'Set password', ru: 'Задать пароль' });
 export const passwordReset = msg({
   en: 'Your new password is set. You are signed in.',
-  ru: 'Новый пароль задан. Вы вошли в TaskMaster.',
+  ru: 'Новый пароль задан. Вы вошли в Простор.',
 });
 
 // ---- Links that no longer work ----
@@ -313,7 +313,7 @@ export const askNewLink = msg({ en: 'Ask for a new link', ru: 'Запросит�
 
 // ---- Invitations (ACC-004) ----
 
-export const invitationTitle = msg({ en: 'Join TaskMaster', ru: 'Присоединиться к TaskMaster' });
+export const invitationTitle = msg({ en: 'Join Prostor', ru: 'Присоединиться к Простору' });
 export const invitationIntro = msg<{ email: string }>({
   en: ({ email }) =>
     `An account for ${email} is waiting. Check your name and username and choose a password.`,
@@ -321,7 +321,7 @@ export const invitationIntro = msg<{ email: string }>({
     `Учётная запись для ${email} уже создана. Проверьте имя и имя пользователя и задайте пароль.`,
 });
 export const join = msg({ en: 'Join', ru: 'Присоединиться' });
-export const joined = msg({ en: 'Welcome to TaskMaster.', ru: 'Добро пожаловать в TaskMaster.' });
+export const joined = msg({ en: 'Welcome to Prostor.', ru: 'Добро пожаловать в Простор.' });
 
 // ---- Email confirmation (AUTH-014) ----
 
@@ -331,7 +331,7 @@ export const verified = msg<{ email: string }>({
   en: ({ email }) => `${email} is confirmed.`,
   ru: ({ email }) => `Адрес ${email} подтверждён.`,
 });
-export const openTaskMaster = msg({ en: 'Open TaskMaster', ru: 'Открыть TaskMaster' });
+export const openProstor = msg({ en: 'Open Prostor', ru: 'Открыть Простор' });
 
 // ---- A required new password (AUTH-010) ----
 

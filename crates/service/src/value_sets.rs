@@ -3,21 +3,21 @@
 //! needs `project.update` in every one (or `system.write`); otherwise a project forks its own copy
 //! (FLD-030, FLD-031).
 
-use serde_json::json;
-use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::permission::Permission;
-use taskmaster_domain::fields::{
+use prostor_domain::access::Access;
+use prostor_domain::access::permission::Permission;
+use prostor_domain::fields::{
     SET_GROUPS_MAX, SET_USERS_MAX, SetKind, VALUES_MAX, may_edit_set, may_see_fields, set_name,
     value_color, value_description, value_name,
 };
-use taskmaster_domain::validation::{Problem, Problems};
-use taskmaster_domain::{GroupId, SetId, UserId, ValueId, rank};
-use taskmaster_store::groups::{self, Group};
-use taskmaster_store::projects::{self, Project};
-use taskmaster_store::users::{self, User};
-use taskmaster_store::value_sets::{self, NewValue, Usage, Value, ValueChange, ValueSet};
-use taskmaster_store::{PgPool, audit, fields, unique_violation};
+use prostor_domain::validation::{Problem, Problems};
+use prostor_domain::{GroupId, SetId, UserId, ValueId, rank};
+use prostor_store::groups::{self, Group};
+use prostor_store::projects::{self, Project};
+use prostor_store::users::{self, User};
+use prostor_store::value_sets::{self, NewValue, Usage, Value, ValueChange, ValueSet};
+use prostor_store::{PgPool, audit, fields, unique_violation};
+use serde_json::json;
+use sqlx::PgConnection;
 use time::Date;
 
 use crate::issues::jobs::FieldWork;
@@ -261,7 +261,7 @@ async fn check_value(
     let not_for = |path: &str, problems: &mut Problems| {
         problems.add(
             path,
-            taskmaster_domain::validation::Rejection::new(
+            prostor_domain::validation::Rejection::new(
                 Problem::Invalid,
                 format!("values of a {} set have no {path}", kind.key()),
             ),
@@ -289,12 +289,12 @@ async fn check_value(
         .flatten()
         .flatten()
     {
-        if !(taskmaster_domain::fields::YEAR_MIN..=taskmaster_domain::fields::YEAR_MAX)
+        if !(prostor_domain::fields::YEAR_MIN..=prostor_domain::fields::YEAR_MAX)
             .contains(&date.year())
         {
             problems.add(
                 "date",
-                taskmaster_domain::validation::Rejection::new(
+                prostor_domain::validation::Rejection::new(
                     Problem::OutOfRange,
                     "dates are within years 1–9999",
                 ),
@@ -525,7 +525,7 @@ pub async fn value_usage(pool: &PgPool, actor: &Access, set_id: SetId, id: Value
     let mut tx = pool.begin().await?;
     lock_editable(&mut tx, actor, set_id).await?;
     lock_value_of(&mut tx, set_id, id).await?;
-    Ok(taskmaster_store::issue_values::issues_with_value(&mut *tx, id).await?)
+    Ok(prostor_store::issue_values::issues_with_value(&mut *tx, id).await?)
 }
 
 /// Deletes a value (FLD-032); it stops being anyone's default. Issues holding it get the
@@ -556,7 +556,7 @@ pub async fn delete_value(
     fields::forget_default_value(&mut tx, id).await?;
     value_sets::delete_value(&mut tx, id).await?;
     value_sets::touch(&mut tx, &[set_id]).await?;
-    if taskmaster_store::issue_values::issues_with_value(&mut *tx, id).await? > 0 {
+    if prostor_store::issue_values::issues_with_value(&mut *tx, id).await? > 0 {
         enqueue_work(
             &mut tx,
             actor,
@@ -587,12 +587,12 @@ pub(crate) async fn enqueue_work(
     actor: &Access,
     work: FieldWork,
 ) -> Result<()> {
-    taskmaster_store::jobs::enqueue(
+    prostor_store::jobs::enqueue(
         conn,
         &work,
-        taskmaster_store::jobs::Enqueue {
+        prostor_store::jobs::Enqueue {
             initiator: actor_of(actor),
-            ..taskmaster_store::jobs::Enqueue::default()
+            ..prostor_store::jobs::Enqueue::default()
         },
     )
     .await?;
@@ -710,7 +710,7 @@ pub(crate) async fn fork(
     let kind = kind_of(set)?;
     let base: String = format!("{project_name}: {}", set.name)
         .chars()
-        .take(taskmaster_domain::fields::SET_NAME_MAX - 6)
+        .take(prostor_domain::fields::SET_NAME_MAX - 6)
         .collect();
     let name = crate::seed::free_set_name(conn, kind.key(), &base).await?;
     let id = value_sets::insert(conn, &name, kind.key()).await?;
@@ -750,6 +750,6 @@ fn target(id: SetId) -> String {
     format!("value_set:{id}")
 }
 
-fn actor_of(access: &Access) -> taskmaster_domain::Actor {
-    taskmaster_domain::Actor::User(access.user())
+fn actor_of(access: &Access) -> prostor_domain::Actor {
+    prostor_domain::Actor::User(access.user())
 }

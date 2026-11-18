@@ -4,8 +4,8 @@ use std::net::SocketAddr;
 use std::time::Duration;
 
 use futures_util::{SinkExt, StreamExt};
+use prostor_server::router;
 use serde_json::{Value, json};
-use taskmaster_server::router;
 use tokio::net::TcpStream;
 use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::http::HeaderValue;
@@ -58,7 +58,7 @@ pub async fn try_connect(
         Some(cookie) => {
             headers.insert(
                 "cookie",
-                format!("taskmaster_session={cookie}").parse().unwrap(),
+                format!("prostor_session={cookie}").parse().unwrap(),
             );
         }
         None => {}

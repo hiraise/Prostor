@@ -2,16 +2,16 @@
 //! AUTH-029). Sessions live in the database and are checked on every request, so ending one takes
 //! effect at once (D-023).
 
-use sqlx::PgConnection;
-use taskmaster_domain::UserId;
-use taskmaster_domain::accounts::PASSWORD_MAX;
-use taskmaster_domain::auth::{
+use prostor_domain::UserId;
+use prostor_domain::accounts::PASSWORD_MAX;
+use prostor_domain::auth::{
     Credential, Principal, Scopes, SessionCheck, SessionPolicy, TOUCH_INTERVAL, check_session,
 };
-use taskmaster_domain::validation::{Problem, Problems, Rejection};
-use taskmaster_store::sessions::{self, Origin};
-use taskmaster_store::users::{self, User};
-use taskmaster_store::{PgPool, api_tokens};
+use prostor_domain::validation::{Problem, Problems, Rejection};
+use prostor_store::sessions::{self, Origin};
+use prostor_store::users::{self, User};
+use prostor_store::{PgPool, api_tokens};
+use sqlx::PgConnection;
 use time::OffsetDateTime;
 
 use crate::passwords::{Passwords, Verified};

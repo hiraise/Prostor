@@ -4,26 +4,26 @@
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use taskmaster_api::error::ErrorBody;
-use taskmaster_api::fields::{
+use prostor_api::error::ErrorBody;
+use prostor_api::fields::{
     AttachField, BuiltinField, DeleteValueQuery, Field, FieldDeletionImpact, FieldKind, FieldPatch,
     FieldQuery, FieldRef, IssueImpact, MoveAfter, NewField, NewFieldSet, NewValue, NewValueSet,
     ProjectField, ProjectFieldPatch, ProjectFields, SetKind, SetMembersChange, SetUse, SetValue,
     UsedIn, ValuePatch, ValueRef, ValueSet, ValueSetPatch, ValueSetQuery, ValueSetRef,
     ValueSetSummary,
 };
-use taskmaster_api::page::{Page, PageQuery};
-use taskmaster_domain::access::Access;
-use taskmaster_domain::auth::Scope;
-use taskmaster_domain::fields::{self as domain, builtin::BuiltinField as DomainBuiltin};
-use taskmaster_domain::{FieldId, SetId};
-use taskmaster_service::fields::{
+use prostor_api::page::{Page, PageQuery};
+use prostor_domain::access::Access;
+use prostor_domain::auth::Scope;
+use prostor_domain::fields::{self as domain, builtin::BuiltinField as DomainBuiltin};
+use prostor_domain::{FieldId, SetId};
+use prostor_service::fields::{
     self as fields_service, FieldRow, FieldUpdate, NewFieldInput, SetSource,
 };
-use taskmaster_service::people::Names;
-use taskmaster_service::project_fields::{self, AttachInput, ProjectFieldRow, SettingsChange};
-use taskmaster_service::value_sets::{self, SetRow, ValueInput};
-use taskmaster_store::value_sets::{Value as StoredValue, ValueSet as StoredSet};
+use prostor_service::people::Names;
+use prostor_service::project_fields::{self, AttachInput, ProjectFieldRow, SettingsChange};
+use prostor_service::value_sets::{self, SetRow, ValueInput};
+use prostor_store::value_sets::{Value as StoredValue, ValueSet as StoredSet};
 
 use crate::AppState;
 use crate::access::Viewer;
@@ -127,7 +127,7 @@ fn value_ref(value: &StoredValue) -> ValueRef {
     }
 }
 
-pub fn field_ref(field: &taskmaster_store::fields::Field) -> FieldRef {
+pub fn field_ref(field: &prostor_store::fields::Field) -> FieldRef {
     FieldRef {
         id: field.id,
         name: field.name.clone(),

@@ -7,14 +7,14 @@ use std::time::Instant;
 use axum::extract::State;
 use axum::http::{HeaderValue, StatusCode, header};
 use axum::response::{IntoResponse, Response};
-use taskmaster_api::accounts::{
+use prostor_api::accounts::{
     EmailSent, InvitationAcceptance, LinkInfo, LinkPurpose, LinkToken, PasswordResetConfirm,
     PasswordResetRequest,
 };
-use taskmaster_api::auth::Session;
-use taskmaster_api::error::ErrorBody;
-use taskmaster_domain::auth;
-use taskmaster_service::links::{self, Acceptance};
+use prostor_api::auth::Session;
+use prostor_api::error::ErrorBody;
+use prostor_domain::auth;
+use prostor_service::links::{self, Acceptance};
 use time::OffsetDateTime;
 
 use crate::AppState;

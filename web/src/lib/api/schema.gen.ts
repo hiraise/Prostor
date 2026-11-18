@@ -3469,7 +3469,7 @@ export interface components {
             settings: components["schemas"]["AdminSetting"][];
             /**
              * Format: int64
-             * @description The deployment's `TASKMASTER_UPLOAD_CEILING_BYTES`: the upload setting may not exceed it.
+             * @description The deployment's `PROSTOR_UPLOAD_CEILING_BYTES`: the upload setting may not exceed it.
              */
             upload_ceiling: number;
         };
@@ -5390,7 +5390,7 @@ export interface components {
             issues: number[];
         };
         /**
-         * @description Languages taskmaster speaks.
+         * @description Languages prostor speaks.
          * @enum {string}
          */
         Language: "en" | "ru";
@@ -7271,7 +7271,7 @@ export interface components {
         };
         /** @description Everything the setup wizard asks for. Problems are reported per field (`invalid_request`). */
         SetupRequest: {
-            /** @description The address people open taskmaster at, used in links in emails. */
+            /** @description The address people open prostor at, used in links in emails. */
             base_url: string | null;
             /** @description The setup code from the server log; case, spaces and hyphens do not matter. */
             code: string;

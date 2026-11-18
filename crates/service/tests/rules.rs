@@ -4,35 +4,33 @@
 //! behaviors themselves land with parts 1.9a-3…1.9a-5.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::role::PredefinedRole;
-use taskmaster_domain::fields::FieldKind;
-use taskmaster_domain::issues::history::{Origin, Record};
-use taskmaster_domain::issues::values::{Input, Value};
-use taskmaster_domain::projects::Template;
-use taskmaster_domain::rules::Rule;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::validation::Problem;
-use taskmaster_domain::{FieldId, IssueId, ProjectId, UserId};
-use taskmaster_service::access;
-use taskmaster_service::auth::SignedIn;
-use taskmaster_service::comments::{self, NewComment};
-use taskmaster_service::issues::{
-    self, AudienceInput, FieldChange, IssueChange, IssueView, NewIssue,
-};
-use taskmaster_service::live::Batch;
-use taskmaster_service::projects::{self, NewProjectInput};
-use taskmaster_service::roles;
-use taskmaster_service::rules::{self, Ctx, Event, MAX_DEPTH, MAX_WRITES};
-use taskmaster_service::setup::{self, Setup};
-use taskmaster_service::users::{self, NewAccount};
-use taskmaster_service::value_sets::{self, ValueInput};
-use taskmaster_service::{Error, Passwords};
-use taskmaster_store::PgPool;
-use taskmaster_store::access::Holder;
-use taskmaster_store::issue_history;
-use taskmaster_store::sessions::Origin as SessionOrigin;
-use taskmaster_testkit::TestDb;
+use prostor_domain::access::Access;
+use prostor_domain::access::role::PredefinedRole;
+use prostor_domain::fields::FieldKind;
+use prostor_domain::issues::history::{Origin, Record};
+use prostor_domain::issues::values::{Input, Value};
+use prostor_domain::projects::Template;
+use prostor_domain::rules::Rule;
+use prostor_domain::settings::Language;
+use prostor_domain::validation::Problem;
+use prostor_domain::{FieldId, IssueId, ProjectId, UserId};
+use prostor_service::access;
+use prostor_service::auth::SignedIn;
+use prostor_service::comments::{self, NewComment};
+use prostor_service::issues::{self, AudienceInput, FieldChange, IssueChange, IssueView, NewIssue};
+use prostor_service::live::Batch;
+use prostor_service::projects::{self, NewProjectInput};
+use prostor_service::roles;
+use prostor_service::rules::{self, Ctx, Event, MAX_DEPTH, MAX_WRITES};
+use prostor_service::setup::{self, Setup};
+use prostor_service::users::{self, NewAccount};
+use prostor_service::value_sets::{self, ValueInput};
+use prostor_service::{Error, Passwords};
+use prostor_store::PgPool;
+use prostor_store::access::Holder;
+use prostor_store::issue_history;
+use prostor_store::sessions::Origin as SessionOrigin;
+use prostor_testkit::TestDb;
 use time::macros::datetime;
 
 const T0: time::OffsetDateTime = datetime!(2026-11-05 09:00 UTC);
@@ -122,8 +120,8 @@ fn state_field(view: &IssueView) -> FieldId {
 async fn state_with_resolved(
     conn: &mut sqlx::PgConnection,
     project: ProjectId,
-) -> (taskmaster_service::issues::values::ProjectField, i64) {
-    let fields = taskmaster_service::issues::values::of_project(conn, project)
+) -> (prostor_service::issues::values::ProjectField, i64) {
+    let fields = prostor_service::issues::values::of_project(conn, project)
         .await
         .unwrap();
     let field = fields
@@ -133,7 +131,7 @@ async fn state_with_resolved(
         .unwrap()
         .clone();
     let set = field.attached.set_id.unwrap();
-    let values = taskmaster_store::value_sets::values_of(conn, &[set])
+    let values = prostor_store::value_sets::values_of(conn, &[set])
         .await
         .unwrap();
     let resolved = values.iter().find(|v| v.resolved).unwrap();
@@ -166,7 +164,7 @@ async fn aut_023_rule_write_marks_origin() {
 
     let mut conn = pool.acquire().await.unwrap();
     let (field, resolved) = state_with_resolved(&mut conn, web).await;
-    let row = taskmaster_store::issues::get(&mut *conn, id)
+    let row = prostor_store::issues::get(&mut *conn, id)
         .await
         .unwrap()
         .unwrap();
@@ -211,7 +209,7 @@ async fn aut_023_records_join_the_change() {
 
     let mut conn = pool.acquire().await.unwrap();
     let (field, resolved) = state_with_resolved(&mut conn, web).await;
-    let row = taskmaster_store::issues::get(&mut *conn, id)
+    let row = prostor_store::issues::get(&mut *conn, id)
         .await
         .unwrap()
         .unwrap();
@@ -298,11 +296,11 @@ async fn aut_023_no_rules_no_queries() {
     let before = issues::get(pool, &admin, id).await.unwrap().0;
 
     let mut conn = pool.acquire().await.unwrap();
-    let fields = taskmaster_service::issues::values::of_project(&mut conn, web)
+    let fields = prostor_service::issues::values::of_project(&mut conn, web)
         .await
         .unwrap();
     let field = fields.0.first().unwrap().clone();
-    let row = taskmaster_store::issues::get(&mut *conn, id)
+    let row = prostor_store::issues::get(&mut *conn, id)
         .await
         .unwrap()
         .unwrap();
@@ -343,7 +341,7 @@ async fn aut_023_depth_bounded() {
 
     let mut conn = pool.acquire().await.unwrap();
     let (field, resolved) = state_with_resolved(&mut conn, web).await;
-    let row = taskmaster_store::issues::get(&mut *conn, view.issue.id)
+    let row = prostor_store::issues::get(&mut *conn, view.issue.id)
         .await
         .unwrap()
         .unwrap();
@@ -409,7 +407,7 @@ async fn aut_023_toggle_off_does_nothing() {
 
     let mut conn = pool.acquire().await.unwrap();
     for rule in Rule::ALL {
-        taskmaster_store::rules::set_enabled(&mut conn, web, rule, false)
+        prostor_store::rules::set_enabled(&mut conn, web, rule, false)
             .await
             .unwrap();
     }
@@ -460,12 +458,12 @@ async fn person(
     .await
     .unwrap()
     .id;
-    let role = taskmaster_store::roles::builtin_id(pool, role.key())
+    let role = prostor_store::roles::builtin_id(pool, role.key())
         .await
         .unwrap()
         .unwrap();
     let scopes: Vec<Option<ProjectId>> = of.iter().copied().map(Some).collect();
-    taskmaster_service::roles::assign(pool, actor, role, Holder::User(user), &scopes)
+    prostor_service::roles::assign(pool, actor, role, Holder::User(user), &scopes)
         .await
         .unwrap();
     access::load(pool, user).await.unwrap()
@@ -483,7 +481,7 @@ async fn aut_063_assignee_not_visible() {
     let amy = person(pool, &admin, "amy", PredefinedRole::ProjectMember, &[web]).await;
     let bob = person(pool, &admin, "bob", PredefinedRole::ProjectMember, &[web]).await;
     // The assignee must be assignable: the team is the assignee field's set.
-    taskmaster_service::teams::add(pool, &admin, web, &[amy.user(), bob.user()], &[])
+    prostor_service::teams::add(pool, &admin, web, &[amy.user(), bob.user()], &[])
         .await
         .unwrap();
     let view = create(pool, &admin, web, "Crash on save").await;
@@ -549,17 +547,17 @@ async fn aut_063_assignee_not_visible() {
     }
 
     // An audience of one group: a member sees the issue, anyone else does not.
-    let group = taskmaster_service::groups::create(
+    let group = prostor_service::groups::create(
         pool,
         &admin,
-        taskmaster_service::groups::NewGroup {
+        prostor_service::groups::NewGroup {
             name: "Insiders".to_owned(),
-            ..taskmaster_service::groups::NewGroup::default()
+            ..prostor_service::groups::NewGroup::default()
         },
     )
     .await
     .unwrap();
-    taskmaster_service::groups::add_members(pool, &admin, group.id, &[bob.user()])
+    prostor_service::groups::add_members(pool, &admin, group.id, &[bob.user()])
         .await
         .unwrap();
     issues::update(
@@ -689,7 +687,7 @@ async fn aut_079_plus_one_vote() {
 }
 
 async fn votes(pool: &PgPool, issue: IssueId) -> i32 {
-    taskmaster_store::issues::get(pool, issue)
+    prostor_store::issues::get(pool, issue)
         .await
         .unwrap()
         .unwrap()
@@ -698,7 +696,7 @@ async fn votes(pool: &PgPool, issue: IssueId) -> i32 {
 
 /// The blank project's own set of the auto-attached component field (an empty one).
 async fn component_set(conn: &mut sqlx::PgConnection, project: ProjectId) -> (FieldId, i64) {
-    let fields = taskmaster_service::issues::values::of_project(conn, project)
+    let fields = prostor_service::issues::values::of_project(conn, project)
         .await
         .unwrap();
     let field = fields
@@ -749,12 +747,12 @@ async fn aut_090_component_owner_assigns() {
     let bob = person(pool, &admin, "bob", PredefinedRole::ProjectMember, &[web]).await;
     let zed = person(pool, &admin, "zed", PredefinedRole::ProjectMember, &[web]).await;
     // Bob joins the team — the assignee field's set — and Zed does not.
-    taskmaster_service::teams::add(pool, &admin, web, &[bob.user()], &[])
+    prostor_service::teams::add(pool, &admin, web, &[bob.user()], &[])
         .await
         .unwrap();
     let mut conn = pool.acquire().await.unwrap();
     let (component, set) = component_set(&mut conn, web).await;
-    let fields = taskmaster_service::issues::values::of_project(&mut conn, web)
+    let fields = prostor_service::issues::values::of_project(&mut conn, web)
         .await
         .unwrap();
     let assignee = fields
@@ -901,7 +899,7 @@ async fn held(pool: &PgPool, actor: &Access, issue: IssueId, builtin: &str) -> O
 /// The ID of the built-in link type of subtasks.
 async fn subtasks(pool: &PgPool) -> i64 {
     let mut conn = pool.acquire().await.unwrap();
-    taskmaster_store::links::type_by_builtin(&mut *conn, "subtask")
+    prostor_store::links::type_by_builtin(&mut *conn, "subtask")
         .await
         .unwrap()
         .unwrap()
@@ -911,14 +909,14 @@ async fn subtasks(pool: &PgPool) -> i64 {
 /// Links a child to its parent through the subtask type, from the child's side (§3.5: the event
 /// then names the parent as the other end).
 async fn link_parent(pool: &PgPool, actor: &Access, child: IssueId, parent: IssueId) {
-    taskmaster_service::issue_links::add(
+    prostor_service::issue_links::add(
         pool,
         actor,
         WEB,
         child,
-        taskmaster_service::issue_links::NewLinks {
+        prostor_service::issue_links::NewLinks {
             link_type: subtasks(pool).await,
-            side: taskmaster_domain::links::Side::Target,
+            side: prostor_domain::links::Side::Target,
             issues: vec![parent],
         },
         false,
@@ -953,7 +951,7 @@ async fn fix_versions(
     names: &[&str],
 ) -> (FieldId, Vec<i64>) {
     let mut conn = pool.acquire().await.unwrap();
-    let fields = taskmaster_service::issues::values::of_project(&mut conn, project)
+    let fields = prostor_service::issues::values::of_project(&mut conn, project)
         .await
         .unwrap();
     let field = fields
@@ -1087,7 +1085,7 @@ async fn aut_094_reopen_reopens_parents() {
         let mut conn = pool.acquire().await.unwrap();
         let (field, _) = state_with_resolved(&mut conn, web).await;
         let values =
-            taskmaster_store::value_sets::values_of(&mut *conn, &[field.attached.set_id.unwrap()])
+            prostor_store::value_sets::values_of(&mut *conn, &[field.attached.set_id.unwrap()])
                 .await
                 .unwrap();
         values.iter().find(|v| v.name == "Reopened").unwrap().id
@@ -1201,7 +1199,7 @@ async fn aut_094_value_per_project() {
     assert_eq!(changed.messages.len(), 1);
     // The parent's own stage field, by its own set's rank: «Done», not the child's «Fixed».
     let mut conn = pool.acquire().await.unwrap();
-    let fields = taskmaster_service::issues::values::of_project(&mut conn, board)
+    let fields = prostor_service::issues::values::of_project(&mut conn, board)
         .await
         .unwrap();
     let stage = fields
@@ -1209,11 +1207,11 @@ async fn aut_094_value_per_project() {
         .iter()
         .find(|f| f.kind.kind == FieldKind::State)
         .unwrap();
-    let row = taskmaster_store::issues::get(&mut *conn, parent.issue.id)
+    let row = prostor_store::issues::get(&mut *conn, parent.issue.id)
         .await
         .unwrap()
         .unwrap();
-    let values = taskmaster_service::issues::values::of_issue(&mut conn, &row, &fields)
+    let values = prostor_service::issues::values::of_issue(&mut conn, &row, &fields)
         .await
         .unwrap();
     drop(conn);
@@ -1300,14 +1298,14 @@ async fn aut_092_link_copies_from_parent() {
     .await
     .unwrap();
 
-    let answer = taskmaster_service::issue_links::add(
+    let answer = prostor_service::issue_links::add(
         pool,
         &admin,
         WEB,
         child.issue.id,
-        taskmaster_service::issue_links::NewLinks {
+        prostor_service::issue_links::NewLinks {
             link_type: subtasks(pool).await,
-            side: taskmaster_domain::links::Side::Target,
+            side: prostor_domain::links::Side::Target,
             issues: vec![parent.issue.id],
         },
         false,
@@ -1428,7 +1426,7 @@ async fn aut_092_other_projects_field_absent() {
     let (parent_field, versions) = fix_versions(pool, &admin, web, &["1.0"]).await;
     // The other project has no fix-versions field at all.
     let mut conn = pool.acquire().await.unwrap();
-    let bare_field = taskmaster_service::issues::values::of_project(&mut conn, bare)
+    let bare_field = prostor_service::issues::values::of_project(&mut conn, bare)
         .await
         .unwrap()
         .0
@@ -1437,7 +1435,7 @@ async fn aut_092_other_projects_field_absent() {
         .unwrap()
         .id();
     drop(conn);
-    taskmaster_service::project_fields::detach(pool, &admin, bare, bare_field)
+    prostor_service::project_fields::detach(pool, &admin, bare, bare_field)
         .await
         .unwrap();
     let parent = create(pool, &admin, web, "Parent").await;
@@ -1479,7 +1477,7 @@ async fn prj_062_archived_rules_silent() {
 
     let mut conn = pool.acquire().await.unwrap();
     let (field, resolved) = state_with_resolved(&mut conn, web).await;
-    let row = taskmaster_store::issues::get(&mut *conn, view.issue.id)
+    let row = prostor_store::issues::get(&mut *conn, view.issue.id)
         .await
         .unwrap()
         .unwrap();
@@ -1508,14 +1506,14 @@ async fn prj_062_archived_rules_silent() {
 /// The state of an issue of an archived project, read by hand: the field was not written.
 async fn held_of_archived(pool: &PgPool, issue: IssueId) -> Option<Value> {
     let mut conn = pool.acquire().await.unwrap();
-    let row = taskmaster_store::issues::get(&mut *conn, issue)
+    let row = prostor_store::issues::get(&mut *conn, issue)
         .await
         .unwrap()
         .unwrap();
-    let fields = taskmaster_service::issues::values::of_project(&mut conn, row.project_id)
+    let fields = prostor_service::issues::values::of_project(&mut conn, row.project_id)
         .await
         .unwrap();
-    let values = taskmaster_service::issues::values::of_issue(&mut conn, &row, &fields)
+    let values = prostor_service::issues::values::of_issue(&mut conn, &row, &fields)
         .await
         .unwrap();
     let state = fields
@@ -1529,7 +1527,7 @@ async fn held_of_archived(pool: &PgPool, issue: IssueId) -> Option<Value> {
 /// The ID of the built-in duplicate link type.
 async fn duplicates(pool: &PgPool) -> i64 {
     let mut conn = pool.acquire().await.unwrap();
-    taskmaster_store::links::type_by_builtin(&mut *conn, "duplicate")
+    prostor_store::links::type_by_builtin(&mut *conn, "duplicate")
         .await
         .unwrap()
         .unwrap()
@@ -1543,15 +1541,15 @@ async fn link_duplicate(
     actor: &Access,
     duplicate: IssueId,
     original: IssueId,
-) -> rules::Answer<taskmaster_service::issue_links::Added> {
-    taskmaster_service::issue_links::add(
+) -> rules::Answer<prostor_service::issue_links::Added> {
+    prostor_service::issue_links::add(
         pool,
         actor,
         WEB,
         duplicate,
-        taskmaster_service::issue_links::NewLinks {
+        prostor_service::issue_links::NewLinks {
             link_type: duplicates(pool).await,
-            side: taskmaster_domain::links::Side::Target,
+            side: prostor_domain::links::Side::Target,
             issues: vec![original],
         },
         false,
@@ -1568,7 +1566,7 @@ async fn builds(
     names: &[&str],
 ) -> (FieldId, Vec<i64>) {
     let mut conn = pool.acquire().await.unwrap();
-    let fields = taskmaster_service::issues::values::of_project(&mut conn, project)
+    let fields = prostor_service::issues::values::of_project(&mut conn, project)
         .await
         .unwrap();
     let field = fields
@@ -1588,7 +1586,7 @@ async fn builds(
 /// The project's state field, its first open value and its first resolved one.
 async fn state_pair(pool: &PgPool, project: ProjectId) -> (FieldId, i64, i64) {
     let mut conn = pool.acquire().await.unwrap();
-    let fields = taskmaster_service::issues::values::of_project(&mut conn, project)
+    let fields = prostor_service::issues::values::of_project(&mut conn, project)
         .await
         .unwrap();
     let field = fields
@@ -1597,7 +1595,7 @@ async fn state_pair(pool: &PgPool, project: ProjectId) -> (FieldId, i64, i64) {
         .find(|f| f.kind.kind == FieldKind::State)
         .unwrap();
     let set = field.attached.set_id.unwrap();
-    let values = taskmaster_store::value_sets::values_of(&mut *conn, &[set])
+    let values = prostor_store::value_sets::values_of(&mut *conn, &[set])
         .await
         .unwrap();
     let open = values.iter().find(|v| !v.resolved).unwrap();
@@ -1608,7 +1606,7 @@ async fn state_pair(pool: &PgPool, project: ProjectId) -> (FieldId, i64, i64) {
 /// The state set's «Дубликат» value (§3.8): the shared default set holds it already.
 async fn duplicate_state(pool: &PgPool, project: ProjectId) -> i64 {
     let mut conn = pool.acquire().await.unwrap();
-    let fields = taskmaster_service::issues::values::of_project(&mut conn, project)
+    let fields = prostor_service::issues::values::of_project(&mut conn, project)
         .await
         .unwrap();
     let field = fields
@@ -1617,7 +1615,7 @@ async fn duplicate_state(pool: &PgPool, project: ProjectId) -> i64 {
         .find(|f| f.kind.kind == FieldKind::State)
         .unwrap();
     let set = field.attached.set_id.unwrap();
-    let values = taskmaster_store::value_sets::values_of(&mut *conn, &[set])
+    let values = prostor_store::value_sets::values_of(&mut *conn, &[set])
         .await
         .unwrap();
     values.iter().find(|v| v.name == "Duplicate").unwrap().id
@@ -1778,7 +1776,7 @@ async fn aut_098_cross_project_untouched() {
 async fn originals(pool: &PgPool, issue: IssueId) -> Vec<IssueId> {
     let mut conn = pool.acquire().await.unwrap();
     let type_id = duplicates(pool).await;
-    let mut ids: Vec<IssueId> = taskmaster_store::links::sources_of(&mut *conn, type_id, &[issue])
+    let mut ids: Vec<IssueId> = prostor_store::links::sources_of(&mut *conn, type_id, &[issue])
         .await
         .unwrap()
         .into_iter()
@@ -1791,7 +1789,7 @@ async fn originals(pool: &PgPool, issue: IssueId) -> Vec<IssueId> {
 /// The project's priority field and the ID of its set's value with a name.
 async fn priority_value(pool: &PgPool, project: ProjectId, name: &str) -> (FieldId, i64) {
     let mut conn = pool.acquire().await.unwrap();
-    let fields = taskmaster_service::issues::values::of_project(&mut conn, project)
+    let fields = prostor_service::issues::values::of_project(&mut conn, project)
         .await
         .unwrap();
     let field = fields
@@ -1800,7 +1798,7 @@ async fn priority_value(pool: &PgPool, project: ProjectId, name: &str) -> (Field
         .find(|f| f.field.builtin.as_deref() == Some("priority"))
         .unwrap();
     let set = field.attached.set_id.unwrap();
-    let value = taskmaster_store::value_sets::values_of(&mut *conn, &[set])
+    let value = prostor_store::value_sets::values_of(&mut *conn, &[set])
         .await
         .unwrap()
         .iter()
@@ -1813,7 +1811,7 @@ async fn priority_value(pool: &PgPool, project: ProjectId, name: &str) -> (Field
 /// The project's state set value with a name (the default set holds «Reopened», §3.7).
 async fn state_value_named(pool: &PgPool, project: ProjectId, name: &str) -> i64 {
     let mut conn = pool.acquire().await.unwrap();
-    let fields = taskmaster_service::issues::values::of_project(&mut conn, project)
+    let fields = prostor_service::issues::values::of_project(&mut conn, project)
         .await
         .unwrap();
     let field = fields
@@ -1822,7 +1820,7 @@ async fn state_value_named(pool: &PgPool, project: ProjectId, name: &str) -> i64
         .find(|f| f.kind.kind == FieldKind::State)
         .unwrap();
     let set = field.attached.set_id.unwrap();
-    taskmaster_store::value_sets::values_of(&mut *conn, &[set])
+    prostor_store::value_sets::values_of(&mut *conn, &[set])
         .await
         .unwrap()
         .iter()
@@ -1943,7 +1941,7 @@ async fn aut_071_priority_other_set_ignored() {
     let app = project(pool, &admin, "APP").await;
     // APP forks its priority set: the same order, another set.
     let (app_priority, _) = priority_value(pool, app, "High").await;
-    taskmaster_service::project_fields::fork_set(pool, &admin, app, app_priority)
+    prostor_service::project_fields::fork_set(pool, &admin, app, app_priority)
         .await
         .unwrap();
     let original = create(pool, &admin, app, "The original").await;
@@ -1985,7 +1983,7 @@ async fn aut_071_reopen_when_links_removed() {
     set_value(pool, &admin, gone.issue.id, state, Some(duplicate)).await;
     let mut conn = pool.acquire().await.unwrap();
     let type_id = duplicates(pool).await;
-    let link = taskmaster_store::links::of_issue(&mut *conn, gone.issue.id)
+    let link = prostor_store::links::of_issue(&mut *conn, gone.issue.id)
         .await
         .unwrap()
         .into_iter()
@@ -1995,7 +1993,7 @@ async fn aut_071_reopen_when_links_removed() {
     drop(conn);
 
     let messages =
-        taskmaster_service::issue_links::remove(pool, &admin, WEB, gone.issue.id, link, false)
+        prostor_service::issue_links::remove(pool, &admin, WEB, gone.issue.id, link, false)
             .await
             .unwrap();
     assert!(messages.is_empty(), "{messages:?}");
@@ -2080,7 +2078,7 @@ async fn aut_071_state_set_on_link() {
             .any(|(origin, _)| origin == "rule")
     );
     let mut conn = pool.acquire().await.unwrap();
-    let row = taskmaster_store::issues::get(&mut *conn, fresh.issue.id)
+    let row = prostor_store::issues::get(&mut *conn, fresh.issue.id)
         .await
         .unwrap()
         .unwrap();
@@ -2236,7 +2234,7 @@ async fn scrum_value(
     name: &str,
 ) -> (FieldId, i64) {
     let mut conn = pool.acquire().await.unwrap();
-    let fields = taskmaster_service::issues::values::of_project(&mut conn, project)
+    let fields = prostor_service::issues::values::of_project(&mut conn, project)
         .await
         .unwrap();
     let field = fields
@@ -2246,7 +2244,7 @@ async fn scrum_value(
         .unwrap()
         .clone();
     let values =
-        taskmaster_store::value_sets::values_of(&mut *conn, &[field.attached.set_id.unwrap()])
+        prostor_store::value_sets::values_of(&mut *conn, &[field.attached.set_id.unwrap()])
             .await
             .unwrap();
     let value = values.iter().find(|v| v.name == name).unwrap();
@@ -2256,7 +2254,7 @@ async fn scrum_value(
 /// The estimation field of a scrum project by English name (it has no built-in key).
 async fn estimation_field(pool: &PgPool, project: ProjectId, name: &str) -> FieldId {
     let mut conn = pool.acquire().await.unwrap();
-    let fields = taskmaster_service::issues::values::of_project(&mut conn, project)
+    let fields = prostor_service::issues::values::of_project(&mut conn, project)
         .await
         .unwrap();
     fields
@@ -2312,7 +2310,7 @@ async fn aut_085_assign_on_state_change() {
         .field
         .id();
     let bob = person(pool, &admin, "bob", PredefinedRole::ProjectMember, &[web]).await;
-    taskmaster_service::teams::add(pool, &admin, web, &[bob.user()], &[])
+    prostor_service::teams::add(pool, &admin, web, &[bob.user()], &[])
         .await
         .unwrap();
     set_value(pool, &admin, mine.issue.id, assignee, Some(bob.user())).await;
@@ -2332,20 +2330,20 @@ async fn aut_085_board_move_assigns() {
     let admin = admin(pool).await;
     let web = scrum_project(pool, &admin, "SCR").await;
     let story = create(pool, &admin, web, "Board story").await;
-    let listed = taskmaster_service::boards::list(pool, &admin, None, Some(web), None, 10)
+    let listed = prostor_service::boards::list(pool, &admin, None, Some(web), None, 10)
         .await
         .unwrap();
-    let board = taskmaster_service::boards::get(pool, &admin, listed.items[0].id)
+    let board = prostor_service::boards::get(pool, &admin, listed.items[0].id)
         .await
         .unwrap();
     let sprint = board.full.sprints.iter().find(|s| !s.internal).unwrap().id;
-    taskmaster_service::boards::cards::add(
+    prostor_service::boards::cards::add(
         pool,
         &admin,
         WEB,
         board.full.board.id,
         sprint,
-        taskmaster_service::boards::cards::NewCard {
+        prostor_service::boards::cards::NewCard {
             issue: story.issue.id,
             ..Default::default()
         },
@@ -2366,14 +2364,14 @@ async fn aut_085_board_move_assigns() {
         .0
         .issue
         .version;
-    let moved = taskmaster_service::boards::cards::move_card(
+    let moved = prostor_service::boards::cards::move_card(
         pool,
         &admin,
         WEB,
         board.full.board.id,
         sprint,
         story.issue.id,
-        taskmaster_service::boards::cards::Move {
+        prostor_service::boards::cards::Move {
             lane: None,
             column: progress,
             after: None,
@@ -2679,16 +2677,16 @@ async fn aut_066_copies_values_tags_audience() {
     )
     .await
     .unwrap();
-    let mine = taskmaster_service::tags::create(pool, &admin, "mine", None)
+    let mine = prostor_service::tags::create(pool, &admin, "mine", None)
         .await
         .unwrap();
-    let theirs = taskmaster_service::tags::create(pool, &amy, "theirs", None)
+    let theirs = prostor_service::tags::create(pool, &amy, "theirs", None)
         .await
         .unwrap();
-    taskmaster_service::tags::set_on_issue(pool, &admin, WEB, view.issue.id, mine.id, true)
+    prostor_service::tags::set_on_issue(pool, &admin, WEB, view.issue.id, mine.id, true)
         .await
         .unwrap();
-    taskmaster_service::tags::set_on_issue(pool, &amy, WEB, view.issue.id, theirs.id, true)
+    prostor_service::tags::set_on_issue(pool, &amy, WEB, view.issue.id, theirs.id, true)
         .await
         .unwrap();
     issues::set_vote(pool, &amy, view.issue.id, true)
@@ -2753,7 +2751,7 @@ async fn aut_066_toggle_off() {
     let web = project(pool, &admin, "WEB").await;
     let view = create(pool, &admin, web, "Crash on save").await;
     let mut conn = pool.acquire().await.unwrap();
-    taskmaster_store::rules::set_enabled(&mut conn, web, Rule::CloneIssue, false)
+    prostor_store::rules::set_enabled(&mut conn, web, Rule::CloneIssue, false)
         .await
         .unwrap();
     drop(conn);

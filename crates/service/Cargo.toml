@@ -1,17 +1,17 @@
 [package]
-name = "taskmaster-service"
-description = "taskmaster use cases: one transaction per change, with checks, history and audit"
+name = "prostor-service"
+description = "prostor use cases: one transaction per change, with checks, history and audit"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
-taskmaster-domain.workspace = true
-taskmaster-files.workspace = true
-taskmaster-markup.workspace = true
-taskmaster-query.workspace = true
-taskmaster-store.workspace = true
+prostor-domain.workspace = true
+prostor-files.workspace = true
+prostor-markup.workspace = true
+prostor-query.workspace = true
+prostor-store.workspace = true
 sqlx.workspace = true
 serde_json.workspace = true
 time.workspace = true
@@ -37,7 +37,7 @@ hyper-rustls.workspace = true
 rustls.workspace = true
 
 [dev-dependencies]
-taskmaster-testkit.workspace = true
+prostor-testkit.workspace = true
 tempfile.workspace = true
 axum.workspace = true
 sha2.workspace = true

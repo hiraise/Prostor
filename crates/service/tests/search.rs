@@ -2,34 +2,32 @@
 //! B5). Each test names the catalog rows it covers.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::role::PredefinedRole;
-use taskmaster_domain::access::visibility::{Audience, Item, Kind, can_see};
-use taskmaster_domain::boards::Preset;
-use taskmaster_domain::fields::FieldKind;
-use taskmaster_domain::issues::history::Origin;
-use taskmaster_domain::issues::values::Input;
-use taskmaster_domain::links::Side;
-use taskmaster_domain::projects::Template;
-use taskmaster_domain::search::SortBy;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::validation::Problem as InputProblem;
-use taskmaster_domain::{BoardId, FieldId, IssueId, ProjectId, SprintId, UserId, ValueId};
-use taskmaster_query::{Direction, ProblemCode};
-use taskmaster_service::issues::{
-    self, AudienceInput, FieldChange, FieldInput, IssueView, NewIssue,
-};
-use taskmaster_service::project_fields::{self, AttachInput, SettingsChange};
-use taskmaster_service::projects::{self, NewProjectInput};
-use taskmaster_service::search::{self, SearchInput};
-use taskmaster_service::setup::{self, Setup};
-use taskmaster_service::users::{self, NewAccount};
-use taskmaster_service::value_sets::{self, ValueInput};
-use taskmaster_service::{Error, Passwords, access, comments, groups, issue_links, roles};
-use taskmaster_store::PgPool;
-use taskmaster_store::access::Holder;
-use taskmaster_store::sessions::Origin as SessionOrigin;
-use taskmaster_testkit::TestDb;
+use prostor_domain::access::Access;
+use prostor_domain::access::role::PredefinedRole;
+use prostor_domain::access::visibility::{Audience, Item, Kind, can_see};
+use prostor_domain::boards::Preset;
+use prostor_domain::fields::FieldKind;
+use prostor_domain::issues::history::Origin;
+use prostor_domain::issues::values::Input;
+use prostor_domain::links::Side;
+use prostor_domain::projects::Template;
+use prostor_domain::search::SortBy;
+use prostor_domain::settings::Language;
+use prostor_domain::validation::Problem as InputProblem;
+use prostor_domain::{BoardId, FieldId, IssueId, ProjectId, SprintId, UserId, ValueId};
+use prostor_query::{Direction, ProblemCode};
+use prostor_service::issues::{self, AudienceInput, FieldChange, FieldInput, IssueView, NewIssue};
+use prostor_service::project_fields::{self, AttachInput, SettingsChange};
+use prostor_service::projects::{self, NewProjectInput};
+use prostor_service::search::{self, SearchInput};
+use prostor_service::setup::{self, Setup};
+use prostor_service::users::{self, NewAccount};
+use prostor_service::value_sets::{self, ValueInput};
+use prostor_service::{Error, Passwords, access, comments, groups, issue_links, roles};
+use prostor_store::PgPool;
+use prostor_store::access::Holder;
+use prostor_store::sessions::Origin as SessionOrigin;
+use prostor_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::datetime;
 
@@ -107,7 +105,7 @@ async fn grant(
     role: PredefinedRole,
     of: &[ProjectId],
 ) {
-    let role = taskmaster_store::roles::builtin_id(pool, role.key())
+    let role = prostor_store::roles::builtin_id(pool, role.key())
         .await
         .unwrap()
         .unwrap();
@@ -186,7 +184,7 @@ async fn value(pool: &PgPool, view: &IssueView, field: &str, name: &str) -> Valu
         .attached
         .set_id
         .unwrap();
-    taskmaster_store::value_sets::values_of(pool, &[set])
+    prostor_store::value_sets::values_of(pool, &[set])
         .await
         .unwrap()
         .into_iter()
@@ -716,7 +714,7 @@ async fn qry_008_ranges_follow_each_projects_order() {
         .await
         .unwrap();
     let own = forked.attached.set_id.unwrap();
-    let values = taskmaster_store::value_sets::values_of(pool, &[own])
+    let values = prostor_store::value_sets::values_of(pool, &[own])
         .await
         .unwrap();
     let named = |n: &str| values.iter().find(|v| v.name == n).unwrap().id;
@@ -882,7 +880,7 @@ async fn qry_011_resolved_only_when_every_state_field_is() {
         .await
         .unwrap();
     }
-    let values = taskmaster_store::value_sets::values_of(pool, &[set_id])
+    let values = prostor_store::value_sets::values_of(pool, &[set_id])
         .await
         .unwrap();
     let named = |n: &str| values.iter().find(|v| v.name == n).unwrap().id;
@@ -1358,7 +1356,7 @@ async fn acc_049_search_and_the_rust_rule_agree_across_projects() {
     for viewer in [&admin, &a, &b, &c, &sam] {
         let mut ruled = Vec::new();
         for view in &created {
-            let project = taskmaster_store::projects::get(pool, view.project.id)
+            let project = prostor_store::projects::get(pool, view.project.id)
                 .await
                 .unwrap()
                 .unwrap();
@@ -1462,7 +1460,7 @@ fn at(text: &str, now: OffsetDateTime, zone: Option<&str>) -> SearchInput {
 
 /// Assigns an issue of WEB, first adding the person to WEB's team (assignees follow the team).
 async fn assign(pool: &PgPool, w: &World, issue: IssueId, user: UserId) {
-    taskmaster_service::teams::add(pool, &w.admin, w.web, &[user], &[])
+    prostor_service::teams::add(pool, &w.admin, w.web, &[user], &[])
         .await
         .unwrap();
     issues::set_field(
@@ -1626,7 +1624,7 @@ async fn qry_016_issue_ids_old_and_new() {
         .0
         .readable_id()
         .unwrap();
-    taskmaster_service::issues::moves::move_issue(pool, &w.admin, WEB, issue, w.api, false)
+    prostor_service::issues::moves::move_issue(pool, &w.admin, WEB, issue, w.api, false)
         .await
         .unwrap();
     let new = issues::get(pool, &w.admin, issue)
@@ -1783,10 +1781,10 @@ async fn qry_019_own_tags() {
         &[w.web],
     )
     .await;
-    let urgent = taskmaster_service::tags::create(pool, &w.admin, "Urgent", None)
+    let urgent = prostor_service::tags::create(pool, &w.admin, "Urgent", None)
         .await
         .unwrap();
-    taskmaster_service::tags::set_on_issue(pool, &w.admin, WEB, w.issues[0], urgent.id, true)
+    prostor_service::tags::set_on_issue(pool, &w.admin, WEB, w.issues[0], urgent.id, true)
         .await
         .unwrap();
     assert_eq!(set(pool, &w.admin, "tag: urgent").await, [w.issues[0]]);
@@ -2055,10 +2053,10 @@ async fn qry_053_project_and_tag_contexts() {
         search::search(pool, &amy, in_api).await,
         Err(Error::NotFound(_))
     ));
-    let mine = taskmaster_service::tags::create(pool, &w.admin, "Mine", None)
+    let mine = prostor_service::tags::create(pool, &w.admin, "Mine", None)
         .await
         .unwrap();
-    taskmaster_service::tags::set_on_issue(pool, &w.admin, WEB, w.issues[3], mine.id, true)
+    prostor_service::tags::set_on_issue(pool, &w.admin, WEB, w.issues[3], mine.id, true)
         .await
         .unwrap();
     let in_tag = SearchInput {
@@ -2322,7 +2320,7 @@ async fn acc_017_query_words_are_reserved_usernames() {
         current_password: None,
         version: 0,
     };
-    let letters = taskmaster_service::mail::Letters {
+    let letters = prostor_service::mail::Letters {
         enabled: false,
         base_url: None,
         language: Language::En,
@@ -2451,7 +2449,7 @@ async fn qry_086_the_answer_names_its_topic() {
 /// A scrum board "Team" over WEB with sprints "Sprint 1" (the first, ended), "Sprint 2" (runs
 /// today), "Old" (archived); the issues 0 and 1 in Sprint 1, 2 in Sprint 2, 3 in Old.
 async fn team_board(pool: &PgPool, w: &World) -> (BoardId, [SprintId; 3]) {
-    use taskmaster_service::boards::{self, NewBoard, Sharing};
+    use prostor_service::boards::{self, NewBoard, Sharing};
     let board = boards::create(
         pool,
         &w.admin,
@@ -2586,7 +2584,7 @@ async fn qry_049_invisible_boards_are_unknown() {
 
 #[tokio::test]
 async fn qry_049_saved_search_follows_renames() {
-    use taskmaster_service::saved_searches;
+    use prostor_service::saved_searches;
     let db = TestDb::new().await;
     let pool = db.pool();
     let w = world(pool).await;
@@ -2640,8 +2638,8 @@ async fn qry_049_saved_search_follows_renames() {
 
 // ---- 2.1b: the query bar's assist (plan §5, QRY-056…QRY-058) ----
 
-use taskmaster_query::completion::Group;
-use taskmaster_service::assist;
+use prostor_query::completion::Group;
+use prostor_service::assist;
 
 /// A value in a project's own set, as the commands tests make theirs.
 async fn value_of(pool: &PgPool, actor: &Access, project: ProjectId, field: &str, name: &str) {
@@ -2838,11 +2836,11 @@ async fn qry_057_context_and_permission_aware_suggestions() {
             .iter()
             .any(|s| s.group == Group::User && s.text == "admin")
     );
-    let all_members = taskmaster_store::groups::builtin_ids(pool).await.unwrap().1;
+    let all_members = prostor_store::groups::builtin_ids(pool).await.unwrap().1;
     let assignment = roles::assignments_of_holder(
         pool,
         &admin,
-        taskmaster_store::access::Holder::Group(all_members),
+        prostor_store::access::Holder::Group(all_members),
     )
     .await
     .unwrap()[0]
@@ -2907,7 +2905,7 @@ async fn qry_058_the_assist_answers_the_check() {
             .check
             .tokens
             .iter()
-            .any(|token| token.1 == taskmaster_query::Class::Attribute)
+            .any(|token| token.1 == prostor_query::Class::Attribute)
     );
     // A value that matches still completes while the problem marks the unknown one.
     let answer = assist::query(pool, &admin, "state: In Pro", 13, None, None)

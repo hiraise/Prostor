@@ -1,7 +1,7 @@
-//! Personal API tokens (AUTH-029, AUTH-030). Scope keys: `taskmaster_domain::auth::Scope`.
+//! Personal API tokens (AUTH-029, AUTH-030). Scope keys: `prostor_domain::auth::Scope`.
 
+use prostor_domain::UserId;
 use sqlx::{PgConnection, PgPool};
-use taskmaster_domain::UserId;
 use time::OffsetDateTime;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

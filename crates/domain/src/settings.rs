@@ -138,7 +138,7 @@ pub static REMEMBER_ME_DAYS: Setting<u32> = Setting {
 };
 
 /// The outgoing mail server as an SMTP URL, credentials included (`smtp://user:pass@host:587`,
-/// NTF-004). Empty: the transport falls back to `TASKMASTER_SMTP_URL`, else email is off. Secret:
+/// NTF-004). Empty: the transport falls back to `PROSTOR_SMTP_URL`, else email is off. Secret:
 /// the URL usually names an account.
 pub static SMTP_URL: Setting<String> = Setting {
     key: "smtp_url",
@@ -163,8 +163,8 @@ pub static SMTP_PASSWORD: Setting<String> = Setting {
     secret: true,
 };
 
-/// The sender of every email, an address with an optional name (`taskmaster <t@example.com>`,
-/// NTF-006). Empty: the transport falls back to `TASKMASTER_MAIL_FROM`.
+/// The sender of every email, an address with an optional name (`prostor <t@example.com>`,
+/// NTF-006). Empty: the transport falls back to `PROSTOR_MAIL_FROM`.
 pub static MAIL_FROM: Setting<String> = Setting {
     key: "mail_from",
     default: || String::new(),
@@ -238,7 +238,7 @@ pub static ALL: &[&dyn Definition] = &[
     &EMAIL_ENABLED,
 ];
 
-/// Languages taskmaster speaks.
+/// Languages prostor speaks.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum Language {
@@ -330,7 +330,7 @@ fn validate_address(value: String) -> Result<String, String> {
     if value.is_empty() || value.contains('@') {
         Ok(value)
     } else {
-        Err("must be an email address, like `taskmaster <tracker@example.com>`".to_owned())
+        Err("must be an email address, like `prostor <tracker@example.com>`".to_owned())
     }
 }
 

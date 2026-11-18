@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // The people of a project (PRJ-046…PRJ-056, ACC-033): who sees it (PRJ-056), the owner and the
   // transfer of ownership (PRJ-053), the team with its roles, groups and accounts (PRJ-047,
   // PRJ-050, PRJ-051, PRJ-054), roles held outside the team (PRJ-052), and global roles that reach
@@ -201,7 +202,7 @@
   }
 </script>
 
-<svelte:head><title>{pm.people()} · {project.name} · TaskMaster</title></svelte:head>
+<svelte:head><title>{pm.people()} · {project.name} · {brand()}</title></svelte:head>
 
 {#snippet holder(assignment: Assignment)}
   {#if assignment.holder.kind === 'user'}

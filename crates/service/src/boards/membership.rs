@@ -2,19 +2,19 @@
 //! boards in mode `auto` when they are published, and the operations commands, search and
 //! automation use name a sprint by role — the current one or the auto-add one.
 
+use prostor_domain::access::Access;
+use prostor_domain::boards::Mode;
+use prostor_domain::boards::sprints::{self, SprintDates};
+use prostor_domain::issues::history::{BoardPlace, Origin, Record};
+use prostor_domain::issues::rights;
+use prostor_domain::live::Change;
+use prostor_domain::rank;
+use prostor_domain::{BoardId, IssueId, SprintId};
+use prostor_store::PgPool;
+use prostor_store::boards::Sprint;
+use prostor_store::boards::cards as store_cards;
+use prostor_store::issues::Issue;
 use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::boards::Mode;
-use taskmaster_domain::boards::sprints::{self, SprintDates};
-use taskmaster_domain::issues::history::{BoardPlace, Origin, Record};
-use taskmaster_domain::issues::rights;
-use taskmaster_domain::live::Change;
-use taskmaster_domain::rank;
-use taskmaster_domain::{BoardId, IssueId, SprintId};
-use taskmaster_store::PgPool;
-use taskmaster_store::boards::Sprint;
-use taskmaster_store::boards::cards as store_cards;
-use taskmaster_store::issues::Issue;
 use time::OffsetDateTime;
 
 use super::cards::{self, NewCard, Placed, place};

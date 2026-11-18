@@ -1,9 +1,9 @@
-//! Files of issues and comments (CNT-017…CNT-024). Rules: `taskmaster_domain::attachments`;
+//! Files of issues and comments (CNT-017…CNT-024). Rules: `prostor_domain::attachments`;
 //! their records in the history: `issue_history`. The files are in the file store under
 //! `storage_key` and `thumbnail_key`.
 
+use prostor_domain::{AttachmentId, CommentId, GroupId, IssueId, UserId};
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::{AttachmentId, CommentId, GroupId, IssueId, UserId};
 use time::OffsetDateTime;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

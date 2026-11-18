@@ -11,13 +11,13 @@ use axum::http::{HeaderMap, header};
 use axum::response::Response;
 use futures_util::stream::{SplitSink, SplitStream};
 use futures_util::{SinkExt, StreamExt};
-use taskmaster_api::live::{
+use prostor_api::live::{
     LiveClientMessage, LiveDenied, LiveServerMessage, LiveSubscribe, LiveUnsubscribe, close,
 };
-use taskmaster_domain::UserId;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::auth::{Credential, Scope};
-use taskmaster_domain::live::Topic;
+use prostor_domain::UserId;
+use prostor_domain::access::Access;
+use prostor_domain::auth::{Credential, Scope};
+use prostor_domain::live::Topic;
 use tokio::sync::mpsc;
 use tokio::sync::mpsc::error::TrySendError;
 

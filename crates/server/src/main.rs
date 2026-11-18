@@ -4,14 +4,14 @@ use std::sync::Arc;
 use std::time::Duration;
 
 use anyhow::Context;
-use taskmaster_server::cli::{self, Command};
-use taskmaster_server::config::{Config, LogFormat, redact_password};
-use taskmaster_server::lifecycle::Phase;
-use taskmaster_server::web::EmbeddedAssets;
-use taskmaster_server::{AppState, VERSION, router, startup};
-use taskmaster_service::Passwords;
-use taskmaster_service::recovery::Target;
-use taskmaster_store::jobs::{Handlers, RunnerConfig};
+use prostor_server::cli::{self, Command};
+use prostor_server::config::{Config, LogFormat, redact_password};
+use prostor_server::lifecycle::Phase;
+use prostor_server::web::EmbeddedAssets;
+use prostor_server::{AppState, VERSION, router, startup};
+use prostor_service::Passwords;
+use prostor_service::recovery::Target;
+use prostor_store::jobs::{Handlers, RunnerConfig};
 use tokio::net::TcpListener;
 use tokio_util::sync::CancellationToken;
 use tracing_subscriber::EnvFilter;
@@ -34,25 +34,25 @@ async fn main() -> anyhow::Result<()> {
         Command::Serve => serve(Config::from_env()?).await,
         Command::RecoverAdmin(target) => recover_admin(Config::from_env()?, target).await,
         Command::Help => Ok(write!(io::stdout(), "{}", cli::USAGE)?),
-        Command::Version => Ok(writeln!(io::stdout(), "TaskMaster {VERSION}")?),
+        Command::Version => Ok(writeln!(io::stdout(), "Prostor {VERSION}")?),
     }
 }
 
-/// `taskmaster recover-admin`: restores administrator access from the command line (ADM-051).
+/// `prostor recover-admin`: restores administrator access from the command line (ADM-051).
 async fn recover_admin(config: Config, target: Target) -> anyhow::Result<()> {
-    let options = taskmaster_store::connect_options(&config.database.url)?;
+    let options = prostor_store::connect_options(&config.database.url)?;
     // The binary may be newer than the database; recovery needs the current schema.
-    taskmaster_store::migrate(&options)
+    prostor_store::migrate(&options)
         .await
         .context("cannot bring the database schema up to date")?;
-    let pool = taskmaster_store::pool(&options, 2);
+    let pool = prostor_store::pool(&options, 2);
     let letters = recovery_letters(&pool, &config).await;
     let recovered =
-        taskmaster_service::recovery::recover(&pool, &Passwords::new(1), target, &letters).await;
+        prostor_service::recovery::recover(&pool, &Passwords::new(1), target, &letters).await;
     pool.close().await;
     let recovered = match recovered {
         Ok(recovered) => recovered,
-        Err(taskmaster_service::Error::Invalid(problems)) => {
+        Err(prostor_service::Error::Invalid(problems)) => {
             let reasons: Vec<String> = problems
                 .iter()
                 .map(|problem| format!("{}: {}", problem.path, problem.message))
@@ -90,67 +90,66 @@ async fn recover_admin(config: Config, target: Target) -> anyhow::Result<()> {
 /// the instance language the words. A settings problem never blocks recovery: the defaults
 /// leave email to the environment, secrets that do not open leave it off, as on the server.
 async fn recovery_letters(
-    pool: &taskmaster_store::PgPool,
+    pool: &prostor_store::PgPool,
     config: &Config,
-) -> taskmaster_service::mail::Letters {
-    let rows = taskmaster_store::settings::load(pool)
+) -> prostor_service::mail::Letters {
+    let rows = prostor_store::settings::load(pool)
         .await
         .unwrap_or_default();
     let secret_key = config
         .secret_key
         .as_ref()
-        .map(|bytes| taskmaster_domain::secret::Key::from(*bytes));
-    let (secrets, _unreadable) =
-        taskmaster_store::settings::load_secrets(pool, secret_key.as_ref())
-            .await
-            .unwrap_or_default();
+        .map(|bytes| prostor_domain::secret::Key::from(*bytes));
+    let (secrets, _unreadable) = prostor_store::settings::load_secrets(pool, secret_key.as_ref())
+        .await
+        .unwrap_or_default();
     let (snapshot, _errors) =
-        taskmaster_domain::settings::Snapshot::from_stored(rows.into_iter().chain(secrets));
+        prostor_domain::settings::Snapshot::from_stored(rows.into_iter().chain(secrets));
     let env = config
         .mail
         .as_ref()
-        .map(|mail| taskmaster_service::mail::EnvMail {
+        .map(|mail| prostor_service::mail::EnvMail {
             url: mail.smtp_url.clone(),
             from: mail.from.clone(),
         });
-    let outgoing = taskmaster_service::mail::outgoing(&snapshot, env.as_ref());
-    taskmaster_service::mail::Letters {
+    let outgoing = prostor_service::mail::outgoing(&snapshot, env.as_ref());
+    prostor_service::mail::Letters {
         enabled: outgoing.enabled,
-        base_url: snapshot.get(&taskmaster_domain::settings::BASE_URL),
-        language: snapshot.get(&taskmaster_domain::settings::SYSTEM_LANGUAGE),
+        base_url: snapshot.get(&prostor_domain::settings::BASE_URL),
+        language: snapshot.get(&prostor_domain::settings::SYSTEM_LANGUAGE),
     }
 }
 
 async fn serve(config: Config) -> anyhow::Result<()> {
     init_tracing(config.log_format);
 
-    let options = taskmaster_store::connect_options(&config.database.url)?;
-    let pool = taskmaster_store::pool(&options, config.database.max_connections);
+    let options = prostor_store::connect_options(&config.database.url)?;
+    let pool = prostor_store::pool(&options, config.database.max_connections);
     // The environment's mail server is the fallback of the admin mail settings (D-026, NTF-004).
     let env_mail = config
         .mail
         .as_ref()
-        .map(|mail| taskmaster_service::mail::EnvMail {
+        .map(|mail| prostor_service::mail::EnvMail {
             url: mail.smtp_url.clone(),
             from: mail.from.clone(),
         });
     if env_mail.is_none() {
         tracing::info!(
-            "no TASKMASTER_SMTP_URL: the mail settings screen is the only way to turn email on"
+            "no PROSTOR_SMTP_URL: the mail settings screen is the only way to turn email on"
         );
     }
     let secret_key = config.secret_key.map(|bytes| {
-        tracing::info!("secret settings can be stored: TASKMASTER_SECRET_KEY is set");
-        taskmaster_domain::secret::Key::from(bytes)
+        tracing::info!("secret settings can be stored: PROSTOR_SECRET_KEY is set");
+        prostor_domain::secret::Key::from(bytes)
     });
     let gravatar = match &config.files.gravatar_url {
         Some(url) => Some(
-            taskmaster_service::pictures::Gravatar::new(url)
+            prostor_service::pictures::Gravatar::new(url)
                 .map_err(|error| anyhow::anyhow!("Gravatar import: {error}"))?,
         ),
         None => None,
     };
-    let files = taskmaster_files::FileStore::new(&config.files.dir);
+    let files = prostor_files::FileStore::new(&config.files.dir);
     let state = AppState::new(Arc::new(EmbeddedAssets), pool)
         .with_trusted_proxies(config.trusted_proxies.clone())
         .with_setup_code(config.setup_code.clone())
@@ -165,7 +164,7 @@ async fn serve(config: Config) -> anyhow::Result<()> {
         address = %listener.local_addr()?,
         version = VERSION,
         database = %redact_password(&config.database.url),
-        "TaskMaster is listening"
+        "Prostor is listening"
     );
 
     let stop = CancellationToken::new();
@@ -191,64 +190,64 @@ async fn serve(config: Config) -> anyhow::Result<()> {
     // Job kinds register here as features add them.
     let mut handlers = Handlers::new();
     let pool = state.db.clone();
-    handlers.add::<taskmaster_service::projects::ProjectDeletion, _, _>(move |_context, job| {
+    handlers.add::<prostor_service::projects::ProjectDeletion, _, _>(move |_context, job| {
         let pool = pool.clone();
-        async move { taskmaster_service::projects::run_deletion(&pool, job).await }
+        async move { prostor_service::projects::run_deletion(&pool, job).await }
     });
     let pool = state.db.clone();
-    handlers.add::<taskmaster_service::issues::jobs::FieldWork, _, _>(move |_context, work| {
+    handlers.add::<prostor_service::issues::jobs::FieldWork, _, _>(move |_context, work| {
         let pool = pool.clone();
-        async move { taskmaster_service::issues::jobs::run(&pool, work).await }
+        async move { prostor_service::issues::jobs::run(&pool, work).await }
     });
     let pool = state.db.clone();
-    handlers.add::<taskmaster_service::commands::bulk::BulkWork, _, _>({
+    handlers.add::<prostor_service::commands::bulk::BulkWork, _, _>({
         let pool = pool.clone();
         move |context, job| {
             let pool = pool.clone();
-            async move { taskmaster_service::commands::bulk::run(&pool, &context, job).await }
+            async move { prostor_service::commands::bulk::run(&pool, &context, job).await }
         }
     });
     let pool = state.db.clone();
-    handlers.add::<taskmaster_service::text::RenderJob, _, _>(move |_context, job| {
+    handlers.add::<prostor_service::text::RenderJob, _, _>(move |_context, job| {
         let pool = pool.clone();
-        async move { taskmaster_service::text::run_render(&pool, job).await }
+        async move { prostor_service::text::run_render(&pool, job).await }
     });
-    handlers.add::<taskmaster_service::files::FilesRemoval, _, _>({
+    handlers.add::<prostor_service::files::FilesRemoval, _, _>({
         let files = files.clone();
         move |_context, job| {
             let files = files.clone();
-            async move { taskmaster_service::files::run_removal(&files, job).await }
+            async move { prostor_service::files::run_removal(&files, job).await }
         }
     });
     let pool = state.db.clone();
-    handlers.add::<taskmaster_service::uploads::UploadExpiry, _, _>(move |_context, job| {
+    handlers.add::<prostor_service::uploads::UploadExpiry, _, _>(move |_context, job| {
         let pool = pool.clone();
-        async move { taskmaster_service::uploads::run_expiry(&pool, job).await }
+        async move { prostor_service::uploads::run_expiry(&pool, job).await }
     });
     let pool = state.db.clone();
-    handlers.add::<taskmaster_service::attachments::ImageInspection, _, _>({
+    handlers.add::<prostor_service::attachments::ImageInspection, _, _>({
         let files = files.clone();
         move |_context, job| {
             let pool = pool.clone();
             let files = files.clone();
-            async move { taskmaster_service::attachments::run_inspection(&pool, &files, job).await }
+            async move { prostor_service::attachments::run_inspection(&pool, &files, job).await }
         }
     });
     // Always registered: the transport follows the settings, so it may appear or disappear
     // while the node runs. A job that finds none fails with the reason.
     {
         let settings = state.settings.clone();
-        handlers.add::<taskmaster_service::mail::Mail, _, _>(move |context, mail| {
+        handlers.add::<prostor_service::mail::Mail, _, _>(move |context, mail| {
             let settings = settings.clone();
             async move {
                 let outgoing = settings.mail();
                 let Some(mailer) = outgoing.transport.clone() else {
-                    return Err(taskmaster_store::jobs::JobError::Fail(
+                    return Err(prostor_store::jobs::JobError::Fail(
                         "outgoing email is not configured on this instance".to_owned(),
                     ));
                 };
                 if !outgoing.enabled {
-                    return Err(taskmaster_store::jobs::JobError::Fail(
+                    return Err(prostor_store::jobs::JobError::Fail(
                         "email is switched off on this instance".to_owned(),
                     ));
                 }
@@ -259,7 +258,7 @@ async fn serve(config: Config) -> anyhow::Result<()> {
     let services = match startup::start(&state, &options, handlers, runner, &stop).await {
         Ok(services) => services,
         Err(error) => {
-            tracing::error!(%error, "TaskMaster cannot start");
+            tracing::error!(%error, "Prostor cannot start");
             stop.cancel();
             let _ = server.await;
             return Err(error.into());
@@ -302,7 +301,7 @@ async fn serve(config: Config) -> anyhow::Result<()> {
     {
         tracing::warn!("database connections did not close in time");
     }
-    tracing::info!("TaskMaster stopped");
+    tracing::info!("Prostor stopped");
     served.context("the HTTP server task failed")??;
     Ok(())
 }

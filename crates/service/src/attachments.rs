@@ -8,26 +8,26 @@
 //! An issue's files are read whole (at most `ISSUE_FILES_MAX`) and filtered by these rules, so a
 //! page never leaks or skips (architecture.md §4).
 
+use prostor_domain::access::Access;
+use prostor_domain::access::visibility::Audience;
+use prostor_domain::attachments::{self as rules, Facts};
+use prostor_domain::files::{self as file_rules, ISSUE_FILES_MAX, Kind};
+use prostor_domain::issues::history::{Origin, Record};
+use prostor_domain::live::Change;
+use prostor_domain::validation::Problem;
+use prostor_domain::{AttachmentId, CommentId, GroupId, IssueId, UploadId, UserId};
+use prostor_files::FileStore;
+use prostor_store::PgPool;
+use prostor_store::attachments::{self as store, Attachment, NewAttachment};
+use prostor_store::comments::{self as store_comments, Comment};
+use prostor_store::groups::{self, Group};
+use prostor_store::issues::{self as store_issues, Issue};
+use prostor_store::jobs::{self, Enqueue, JobError, JobKind};
+use prostor_store::projects::Project;
+use prostor_store::uploads;
+use prostor_store::users::{self, User};
 use serde::{Deserialize, Serialize};
 use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::visibility::Audience;
-use taskmaster_domain::attachments::{self as rules, Facts};
-use taskmaster_domain::files::{self as file_rules, ISSUE_FILES_MAX, Kind};
-use taskmaster_domain::issues::history::{Origin, Record};
-use taskmaster_domain::live::Change;
-use taskmaster_domain::validation::Problem;
-use taskmaster_domain::{AttachmentId, CommentId, GroupId, IssueId, UploadId, UserId};
-use taskmaster_files::FileStore;
-use taskmaster_store::PgPool;
-use taskmaster_store::attachments::{self as store, Attachment, NewAttachment};
-use taskmaster_store::comments::{self as store_comments, Comment};
-use taskmaster_store::groups::{self, Group};
-use taskmaster_store::issues::{self as store_issues, Issue};
-use taskmaster_store::jobs::{self, Enqueue, JobError, JobKind};
-use taskmaster_store::projects::Project;
-use taskmaster_store::uploads;
-use taskmaster_store::users::{self, User};
 
 use crate::images;
 use crate::issues::{self, AudienceInput};

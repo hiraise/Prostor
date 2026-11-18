@@ -7,27 +7,27 @@
 //! records too but never stream items (HIST-006). A deleted comment is a placeholder. A change
 //! made by a comment's author within a minute after it is grouped under it (HIST-011).
 
-use serde_json::Value as Json;
-use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::fields::FieldKind;
-use taskmaster_domain::issues::history::{ChangeKind, LoggedLink, clone_of, read_ref};
-use taskmaster_domain::issues::rights;
-use taskmaster_domain::{
+use prostor_domain::access::Access;
+use prostor_domain::fields::FieldKind;
+use prostor_domain::issues::history::{ChangeKind, LoggedLink, clone_of, read_ref};
+use prostor_domain::issues::rights;
+use prostor_domain::{
     AttachmentId, CommentId, FieldId, GroupId, IssueId, ProjectId, TagId, UserId,
 };
-use taskmaster_store::PgPool;
-use taskmaster_store::attachments as store_attachments;
-use taskmaster_store::comments::{self as store_comments, Comment};
-use taskmaster_store::fields::{self as store_fields, Field};
-use taskmaster_store::groups::Group;
-use taskmaster_store::issue_history::{self, Direction, Entry};
-use taskmaster_store::issues::{self, Issue};
-use taskmaster_store::links::{self as store_links, LinkType, Linked};
-use taskmaster_store::projects::{self, Project};
-use taskmaster_store::tags::{self as store_tags, Tag};
-use taskmaster_store::users::User;
-use taskmaster_store::value_sets::{self, Value as SetValue};
+use prostor_store::PgPool;
+use prostor_store::attachments as store_attachments;
+use prostor_store::comments::{self as store_comments, Comment};
+use prostor_store::fields::{self as store_fields, Field};
+use prostor_store::groups::Group;
+use prostor_store::issue_history::{self, Direction, Entry};
+use prostor_store::issues::{self, Issue};
+use prostor_store::links::{self as store_links, LinkType, Linked};
+use prostor_store::projects::{self, Project};
+use prostor_store::tags::{self as store_tags, Tag};
+use prostor_store::users::User;
+use prostor_store::value_sets::{self, Value as SetValue};
+use serde_json::Value as Json;
+use sqlx::PgConnection;
 use time::Duration;
 
 use super::values::{self, ProjectFields};

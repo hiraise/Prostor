@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // The issue page (ISS-001, ISS-016, ISS-020, UI-005), read form: breadcrumbs, then a frame of
   // the head cluster (the metadata line above the summary, the summary with icon actions, tags,
   // the parent) and the content beside the field panel in its own tone — the panel runs from the
@@ -383,7 +384,7 @@
 </script>
 
 <svelte:head>
-  {#if !embedded}<title>{title} · TaskMaster</title>{/if}
+  {#if !embedded}<title>{title} · {brand()}</title>{/if}
 </svelte:head>
 <svelte:window onkeydown={embedded ? undefined : keydown} />
 

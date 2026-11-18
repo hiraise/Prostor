@@ -62,8 +62,8 @@ export const roleCreated = msg({
 // ---- One role ----
 
 export const predefinedNotice = msg({
-  en: 'This role comes with TaskMaster and cannot be changed or deleted. For a different set of permissions, create your own role.',
-  ru: 'Эта роль встроена в TaskMaster: её нельзя изменить или удалить. Для другого набора прав создайте свою роль.',
+  en: 'This role comes with Prostor and cannot be changed or deleted. For a different set of permissions, create your own role.',
+  ru: 'Эта роль встроена в Простор: её нельзя изменить или удалить. Для другого набора прав создайте свою роль.',
 });
 export const readOnlyNotice = msg<{ permission: string }>({
   en: ({ permission }) => `Roles can be changed only with the permission “${permission}”.`,
@@ -157,8 +157,8 @@ export const andMore = msg<{ count: number }>({
 export const cannotUndo = msg({ en: 'This cannot be undone.', ru: 'Отменить это нельзя.' });
 export const lastAdministrator = msg<{ role: string }>({
   en: ({ role }) =>
-    `This would leave nobody able to administer TaskMaster. Give someone the role “${role}” first.`,
+    `This would leave nobody able to administer Prostor. Give someone the role “${role}” first.`,
   ru: ({ role }) =>
-    `Тогда TaskMaster останется без администратора. Сначала выдайте кому-нибудь роль «${role}».`,
+    `Тогда Простор останется без администратора. Сначала выдайте кому-нибудь роль «${role}».`,
 });
 export const roleDeleted = msg({ en: 'Role deleted', ru: 'Роль удалена' });

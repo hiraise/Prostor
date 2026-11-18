@@ -1,14 +1,14 @@
 [package]
-name = "taskmaster-store"
-description = "taskmaster storage on PostgreSQL: pool, migrations, notification bus, settings, jobs"
+name = "prostor-store"
+description = "prostor storage on PostgreSQL: pool, migrations, notification bus, settings, jobs"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
-taskmaster-domain.workspace = true
-taskmaster-query.workspace = true
+prostor-domain.workspace = true
+prostor-query.workspace = true
 sqlx.workspace = true
 serde.workspace = true
 serde_json.workspace = true
@@ -20,7 +20,7 @@ thiserror.workspace = true
 uuid.workspace = true
 
 [dev-dependencies]
-taskmaster-testkit.workspace = true
+prostor-testkit.workspace = true
 serde.workspace = true
 
 [lints]

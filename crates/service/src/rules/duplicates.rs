@@ -15,16 +15,16 @@
 //! 5. The state requires a link: the duplicate value without an original is refused where the
 //!    form shows field problems, before anything lands.
 
+use prostor_domain::fields::FieldKind;
+use prostor_domain::issues::rights;
+use prostor_domain::issues::values::Value;
+use prostor_domain::links::BuiltinType;
+use prostor_domain::live::Change;
+use prostor_domain::rules::{DUPLICATE, PRIORITY, REOPENED, Rule};
+use prostor_domain::validation::{Problem, Rejection};
+use prostor_store::issues::Issue;
+use prostor_store::{issues, links, value_sets};
 use sqlx::PgConnection;
-use taskmaster_domain::fields::FieldKind;
-use taskmaster_domain::issues::rights;
-use taskmaster_domain::issues::values::Value;
-use taskmaster_domain::links::BuiltinType;
-use taskmaster_domain::live::Change;
-use taskmaster_domain::rules::{DUPLICATE, PRIORITY, REOPENED, Rule};
-use taskmaster_domain::validation::{Problem, Rejection};
-use taskmaster_store::issues::Issue;
-use taskmaster_store::{issues, links, value_sets};
 
 use crate::Error;
 use crate::issues::can_read;
@@ -369,7 +369,7 @@ async fn unlinked(
 }
 
 /// Whether a set value carries one of a name pair, either language, case-insensitively (§3.4).
-fn names(held: &str, needle: &taskmaster_domain::fields::builtin::Names) -> bool {
+fn names(held: &str, needle: &prostor_domain::fields::builtin::Names) -> bool {
     held.to_lowercase() == needle.en.to_lowercase()
         || held.to_lowercase() == needle.ru.to_lowercase()
 }
@@ -490,7 +490,7 @@ async fn requires_link(
 
 /// Removes a link row and tells the live channel, before its replacement goes in.
 async fn take(conn: &mut PgConnection, batch: &mut Batch, link: i64) -> Result<(), Error> {
-    for facts in taskmaster_store::live::link_facts(&mut *conn, &[link]).await? {
+    for facts in prostor_store::live::link_facts(&mut *conn, &[link]).await? {
         batch.link_removed(facts);
     }
     links::delete(&mut *conn, link).await?;
@@ -500,7 +500,7 @@ async fn take(conn: &mut PgConnection, batch: &mut Batch, link: i64) -> Result<(
 /// The project's priority field (§3.4): by built-in key first, else by name.
 fn find_field(
     fields: &ProjectFields,
-    language: taskmaster_domain::settings::Language,
+    language: prostor_domain::settings::Language,
 ) -> Option<&ProjectField> {
     super::find_field(fields, &PRIORITY, language)
 }

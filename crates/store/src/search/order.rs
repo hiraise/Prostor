@@ -1,12 +1,12 @@
 //! Sort keys → SQL expressions, and the keyset continuation after the last issue of a page.
 //! Empty values go last in both directions. A multi-valued field sorts by its smallest value.
 
+use prostor_domain::fields::FieldKind;
+use prostor_domain::search::{FieldRef, SortBy, SortSpec, TextScope, TextTerm};
+use prostor_query::Direction;
 use serde::{Deserialize, Serialize};
 use sqlx::postgres::PgRow;
 use sqlx::{Postgres, QueryBuilder, Row};
-use taskmaster_domain::fields::FieldKind;
-use taskmaster_domain::search::{FieldRef, SortBy, SortSpec, TextScope, TextTerm};
-use taskmaster_query::Direction;
 use time::{Date, OffsetDateTime};
 
 use super::compile::{

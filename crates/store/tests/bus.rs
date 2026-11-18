@@ -3,8 +3,8 @@
 
 use std::time::Duration;
 
-use taskmaster_store::bus::{self, Bus, BusEvent};
-use taskmaster_testkit::TestDb;
+use prostor_store::bus::{self, Bus, BusEvent};
+use prostor_testkit::TestDb;
 use tokio::sync::broadcast;
 use tokio_util::sync::CancellationToken;
 

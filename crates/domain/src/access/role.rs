@@ -51,7 +51,7 @@ impl PredefinedRole {
         Self::ALL.into_iter().find(|role| role.key() == key)
     }
 
-    /// Names in the languages taskmaster speaks (English first), for display in the instance
+    /// Names in the languages prostor speaks (English first), for display in the instance
     /// language and so nobody names a custom role the same.
     pub fn names(self) -> [&'static str; 2] {
         match self {

@@ -1,7 +1,7 @@
 // Reading the emails the server sent, from Mailpit (deploy/compose.dev.yaml, http://127.0.0.1:8025).
 import { expect, type APIRequestContext } from '@playwright/test';
 
-const MAILPIT = process.env.TASKMASTER_E2E_MAILPIT ?? 'http://127.0.0.1:8025';
+const MAILPIT = process.env.PROSTOR_E2E_MAILPIT ?? 'http://127.0.0.1:8025';
 
 interface Summary {
   ID: string;

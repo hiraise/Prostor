@@ -45,8 +45,8 @@ export const errorText: Record<ErrorCode | ClientErrorCode, () => string> = {
     ru: 'Кто-то изменил это одновременно с вами. Обновите страницу и попробуйте снова.',
   }),
   last_administrator: msg({
-    en: 'This would leave nobody able to administer TaskMaster. Make someone else a system administrator first.',
-    ru: 'Тогда в TaskMaster не останется ни одного системного администратора. Сначала назначьте администратором кого-то ещё.',
+    en: 'This would leave nobody able to administer Prostor. Make someone else a system administrator first.',
+    ru: 'Тогда в Просторе не останется ни одного системного администратора. Сначала назначьте администратором кого-то ещё.',
   }),
   payload_too_large: msg({
     en: 'The file or text is too large.',

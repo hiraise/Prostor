@@ -1,19 +1,19 @@
 //! Card settings (BRD-059…BRD-063; plan 1.8 §3.16): the fields cards show, the colors and the
 //! estimation, with private fields kept from viewers who cannot read them (FLD-062).
 
+use prostor_domain::access::Access;
+use prostor_domain::boards::cards as domain;
+use prostor_domain::boards::presets::Attached as PresetField;
+use prostor_domain::boards::{self as boards, ColorMode};
+use prostor_domain::fields::FieldKind;
+use prostor_domain::fields::builtin::BuiltinField;
+use prostor_domain::issues::rights;
+use prostor_domain::validation::Problem;
+use prostor_domain::{FieldId, ProjectId};
+use prostor_store::boards::view::Estimate;
+use prostor_store::boards::{self as store, Settings};
+use prostor_store::fields::{Attached, Field};
 use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::boards::cards as domain;
-use taskmaster_domain::boards::presets::Attached as PresetField;
-use taskmaster_domain::boards::{self as boards, ColorMode};
-use taskmaster_domain::fields::FieldKind;
-use taskmaster_domain::fields::builtin::BuiltinField;
-use taskmaster_domain::issues::rights;
-use taskmaster_domain::validation::Problem;
-use taskmaster_domain::{FieldId, ProjectId};
-use taskmaster_store::boards::view::Estimate;
-use taskmaster_store::boards::{self as store, Settings};
-use taskmaster_store::fields::{Attached, Field};
 
 use super::{BoardRow, rejected};
 use crate::{Error, Result};
@@ -137,7 +137,7 @@ pub(super) async fn check_change(
     change: CardsChange,
     settings: &mut Settings,
 ) -> Result<Vec<(ProjectId, Option<i16>)>> {
-    let attached = taskmaster_store::fields::of_projects(&mut *conn, projects).await?;
+    let attached = prostor_store::fields::of_projects(&mut *conn, projects).await?;
     let hidden = hidden_fields(viewer, &attached);
     let given = boards::card_fields(change.fields).map_err(rejected("cards.fields"))?;
     for id in &given {
@@ -188,7 +188,7 @@ pub(super) async fn check_change(
     let mut ids: Vec<FieldId> = color_field.into_iter().collect();
     ids.extend(estimation);
     ids.extend(original);
-    let defs = taskmaster_store::fields::get_many(&mut *conn, &ids).await?;
+    let defs = prostor_store::fields::get_many(&mut *conn, &ids).await?;
     let kind = |id: FieldId, path: &str| {
         kind_of(&defs, id).ok_or_else(|| Error::field(path, Problem::Invalid, "no such field"))
     };

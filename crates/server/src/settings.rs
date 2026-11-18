@@ -6,14 +6,14 @@
 use std::sync::{Arc, PoisonError, RwLock};
 use std::time::Duration;
 
+use prostor_domain::Actor;
+use prostor_domain::secret::Key;
+use prostor_domain::settings::Snapshot;
+pub use prostor_service::mail::{EnvMail, MailSource, Outgoing};
+pub use prostor_service::settings::SetError;
+use prostor_store::PgPool;
+use prostor_store::bus::{self, BusEvent};
 use serde_json::Value;
-use taskmaster_domain::Actor;
-use taskmaster_domain::secret::Key;
-use taskmaster_domain::settings::Snapshot;
-pub use taskmaster_service::mail::{EnvMail, MailSource, Outgoing};
-pub use taskmaster_service::settings::SetError;
-use taskmaster_store::PgPool;
-use taskmaster_store::bus::{self, BusEvent};
 use tokio::sync::broadcast;
 use tokio::task::JoinHandle;
 use tokio::time::Instant;
@@ -47,7 +47,7 @@ impl SettingsCache {
         self
     }
 
-    /// The key secret settings are sealed with (`TASKMASTER_SECRET_KEY`, NTF-004).
+    /// The key secret settings are sealed with (`PROSTOR_SECRET_KEY`, NTF-004).
     pub fn with_secret_key(mut self, key: Option<Key>) -> Self {
         self.secret_key = key.map(Arc::new);
         self
@@ -71,20 +71,20 @@ impl SettingsCache {
     /// Reloads all values from the database, secrets included, and rebuilds the mail state.
     pub async fn reload(&self, pool: &PgPool) -> Result<(), sqlx::Error> {
         let _one_at_a_time = self.reloading.lock().await;
-        let rows = taskmaster_store::settings::load(pool).await?;
+        let rows = prostor_store::settings::load(pool).await?;
         let (secrets, unreadable) =
-            taskmaster_store::settings::load_secrets(pool, self.secret_key.as_deref()).await?;
+            prostor_store::settings::load_secrets(pool, self.secret_key.as_deref()).await?;
         for key in unreadable {
             tracing::warn!(
                 key,
-                "a secret setting does not open under TASKMASTER_SECRET_KEY; its default applies"
+                "a secret setting does not open under PROSTOR_SECRET_KEY; its default applies"
             );
         }
         let (snapshot, errors) = Snapshot::from_stored(rows.into_iter().chain(secrets));
         for error in errors {
             tracing::warn!(%error, "ignoring a stored setting; its default applies");
         }
-        let outgoing = taskmaster_service::mail::outgoing(&snapshot, self.env_mail.as_ref());
+        let outgoing = prostor_service::mail::outgoing(&snapshot, self.env_mail.as_ref());
         if outgoing.enabled {
             tracing::info!(source = ?outgoing.source, "outgoing email is on");
         }
@@ -103,7 +103,7 @@ impl SettingsCache {
         actor: Actor,
     ) -> Result<bool, SetError> {
         let changed =
-            taskmaster_service::settings::set(pool, key, value, actor, self.secret_key.as_deref())
+            prostor_service::settings::set(pool, key, value, actor, self.secret_key.as_deref())
                 .await?;
         if changed {
             // This node need not wait for its own notification.
@@ -117,11 +117,11 @@ impl SettingsCache {
     pub async fn set_flag(
         &self,
         pool: &PgPool,
-        flag: &taskmaster_domain::settings::Flag,
+        flag: &prostor_domain::settings::Flag,
         value: Option<bool>,
         actor: Actor,
     ) -> Result<bool, SetError> {
-        let changed = taskmaster_service::settings::set_flag(pool, flag, value, actor).await?;
+        let changed = prostor_service::settings::set_flag(pool, flag, value, actor).await?;
         if changed {
             self.reload(pool).await?;
         }

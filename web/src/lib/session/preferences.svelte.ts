@@ -45,13 +45,13 @@ const LEGACY: {
   storage: string;
   read: (s: string) => boolean;
 }[] = [
-  { key: 'rail_collapsed', storage: 'taskmaster.nav.collapsed', read: (s) => s === 'true' },
-  { key: 'editor_toolbar', storage: 'taskmaster.editor.toolbar', read: (s) => s !== 'hidden' },
+  { key: 'rail_collapsed', storage: 'prostor.nav.collapsed', read: (s) => s === 'true' },
+  { key: 'editor_toolbar', storage: 'prostor.editor.toolbar', read: (s) => s !== 'hidden' },
 ];
 
 /** Quiet time after the last change before it is sent. */
 const SEND_DELAY_MS = 400;
-const CHANNEL = 'taskmaster-preferences';
+const CHANNEL = 'prostor-preferences';
 
 let stored = $state<Preferences>({});
 let loaded: Promise<void> | null = null;

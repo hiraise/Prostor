@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // One value set (FLD-029…FLD-049): its values or members in the set editor, renaming for those
   // who may change it, and deleting it once nothing uses it (system administrators).
   import Pencil from '@lucide/svelte/icons/pencil';
@@ -60,7 +61,7 @@
   }
 </script>
 
-<svelte:head><title>{set?.name ?? m.setsTitle()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{set?.name ?? m.setsTitle()} · {brand()}</title></svelte:head>
 
 {#if !canSeeFields()}
   <ForbiddenState {home} />

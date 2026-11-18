@@ -2,8 +2,8 @@
 //! job that renders texts of older rules again. Texts: issue descriptions, text field values,
 //! comments and project descriptions.
 
+use prostor_domain::{CommentId, FieldId, IssueId, ProjectId, UserId};
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::{CommentId, FieldId, IssueId, ProjectId, UserId};
 
 /// A text rendered by the crate `markup`.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]

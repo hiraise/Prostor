@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // A section whose screens are not built yet: its title and an honest empty state.
   import Construction from '@lucide/svelte/icons/construction';
 
@@ -10,7 +11,7 @@
   let { title }: { title: string } = $props();
 </script>
 
-<svelte:head><title>{title} · TaskMaster</title></svelte:head>
+<svelte:head><title>{title} · {brand()}</title></svelte:head>
 
 <PageHeader {title} />
 <EmptyState

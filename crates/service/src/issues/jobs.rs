@@ -4,18 +4,18 @@
 //! (ISS-023). Each batch is its own transaction and the work is idempotent, so a job interrupted
 //! anywhere runs again safely.
 
+use prostor_domain::fields::FieldKind;
+use prostor_domain::issues::history::{Origin, Record};
+use prostor_domain::issues::values::Value;
+use prostor_domain::live::Change;
+use prostor_domain::{FieldId, IssueId, ProjectId, UserId, ValueId};
+use prostor_store::issue_history::{self, Author};
+use prostor_store::issue_values;
+use prostor_store::issues;
+use prostor_store::jobs::{JobError, JobKind};
+use prostor_store::{PgConnection, PgPool, value_sets};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use taskmaster_domain::fields::FieldKind;
-use taskmaster_domain::issues::history::{Origin, Record};
-use taskmaster_domain::issues::values::Value;
-use taskmaster_domain::live::Change;
-use taskmaster_domain::{FieldId, IssueId, ProjectId, UserId, ValueId};
-use taskmaster_store::issue_history::{self, Author};
-use taskmaster_store::issue_values;
-use taskmaster_store::issues;
-use taskmaster_store::jobs::{JobError, JobKind};
-use taskmaster_store::{PgConnection, PgPool, value_sets};
 use time::OffsetDateTime;
 
 use super::values;
@@ -233,7 +233,7 @@ async fn replace_in(
             .map(|r| json!({ "id": r.id, "name": r.name }))
             .collect();
         records.push(Record {
-            kind: taskmaster_domain::issues::history::ChangeKind::Field,
+            kind: prostor_domain::issues::history::ChangeKind::Field,
             field: Some(f.id()),
             comment: None,
             removed: Some(json!([{ "id": value, "name": name }])),

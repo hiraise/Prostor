@@ -11,10 +11,10 @@ use std::net::IpAddr;
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
 use axum::http::{HeaderMap, HeaderValue, Method, header};
-use taskmaster_api::error::ErrorCode;
-use taskmaster_domain::auth::{Principal, Scope};
-use taskmaster_domain::settings::{BASE_URL, session_policy};
-use taskmaster_store::sessions;
+use prostor_api::error::ErrorCode;
+use prostor_domain::auth::{Principal, Scope};
+use prostor_domain::settings::{BASE_URL, session_policy};
+use prostor_store::sessions;
 use time::{Duration, OffsetDateTime};
 
 use crate::AppState;
@@ -22,7 +22,7 @@ use crate::client::client_ip;
 use crate::error::ApiError;
 
 /// Name of the session cookie.
-pub const SESSION_COOKIE: &str = "taskmaster_session";
+pub const SESSION_COOKIE: &str = "prostor_session";
 /// The cookie goes only to the API, not with every static file.
 const COOKIE_PATH: &str = "/api";
 
@@ -83,7 +83,7 @@ async fn authenticate(parts: &mut Parts, state: &AppState) -> Result<Principal, 
             .ok_or_else(|| {
                 unauthenticated("Send an API token as `Authorization: Bearer <token>`")
             })?;
-        return taskmaster_service::auth::authenticate_token(&state.db, token, now)
+        return prostor_service::auth::authenticate_token(&state.db, token, now)
             .await?
             .ok_or_else(|| unauthenticated("The API token is not valid"));
     }
@@ -92,7 +92,7 @@ async fn authenticate(parts: &mut Parts, state: &AppState) -> Result<Principal, 
         return Err(unauthenticated("Sign in or send an API token"));
     };
     let policy = session_policy(&state.settings.get());
-    let principal = taskmaster_service::auth::authenticate_session(&state.db, cookie, policy, now)
+    let principal = prostor_service::auth::authenticate_session(&state.db, cookie, policy, now)
         .await?
         .ok_or_else(|| unauthenticated("The session has ended; sign in again"))?;
     if !is_safe(&parts.method) && !same_origin(parts, state) {
@@ -321,16 +321,13 @@ mod tests {
         headers.append(header::COOKIE, HeaderValue::from_static("theme=dark; a=b"));
         headers.append(
             header::COOKIE,
-            HeaderValue::from_static("taskmaster_session=abc123; x=y"),
+            HeaderValue::from_static("prostor_session=abc123; x=y"),
         );
         assert_eq!(cookie(&headers, SESSION_COOKIE), Some("abc123"));
         assert_eq!(cookie(&headers, "theme"), Some("dark"));
         assert_eq!(cookie(&headers, "missing"), None);
         let mut empty = HeaderMap::new();
-        empty.insert(
-            header::COOKIE,
-            HeaderValue::from_static("taskmaster_session="),
-        );
+        empty.insert(header::COOKIE, HeaderValue::from_static("prostor_session="));
         assert_eq!(cookie(&empty, SESSION_COOKIE), None);
     }
 

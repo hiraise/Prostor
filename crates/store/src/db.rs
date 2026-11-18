@@ -20,7 +20,7 @@ const MIGRATION_LOCK: i64 = 0x7472_6163_6b6d_6967;
 
 /// Parses a `postgres://` URL.
 pub fn connect_options(url: &str) -> Result<PgConnectOptions, sqlx::Error> {
-    Ok(PgConnectOptions::from_str(url)?.application_name("taskmaster"))
+    Ok(PgConnectOptions::from_str(url)?.application_name("prostor"))
 }
 
 /// A pool that connects on first use, so the server can start and report readiness

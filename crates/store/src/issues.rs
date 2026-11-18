@@ -1,8 +1,8 @@
 //! Issues and drafts (ISS), their former IDs, watchers and votes. Field values:
-//! `issue_values`; history: `issue_history`; tags: `tags`. Rules: `taskmaster_domain::issues`.
+//! `issue_values`; history: `issue_history`; tags: `tags`. Rules: `prostor_domain::issues`.
 
+use prostor_domain::{GroupId, IssueId, ProjectId, UserId};
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::{GroupId, IssueId, ProjectId, UserId};
 use time::OffsetDateTime;
 
 use crate::content::Rendered;

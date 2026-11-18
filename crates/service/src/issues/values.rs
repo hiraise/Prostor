@@ -4,20 +4,20 @@
 
 use std::collections::BTreeMap;
 
+use prostor_domain::access::Access;
+use prostor_domain::fields::{FieldKind, FieldType};
+use prostor_domain::issues::history::Record;
+use prostor_domain::issues::resolution::{self, StateSlot};
+use prostor_domain::issues::values::Value;
+use prostor_domain::validation::Problem;
+use prostor_domain::{FieldId, IssueId, ProjectId};
+use prostor_store::fields::{self as store_fields, Attached, Field};
+use prostor_store::groups;
+use prostor_store::issue_values;
+use prostor_store::issues::{self, Issue};
+use prostor_store::users;
+use prostor_store::value_sets;
 use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::fields::{FieldKind, FieldType};
-use taskmaster_domain::issues::history::Record;
-use taskmaster_domain::issues::resolution::{self, StateSlot};
-use taskmaster_domain::issues::values::Value;
-use taskmaster_domain::validation::Problem;
-use taskmaster_domain::{FieldId, IssueId, ProjectId};
-use taskmaster_store::fields::{self as store_fields, Attached, Field};
-use taskmaster_store::groups;
-use taskmaster_store::issue_values;
-use taskmaster_store::issues::{self, Issue};
-use taskmaster_store::users;
-use taskmaster_store::value_sets;
 use time::OffsetDateTime;
 
 use crate::groups::team_visible;
@@ -229,8 +229,8 @@ pub async fn store(
     issue_values::set(&mut *conn, issue, field, kind, value).await?;
     if let Some(Value::Text(text)) = value {
         let rendered =
-            crate::text::prepare(&mut *conn, text, taskmaster_markup::Profile::Full).await?;
-        taskmaster_store::content::set_text_value(conn, issue, field, &rendered).await?;
+            crate::text::prepare(&mut *conn, text, prostor_markup::Profile::Full).await?;
+        prostor_store::content::set_text_value(conn, issue, field, &rendered).await?;
     }
     Ok(())
 }

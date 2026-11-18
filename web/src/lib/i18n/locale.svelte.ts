@@ -7,7 +7,7 @@ export type Locale = (typeof LOCALES)[number];
 /** The language every text is written in first; also the fallback for unknown browser languages. */
 export const BASE_LOCALE: Locale = 'en';
 
-const STORAGE_KEY = 'taskmaster.locale';
+const STORAGE_KEY = 'prostor.locale';
 
 let current = $state<Locale>(BASE_LOCALE);
 

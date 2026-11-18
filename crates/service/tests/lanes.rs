@@ -3,27 +3,27 @@
 //! the backlog, and pages of lanes.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use taskmaster_domain::access::Access;
-use taskmaster_domain::boards::Preset;
-use taskmaster_domain::boards::lanes::{Attribute, LaneMode, OtherLane};
-use taskmaster_domain::issues::history::Origin;
-use taskmaster_domain::issues::values::Input;
-use taskmaster_domain::links::Side;
-use taskmaster_domain::projects::Template;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::{BoardId, FieldId, IssueId, ProjectId, SprintId};
-use taskmaster_service::boards::cards::{self, Move, NewCard};
-use taskmaster_service::boards::lanes::{self, LanesChange};
-use taskmaster_service::boards::view::{self, BoardView};
-use taskmaster_service::boards::{self as boards, BoardChange, BoardRow, NewBoard, Sharing};
-use taskmaster_service::issue_links::{self, NewLinks};
-use taskmaster_service::issues::{self, FieldChange, NewIssue};
-use taskmaster_service::projects::{self, NewProjectInput};
-use taskmaster_service::setup::{self, Setup};
-use taskmaster_service::{Error, Passwords, access};
-use taskmaster_store::PgPool;
-use taskmaster_store::sessions::Origin as SessionOrigin;
-use taskmaster_testkit::TestDb;
+use prostor_domain::access::Access;
+use prostor_domain::boards::Preset;
+use prostor_domain::boards::lanes::{Attribute, LaneMode, OtherLane};
+use prostor_domain::issues::history::Origin;
+use prostor_domain::issues::values::Input;
+use prostor_domain::links::Side;
+use prostor_domain::projects::Template;
+use prostor_domain::settings::Language;
+use prostor_domain::{BoardId, FieldId, IssueId, ProjectId, SprintId};
+use prostor_service::boards::cards::{self, Move, NewCard};
+use prostor_service::boards::lanes::{self, LanesChange};
+use prostor_service::boards::view::{self, BoardView};
+use prostor_service::boards::{self as boards, BoardChange, BoardRow, NewBoard, Sharing};
+use prostor_service::issue_links::{self, NewLinks};
+use prostor_service::issues::{self, FieldChange, NewIssue};
+use prostor_service::projects::{self, NewProjectInput};
+use prostor_service::setup::{self, Setup};
+use prostor_service::{Error, Passwords, access};
+use prostor_store::PgPool;
+use prostor_store::sessions::Origin as SessionOrigin;
+use prostor_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::datetime;
 
@@ -138,14 +138,14 @@ async fn held(pool: &PgPool, issue: IssueId, field: FieldId) -> Vec<i64> {
 }
 
 async fn parent_of(pool: &PgPool, child: IssueId) -> Option<IssueId> {
-    taskmaster_store::links::parent_of(pool, child)
+    prostor_store::links::parent_of(pool, child)
         .await
         .unwrap()
         .map(|l| l.id)
 }
 
 async fn subtask(pool: &PgPool, who: &Access, parent: IssueId, child: IssueId) {
-    let link_type = taskmaster_store::links::subtask_type(pool)
+    let link_type = prostor_store::links::subtask_type(pool)
         .await
         .unwrap()
         .unwrap();

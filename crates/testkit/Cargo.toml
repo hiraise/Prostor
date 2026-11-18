@@ -1,13 +1,13 @@
 [package]
-name = "taskmaster-testkit"
-description = "Test support for taskmaster: a fresh migrated database per test"
+name = "prostor-testkit"
+description = "Test support for prostor: a fresh migrated database per test"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
 [dependencies]
-taskmaster-store.workspace = true
+prostor-store.workspace = true
 sqlx.workspace = true
 tokio.workspace = true
 uuid.workspace = true

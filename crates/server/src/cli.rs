@@ -1,7 +1,7 @@
-//! The command line of the `taskmaster` binary: running the server, and administrator recovery
+//! The command line of the `prostor` binary: running the server, and administrator recovery
 //! for whoever runs the server (ADM-051, AUTH-073).
 
-use taskmaster_service::recovery::Target;
+use prostor_service::recovery::Target;
 
 /// What the binary was asked to do.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -13,21 +13,21 @@ pub enum Command {
 }
 
 pub const USAGE: &str = "\
-TaskMaster — an issue tracker
+Prostor — an issue tracker
 
 Usage:
-  taskmaster [serve]
+  prostor [serve]
       Run the server. Settings come from environment variables (see .env.example).
 
-  taskmaster recover-admin [LOGIN]
+  prostor recover-admin [LOGIN]
       Restore administrator access when nobody can sign in. Gives the account a new random
       password (printed once), enables it, makes it a system administrator and ends its
       sessions. LOGIN is a username or email; without it, the administrator made by the setup.
 
-  taskmaster recover-admin --new USERNAME EMAIL [FULL NAME]
+  prostor recover-admin --new USERNAME EMAIL [FULL NAME]
       Create a new system administrator with a random password.
 
-  taskmaster help | version
+  prostor help | version
 
 Recovery uses the same DATABASE_URL as the server and is recorded in the audit log.
 ";

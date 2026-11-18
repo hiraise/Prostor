@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   import type { Snippet } from 'svelte';
   import { page } from '$app/state';
 
@@ -15,7 +16,7 @@
 </script>
 
 <svelte:head>
-  {#if !project}<title>{states.notFoundTitle()} · TaskMaster</title>{/if}
+  {#if !project}<title>{states.notFoundTitle()} · {brand()}</title>{/if}
 </svelte:head>
 
 {#if project}

@@ -1,9 +1,9 @@
 //! A resolved [`Filter`] → SQL conditions on issue row `i` (plan step 1.5 §4, D-024).
 
+use prostor_domain::fields::FieldKind;
+use prostor_domain::links::Side;
+use prostor_domain::search::{Bound, FieldRef, Filter, Range, Target, TextScope, TextTerm};
 use sqlx::{Encode, Postgres, QueryBuilder, Type};
-use taskmaster_domain::fields::FieldKind;
-use taskmaster_domain::links::Side;
-use taskmaster_domain::search::{Bound, FieldRef, Filter, Range, Target, TextScope, TextTerm};
 
 use crate::visibility::{Visibility, push_projects};
 
@@ -228,7 +228,7 @@ pub fn push_filter(qb: &mut QueryBuilder<Postgres>, filter: &Filter, vis: &Visib
 }
 
 /// The text configuration of the stored documents (migration 0010).
-const CONFIG: &str = "'taskmaster_text'";
+const CONFIG: &str = "'prostor_text'";
 
 /// The text query of a term: its words in any form, or the phrase.
 pub(crate) fn push_tsquery(qb: &mut QueryBuilder<Postgres>, term: &TextTerm) {
@@ -575,7 +575,7 @@ fn split(sides: &[(i64, Side)]) -> (Vec<i64>, Vec<i64>) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use taskmaster_domain::access::Projects;
+    use prostor_domain::access::Projects;
 
     fn vis() -> Visibility {
         Visibility {

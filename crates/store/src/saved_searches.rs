@@ -1,12 +1,12 @@
 //! Saved searches (QRY-063…QRY-068, PRJ-019) with the audiences of sharing (D-038). Hidden rows
 //! are deleted predefined searches: no read here returns them.
 
+use prostor_domain::links::Side;
+use prostor_domain::search::stored::{Names, Refs};
+use prostor_domain::sharing::{Audience, Shared};
+use prostor_domain::{GroupId, ProjectId, UserId};
 use serde_json::Value;
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::links::Side;
-use taskmaster_domain::search::stored::{Names, Refs};
-use taskmaster_domain::sharing::{Audience, Shared};
-use taskmaster_domain::{GroupId, ProjectId, UserId};
 use time::OffsetDateTime;
 
 pub type SavedSearchId = i64;
@@ -526,8 +526,8 @@ pub async fn names(
 /// The manual order of a saved search (BRD-093, the backlog's priority): ranked issues first by
 /// `(rank, issue_id)`, the rest after them in the query's sort.
 pub mod ranks {
+    use prostor_domain::{BoardId, IssueId};
     use sqlx::{PgConnection, PgExecutor};
-    use taskmaster_domain::{BoardId, IssueId};
 
     use super::SavedSearchId;
 
@@ -654,7 +654,7 @@ pub mod ranks {
     /// Whether the owner has a saved search of this name (case folded).
     pub async fn name_taken(
         db: impl PgExecutor<'_>,
-        owner: taskmaster_domain::UserId,
+        owner: prostor_domain::UserId,
         name: &str,
     ) -> Result<bool, sqlx::Error> {
         sqlx::query_scalar!(

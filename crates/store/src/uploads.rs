@@ -1,8 +1,8 @@
 //! Staged uploads (CNT-017, CNT-034): files a person sent and has not attached yet. A job removes
 //! each a day later; attaching moves it into `attachments`.
 
+use prostor_domain::{UploadId, UserId};
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::{UploadId, UserId};
 use time::OffsetDateTime;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

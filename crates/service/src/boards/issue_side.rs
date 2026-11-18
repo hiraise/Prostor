@@ -2,15 +2,15 @@
 //! issue, adding it to one and taking it off. A draft can be put on boards too; the boards it
 //! would join on its own when published are shown, and it can be kept off them.
 
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::permission::Permission;
-use taskmaster_domain::issues::history::Origin;
-use taskmaster_domain::issues::rights;
-use taskmaster_domain::{BoardId, IssueId, SprintId};
-use taskmaster_store::PgPool;
-use taskmaster_store::boards::cards as store_cards;
-use taskmaster_store::boards::{self as store, Viewer};
-use taskmaster_store::issues::{self as store_issues, Issue};
+use prostor_domain::access::Access;
+use prostor_domain::access::permission::Permission;
+use prostor_domain::issues::history::Origin;
+use prostor_domain::issues::rights;
+use prostor_domain::{BoardId, IssueId, SprintId};
+use prostor_store::PgPool;
+use prostor_store::boards::cards as store_cards;
+use prostor_store::boards::{self as store, Viewer};
+use prostor_store::issues::{self as store_issues, Issue};
 use time::OffsetDateTime;
 
 use super::cards::NewCard;

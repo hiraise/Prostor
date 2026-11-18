@@ -4,8 +4,8 @@
 
 use std::collections::{BTreeMap, HashMap};
 
+use prostor_markup::{Profile, render};
 use serde::Deserialize;
-use taskmaster_markup::{Profile, render};
 
 #[derive(Debug, Deserialize)]
 struct Case {

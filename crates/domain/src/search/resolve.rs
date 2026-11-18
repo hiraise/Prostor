@@ -2,8 +2,8 @@
 
 use std::collections::BTreeMap;
 
-use taskmaster_query::words::{self, Kind};
-use taskmaster_query::{
+use prostor_query::words::{self, Kind};
+use prostor_query::{
     Atom, Condition, Expr, Item, ItemKind, Op, Problem, ProblemCode, Query, Severity, Span, fold,
     fold_value,
 };

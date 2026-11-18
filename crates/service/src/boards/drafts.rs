@@ -2,15 +2,15 @@
 //! the cell's column and lane, like the form's own drafts (D-041). Each person keeps one draft
 //! per cell until it is published or deleted.
 
-use taskmaster_domain::access::Access;
-use taskmaster_domain::boards::lanes::LaneKey;
-use taskmaster_domain::issues::history::Origin;
-use taskmaster_domain::issues::rights;
-use taskmaster_domain::validation::Problem;
-use taskmaster_domain::{BoardId, ColumnId, IssueId, ProjectId, SprintId};
-use taskmaster_store::PgPool;
-use taskmaster_store::boards as store;
-use taskmaster_store::issues as store_issues;
+use prostor_domain::access::Access;
+use prostor_domain::boards::lanes::LaneKey;
+use prostor_domain::issues::history::Origin;
+use prostor_domain::issues::rights;
+use prostor_domain::validation::Problem;
+use prostor_domain::{BoardId, ColumnId, IssueId, ProjectId, SprintId};
+use prostor_store::PgPool;
+use prostor_store::boards as store;
+use prostor_store::issues as store_issues;
 
 use super::cards::{self, NewCard};
 use super::view::is_query;
@@ -93,7 +93,7 @@ pub async fn cell_draft(
     let fields = match (query, board.full.board.column_field_id) {
         (true, Some(field)) => vec![FieldInput {
             field,
-            value: Some(taskmaster_domain::issues::values::Input::Ids(vec![
+            value: Some(prostor_domain::issues::values::Input::Ids(vec![
                 column.value_id,
             ])),
         }],

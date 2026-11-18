@@ -18,7 +18,7 @@ use crate::accounts::UserRef;
 pub enum MailSource {
     /// The admin mail settings (NTF-004).
     Settings,
-    /// The environment (`TASKMASTER_SMTP_URL`, D-026): no mail setting is stored.
+    /// The environment (`PROSTOR_SMTP_URL`, D-026): no mail setting is stored.
     Env,
     /// No transport at all.
     None,
@@ -82,7 +82,7 @@ pub struct AdminSettings {
     pub settings: Vec<AdminSetting>,
     /// The instance-wide flags (ADM-023); empty while none exist.
     pub flags: Vec<AdminFlag>,
-    /// The deployment's `TASKMASTER_UPLOAD_CEILING_BYTES`: the upload setting may not exceed it.
+    /// The deployment's `PROSTOR_UPLOAD_CEILING_BYTES`: the upload setting may not exceed it.
     pub upload_ceiling: u64,
 }
 

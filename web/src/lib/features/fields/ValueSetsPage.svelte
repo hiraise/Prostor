@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // The value sets of the instance (FLD-025, FLD-029): by name, with their type and how many
   // projects and fields use them; search by name and filter by type. System administrators create
   // sets; each row opens the set's page.
@@ -98,7 +99,7 @@
   }
 </script>
 
-<svelte:head><title>{m.setsTitle()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.setsTitle()} · {brand()}</title></svelte:head>
 
 {#if !sets || !canSeeFields()}
   <ForbiddenState {home} />

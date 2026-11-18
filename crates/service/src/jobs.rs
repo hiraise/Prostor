@@ -2,11 +2,11 @@
 //! the cancel and retry actions. Kind names and descriptions for people are the web's texts; the
 //! API carries the machine kind.
 
-use taskmaster_domain::Actor;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::permission::Permission;
-use taskmaster_store::PgPool;
-use taskmaster_store::jobs::{self, CancelOutcome, Job, JobFilter, JobState};
+use prostor_domain::Actor;
+use prostor_domain::access::Access;
+use prostor_domain::access::permission::Permission;
+use prostor_store::PgPool;
+use prostor_store::jobs::{self, CancelOutcome, Job, JobFilter, JobState};
 
 use crate::Error;
 

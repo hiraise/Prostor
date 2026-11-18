@@ -1,11 +1,11 @@
-//! Users and their built-in passwords. Rules for the values: `taskmaster_domain::accounts`.
+//! Users and their built-in passwords. Rules for the values: `prostor_domain::accounts`.
 //!
 //! A deleted account keeps its row without personal data (ACC-006): `deleted_at` is set and
 //! `replaced_by` names the account its ID resolves to (ACC-013). Lookups by login and the directory
 //! skip deleted accounts; loading by ID returns them, so authorship can show a placeholder.
 
+use prostor_domain::UserId;
 use sqlx::{PgConnection, PgExecutor, PgPool};
-use taskmaster_domain::UserId;
 use time::OffsetDateTime;
 
 /// A built-in account the server itself needs.

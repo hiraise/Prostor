@@ -1,12 +1,12 @@
 //! A signed-in person's own account: who they are and their password (AUTH-009).
 
+use prostor_domain::UserId;
+use prostor_domain::accounts::check_new_password;
+use prostor_domain::auth::Principal;
+use prostor_domain::validation::{Problem, Problems, Rejection};
+use prostor_store::users::{self, User};
+use prostor_store::{PgPool, audit, sessions};
 use serde_json::json;
-use taskmaster_domain::UserId;
-use taskmaster_domain::accounts::check_new_password;
-use taskmaster_domain::auth::Principal;
-use taskmaster_domain::validation::{Problem, Problems, Rejection};
-use taskmaster_store::users::{self, User};
-use taskmaster_store::{PgPool, audit, sessions};
 
 use crate::passwords::{Passwords, Verified};
 use crate::{Error, Result};

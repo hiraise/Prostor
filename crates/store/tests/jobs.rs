@@ -1,20 +1,20 @@
 //! The durable job queue and runner (ADM-031). Runners run on the multi-thread runtime (see
-//! `taskmaster_testkit`).
+//! `prostor_testkit`).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use std::sync::Arc;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::time::Duration;
 
-use serde::{Deserialize, Serialize};
-use taskmaster_domain::Actor;
-use taskmaster_store::PgPool;
-use taskmaster_store::bus::Bus;
-use taskmaster_store::jobs::{
+use prostor_domain::Actor;
+use prostor_store::PgPool;
+use prostor_store::bus::Bus;
+use prostor_store::jobs::{
     self, CancelOutcome, Enqueue, Handlers, JobError, JobFilter, JobKind, JobState, Runner,
     RunnerConfig,
 };
-use taskmaster_testkit::TestDb;
+use prostor_testkit::TestDb;
+use serde::{Deserialize, Serialize};
 use tokio::sync::Notify;
 use tokio_util::sync::CancellationToken;
 
@@ -127,9 +127,9 @@ fn handlers(probe: &Probe) -> Handlers {
 /// A user to start jobs as.
 async fn user(pool: &PgPool, username: &str) -> i64 {
     let mut conn = pool.acquire().await.unwrap();
-    taskmaster_store::users::insert(
+    prostor_store::users::insert(
         &mut conn,
-        &taskmaster_store::users::NewUser {
+        &prostor_store::users::NewUser {
             username,
             full_name: username,
             email: None,

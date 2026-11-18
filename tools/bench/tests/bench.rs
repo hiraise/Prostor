@@ -6,17 +6,17 @@
 
 use std::sync::Arc;
 
+use prostor_bench::catalog::Catalog;
+use prostor_bench::dataset::{self, Plan};
+use prostor_bench::http::Node;
+use prostor_bench::report::{self, Environment, Timing};
+use prostor_bench::runner::{self, RunOptions};
+use prostor_bench::scenarios::live::{self, LiveOptions};
+use prostor_bench::scenarios::{Mode, Scenario};
+use prostor_domain::access::Projects;
+use prostor_domain::access::permission::Permission;
+use prostor_testkit::TestDb;
 use sqlx::{AssertSqlSafe, Connection, PgConnection};
-use taskmaster_bench::catalog::Catalog;
-use taskmaster_bench::dataset::{self, Plan};
-use taskmaster_bench::http::Node;
-use taskmaster_bench::report::{self, Environment, Timing};
-use taskmaster_bench::runner::{self, RunOptions};
-use taskmaster_bench::scenarios::live::{self, LiveOptions};
-use taskmaster_bench::scenarios::{Mode, Scenario};
-use taskmaster_domain::access::Projects;
-use taskmaster_domain::access::permission::Permission;
-use taskmaster_testkit::TestDb;
 
 #[tokio::test(flavor = "multi_thread")]
 async fn a_small_dataset_runs_every_scenario() {
@@ -187,7 +187,7 @@ async fn a_small_dataset_runs_every_scenario() {
         connections: 50,
         changes: 8,
         seed: 7,
-        clients: env!("CARGO_BIN_EXE_taskmaster-bench").into(),
+        clients: env!("CARGO_BIN_EXE_prostor-bench").into(),
     };
     let delivered = live::measure(&catalog, &node, &options).await.unwrap();
     assert_eq!(delivered.opened, 50);
@@ -260,7 +260,7 @@ async fn viewers_match_the_server(pool: &sqlx::PgPool, catalog: &Catalog) {
         .step_by(catalog.users.len() / 20)
         .copied()
     {
-        let access = taskmaster_service::access::load(pool, user).await.unwrap();
+        let access = prostor_service::access::load(pool, user).await.unwrap();
         let viewer = catalog.viewer(user);
         let read = only(access.projects_with(Permission::IssueRead));
         let create_only: Vec<i64> = only(access.projects_with(Permission::IssueCreate))

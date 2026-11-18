@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   import { page } from '$app/state';
 
   import { BoardPage } from '#lib/features/boards/index.ts';
@@ -14,7 +15,7 @@
 </script>
 
 <svelte:head>
-  {#if !board}<title>{states.notFoundTitle()} · TaskMaster</title>{/if}
+  {#if !board}<title>{states.notFoundTitle()} · {brand()}</title>{/if}
 </svelte:head>
 
 {#if board && data.sprint !== null}

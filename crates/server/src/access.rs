@@ -9,11 +9,11 @@ use std::sync::{Arc, Mutex, PoisonError};
 
 use axum::extract::FromRequestParts;
 use axum::http::request::Parts;
-use taskmaster_domain::UserId;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::auth::Principal;
-use taskmaster_store::PgPool;
-use taskmaster_store::bus::{self, BusEvent};
+use prostor_domain::UserId;
+use prostor_domain::access::Access;
+use prostor_domain::auth::Principal;
+use prostor_store::PgPool;
+use prostor_store::bus::{self, BusEvent};
 use tokio::sync::broadcast;
 use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
@@ -44,7 +44,7 @@ impl AccessCache {
             return Ok(Arc::clone(found));
         }
         let generation = self.inner.generation.load(Ordering::Acquire);
-        let access = Arc::new(taskmaster_service::access::load(pool, user).await?);
+        let access = Arc::new(prostor_service::access::load(pool, user).await?);
         let mut entries = self.entries();
         if self.inner.generation.load(Ordering::Acquire) == generation {
             if entries.len() >= CAPACITY {

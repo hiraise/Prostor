@@ -2,7 +2,7 @@
 //! `summary:`, `description:`, `comments:`, `text:` or a text field; `mentions:` and
 //! `mentioned in:`.
 
-use taskmaster_query::{Atom, Condition, ItemKind, Op, ProblemCode};
+use prostor_query::{Atom, Condition, ItemKind, Op, ProblemCode};
 
 use super::filter::{Filter, TextScope, TextTerm};
 use super::names::looks_like_id;

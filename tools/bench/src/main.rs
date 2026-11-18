@@ -1,4 +1,4 @@
-//! `taskmaster-bench`: generates the dataset when it is missing or outdated, runs the
+//! `prostor-bench`: generates the dataset when it is missing or outdated, runs the
 //! load scenarios and prints the report against the performance budget (architecture.md §7).
 
 use std::io::{self, Write};
@@ -6,23 +6,23 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use anyhow::Context;
+use prostor_bench::breakdown;
+use prostor_bench::catalog::Catalog;
+use prostor_bench::dataset::{self, Plan};
+use prostor_bench::http::Node;
+use prostor_bench::report::{self, Environment, Timing};
+use prostor_bench::runner::{self, RunOptions};
+use prostor_bench::scenarios::Scenario;
+use prostor_bench::scenarios::live::{self, LiveOptions};
+use prostor_store::PgConnectOptions;
 use sqlx::{AssertSqlSafe, Connection, PgConnection};
-use taskmaster_bench::breakdown;
-use taskmaster_bench::catalog::Catalog;
-use taskmaster_bench::dataset::{self, Plan};
-use taskmaster_bench::http::Node;
-use taskmaster_bench::report::{self, Environment, Timing};
-use taskmaster_bench::runner::{self, RunOptions};
-use taskmaster_bench::scenarios::Scenario;
-use taskmaster_bench::scenarios::live::{self, LiveOptions};
-use taskmaster_store::PgConnectOptions;
 
-const DEFAULT_URL: &str = "postgres://taskmaster:taskmaster@127.0.0.1:5450/taskmaster_bench";
+const DEFAULT_URL: &str = "postgres://prostor:prostor@127.0.0.1:5450/prostor_bench";
 
 const USAGE: &str = "\
-taskmaster-bench — the datasets and load scenarios of the performance budget
+prostor-bench — the datasets and load scenarios of the performance budget
 
-Usage: taskmaster-bench [options]          (or: make bench BENCH_ARGS=\"options\")
+Usage: prostor-bench [options]          (or: make bench BENCH_ARGS=\"options\")
 
   --scale X        Dataset size: 0.1 is the target dataset (100k issues, the default),
                    1 the stress dataset (1M issues, `make bench-stress`).
@@ -40,8 +40,8 @@ Usage: taskmaster-bench [options]          (or: make bench BENCH_ARGS=\"options\
   --breakdown      List the SQL statements of each scenario by time per operation.
                    Needs --clients 1 (the default).
 
-The database is TASKMASTER_BENCH_DATABASE_URL, by default the one `make bench` starts:
-  postgres://taskmaster:taskmaster@127.0.0.1:5450/taskmaster_bench
+The database is PROSTOR_BENCH_DATABASE_URL, by default the one `make bench` starts:
+  postgres://prostor:prostor@127.0.0.1:5450/prostor_bench
 The dataset is generated there when it is missing or was made by another generator, schema,
 scale or seed; that drops and recreates the database. Exit status 1: a scenario is over budget
 and not a known miss (see the report), or the benchmark took longer than its own budget
@@ -135,8 +135,8 @@ async fn main() -> anyhow::Result<()> {
     // `install` also carries the statements layer of `--breakdown`; it is idempotent, and the
     // runner calls it again when it measures with the breakdown.
     breakdown::install();
-    let url = std::env::var("TASKMASTER_BENCH_DATABASE_URL").unwrap_or_else(|_| DEFAULT_URL.into());
-    let options = taskmaster_store::connect_options(&url)?;
+    let url = std::env::var("PROSTOR_BENCH_DATABASE_URL").unwrap_or_else(|_| DEFAULT_URL.into());
+    let options = prostor_store::connect_options(&url)?;
 
     let mut timing = Timing::default();
     let started = Instant::now();
@@ -246,7 +246,7 @@ async fn ensure_dataset(
         plan.scale, plan.seed
     ));
     recreate_database(options).await?;
-    taskmaster_store::migrate(options)
+    prostor_store::migrate(options)
         .await
         .context("cannot migrate the benchmark database")?;
     let started = Instant::now();

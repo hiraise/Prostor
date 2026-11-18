@@ -7,9 +7,9 @@
 
 use std::collections::HashMap;
 
+use prostor_query::print::{Role, significant};
+use prostor_query::{Atom, Expr, ItemKind, Problem, ProblemCode, Query, Span};
 use serde::{Deserialize, Serialize};
-use taskmaster_query::print::{Role, significant};
-use taskmaster_query::{Atom, Expr, ItemKind, Problem, ProblemCode, Query, Span};
 
 use super::Binding;
 use crate::links::Side;
@@ -112,7 +112,7 @@ impl Stored {
     }
 
     /// The tree with the current names, and a `deleted_reference` per atom whose target is gone.
-    /// Spans still point into the saved text: print the tree (`taskmaster_query::print`) and parse
+    /// Spans still point into the saved text: print the tree (`prostor_query::print`) and parse
     /// the result before resolving it.
     pub fn unbind(&self, names: &Names) -> (Query, Vec<Problem>) {
         let mut query = self.query.clone();
@@ -137,9 +137,9 @@ impl Stored {
     /// into that text.
     pub fn text(&self, names: &Names) -> (String, Vec<Problem>) {
         let (tree, mut problems) = self.unbind(names);
-        let text = taskmaster_query::print(&tree);
+        let text = prostor_query::print(&tree);
         let old = atom_spans(&tree);
-        let new = atom_spans(&taskmaster_query::parse(&text));
+        let new = atom_spans(&prostor_query::parse(&text));
         for problem in &mut problems {
             problem.span = old
                 .iter()
@@ -323,7 +323,7 @@ impl Renamer<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use taskmaster_query::{parse, print};
+    use prostor_query::{parse, print};
 
     fn span_of(text: &str, word: &str) -> Span {
         let start = text.find(word).unwrap();

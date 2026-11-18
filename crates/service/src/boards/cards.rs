@@ -4,22 +4,22 @@
 //! history, resolution), all in one transaction with the rank and the live events. On a query
 //! board an issue joins by the field changes that make it match the board query (BRD-028).
 
+use prostor_domain::access::Access;
+use prostor_domain::boards::query_mode::{self, Facts, Failure, Step};
+use prostor_domain::issues::history::{BoardPlace, ChangeKind, Origin, Record};
+use prostor_domain::issues::rights;
+use prostor_domain::issues::values::Input;
+use prostor_domain::live::Change;
+use prostor_domain::rank;
+use prostor_domain::search::Filter;
+use prostor_domain::validation::Problem;
+use prostor_domain::{BoardId, ColumnId, IssueId, SprintId, TagId};
+use prostor_store::PgPool;
+use prostor_store::boards::cards as store_cards;
+use prostor_store::boards::view::{self as store_view, After};
+use prostor_store::boards::{self as store, Sprint};
+use prostor_store::issues::Issue;
 use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::boards::query_mode::{self, Facts, Failure, Step};
-use taskmaster_domain::issues::history::{BoardPlace, ChangeKind, Origin, Record};
-use taskmaster_domain::issues::rights;
-use taskmaster_domain::issues::values::Input;
-use taskmaster_domain::live::Change;
-use taskmaster_domain::rank;
-use taskmaster_domain::search::Filter;
-use taskmaster_domain::validation::Problem;
-use taskmaster_domain::{BoardId, ColumnId, IssueId, SprintId, TagId};
-use taskmaster_store::PgPool;
-use taskmaster_store::boards::cards as store_cards;
-use taskmaster_store::boards::view::{self as store_view, After};
-use taskmaster_store::boards::{self as store, Sprint};
-use taskmaster_store::issues::Issue;
 
 use super::view::{CELL_CAP, Card, Lens, cards_of, is_query, lens, scope, visibility};
 use super::{BoardRow, load};
@@ -247,7 +247,7 @@ async fn plan_for(
 ) -> Result<Vec<Step>> {
     let leaves = query_mode::leaves(filter);
     let vis = visibility(actor, board);
-    let holds = taskmaster_store::search::holds_each(&mut *conn, issue.id, &leaves, &vis).await?;
+    let holds = prostor_store::search::holds_each(&mut *conn, issue.id, &leaves, &vis).await?;
     let fields = crate::issues::values::of_project(&mut *conn, issue.project_id).await?;
     let wanted: Vec<TagId> = leaves
         .iter()
@@ -257,7 +257,7 @@ async fn plan_for(
         })
         .flatten()
         .collect();
-    let usable: Vec<TagId> = taskmaster_store::tags::get_many(&mut *conn, &wanted)
+    let usable: Vec<TagId> = prostor_store::tags::get_many(&mut *conn, &wanted)
         .await?
         .into_iter()
         .filter(|t| t.sharing().can_use(actor))
@@ -308,7 +308,7 @@ async fn apply(
                 writes.push(written);
             }
             Step::Tag(tag) => {
-                if taskmaster_store::tags::add(conn, issue.id, tag).await? {
+                if prostor_store::tags::add(conn, issue.id, tag).await? {
                     records.extend(Record::tags(&[], &[tag]));
                 }
             }
@@ -527,7 +527,7 @@ async fn join_subtasks(
     sprint: &Sprint,
     parent: IssueId,
 ) -> Result<()> {
-    let mut ids: Vec<IssueId> = taskmaster_store::links::children_of(&mut *tx, &[parent])
+    let mut ids: Vec<IssueId> = prostor_store::links::children_of(&mut *tx, &[parent])
         .await?
         .into_iter()
         .map(|(_, child)| child)
@@ -567,7 +567,7 @@ async fn join_subtasks(
 #[allow(clippy::too_many_arguments)]
 async fn add_by_query(
     pool: &PgPool,
-    mut tx: taskmaster_store::Transaction<'_, taskmaster_store::Postgres>,
+    mut tx: prostor_store::Transaction<'_, prostor_store::Postgres>,
     ctx: &mut Ctx<'_>,
     actor: &Access,
     origin: Origin,
@@ -843,7 +843,7 @@ pub(crate) async fn membership(
                 } else {
                     let today = super::view::today(conn, time::OffsetDateTime::now_utc()).await?;
                     let dates: Vec<_> = board.full.sprints.iter().map(|s| s.dates()).collect();
-                    let chosen = taskmaster_domain::boards::sprints::current(&dates, today)
+                    let chosen = prostor_domain::boards::sprints::current(&dates, today)
                         .or(board.full.board.auto_sprint_id)
                         .and_then(|id| board.full.sprints.iter().find(|s| s.id == id).cloned());
                     let Some(chosen) = chosen else {

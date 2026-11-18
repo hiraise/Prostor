@@ -25,7 +25,7 @@ test('ACC-004, AUTH-008: join from an invitation, then reset a forgotten passwor
   // ACC-004: the invitation link opens the page to join.
   const invitation = await lastMail(request, email, 'invited you');
   await page.goto(linkPath(invitation.text, 'invitation'));
-  await expect(page.getByRole('heading', { level: 1, name: 'Join TaskMaster' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Join Prostor' })).toBeVisible();
   // The secret is gone from the address bar.
   expect(new URL(page.url()).hash).toBe('');
   await page.getByLabel(/^Full name/).fill('Ivy Invited');
@@ -44,7 +44,7 @@ test('ACC-004, AUTH-008: join from an invitation, then reset a forgotten passwor
   await expect(
     page.getByRole('main').getByText('If an account has this confirmed address'),
   ).toBeVisible();
-  const reset = await lastMail(request, email, 'Reset your TaskMaster password');
+  const reset = await lastMail(request, email, 'Reset your Prostor password');
   await page.goto(linkPath(reset.text, 'reset-password'));
   await page.getByLabel(/^New password/).fill('ivy second password');
   await page.getByLabel(/^Repeat the new password/).fill('ivy second password');

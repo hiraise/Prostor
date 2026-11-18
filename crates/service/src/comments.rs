@@ -5,22 +5,22 @@
 //! the issue's change (which also marks the issue as updated). A comment the viewer may not see is
 //! "not found": the issue rule first, then the comment rule, so an audience only narrows (CNT-003).
 
+use prostor_domain::access::Access;
+use prostor_domain::access::visibility::Audience;
+use prostor_domain::attachments as attachment_rules;
+use prostor_domain::comments::{self as rules, Facts, Refusal};
+use prostor_domain::issues::history::{CommentEvent, Origin, Record};
+use prostor_domain::live::Change;
+use prostor_domain::{CommentId, GroupId, IssueId, UploadId, UserId};
+use prostor_markup::Profile;
+use prostor_store::attachments::{self, Attachment};
+use prostor_store::comments::{self as store, Comment, NewComment as StoredNew};
+use prostor_store::groups::{self, Group};
+use prostor_store::issues::Issue;
+use prostor_store::projects::Project;
+use prostor_store::users::{self, User};
+use prostor_store::{PgPool, issues as store_issues};
 use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::visibility::Audience;
-use taskmaster_domain::attachments as attachment_rules;
-use taskmaster_domain::comments::{self as rules, Facts, Refusal};
-use taskmaster_domain::issues::history::{CommentEvent, Origin, Record};
-use taskmaster_domain::live::Change;
-use taskmaster_domain::{CommentId, GroupId, IssueId, UploadId, UserId};
-use taskmaster_markup::Profile;
-use taskmaster_store::attachments::{self, Attachment};
-use taskmaster_store::comments::{self as store, Comment, NewComment as StoredNew};
-use taskmaster_store::groups::{self, Group};
-use taskmaster_store::issues::Issue;
-use taskmaster_store::projects::Project;
-use taskmaster_store::users::{self, User};
-use taskmaster_store::{PgPool, issues as store_issues};
 
 use crate::attachments::AttachmentView;
 use crate::issues::{self, AudienceInput};
@@ -441,7 +441,7 @@ pub async fn update(
     {
         return Err(Error::field(
             "text",
-            taskmaster_domain::validation::Problem::Required,
+            prostor_domain::validation::Problem::Required,
             "the comment is empty",
         ));
     }
@@ -483,7 +483,7 @@ pub async fn update(
     }
     if let Some(record) = record {
         let rendered = if text_value == comment.text {
-            taskmaster_store::content::Rendered {
+            prostor_store::content::Rendered {
                 html: comment.html.clone(),
                 users: comment.mentioned_users.clone(),
                 issue_tokens: comment.issue_tokens.clone(),

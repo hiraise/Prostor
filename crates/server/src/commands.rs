@@ -5,20 +5,20 @@
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::Response;
-use serde_json::Value;
-use taskmaster_api::commands::{
+use prostor_api::commands::{
     ApplyAnswer, ApplyRequest, AssistRequest, BulkFailure, BulkProgress, BulkQueued, BulkRequest,
     CommandAssist, CommandProblem, CommandQuickFix, IssueProblem, IssueResult, PlannedOperation,
     Suggestion, SuggestionGroup,
 };
-use taskmaster_api::error::ErrorBody;
-use taskmaster_domain::auth::Scope;
-use taskmaster_query::command::CommandCode;
-use taskmaster_query::completion;
-use taskmaster_query::utf16;
-use taskmaster_service::assist as assist_service;
-use taskmaster_service::commands::bulk;
-use taskmaster_service::commands::{self, ApplyInput, Operation};
+use prostor_api::error::ErrorBody;
+use prostor_domain::auth::Scope;
+use prostor_query::command::CommandCode;
+use prostor_query::completion;
+use prostor_query::utf16;
+use prostor_service::assist as assist_service;
+use prostor_service::commands::bulk;
+use prostor_service::commands::{self, ApplyInput, Operation};
+use serde_json::Value;
 
 use crate::AppState;
 use crate::access::Viewer;
@@ -119,9 +119,9 @@ pub async fn assist(
     // A query of `Some` — even empty — is the bulk flow's target (empty means the named project's
     // every issue, `BulkRequest`); only naming neither target is the mistake.
     if request.issues.is_empty() && request.query.is_none() {
-        return Err(ApiError::from(taskmaster_service::Error::field(
+        return Err(ApiError::from(prostor_service::Error::field(
             "issues",
-            taskmaster_domain::validation::Problem::Required,
+            prostor_domain::validation::Problem::Required,
             "name the issues or the query the line applies to",
         )));
     }
@@ -256,9 +256,9 @@ pub async fn bulk_progress(
 
 /// The api's audience shape to the service's.
 fn audience_input(
-    audience: taskmaster_api::issues::AudienceInput,
-) -> taskmaster_service::issues::AudienceInput {
-    taskmaster_service::issues::AudienceInput {
+    audience: prostor_api::issues::AudienceInput,
+) -> prostor_service::issues::AudienceInput {
+    prostor_service::issues::AudienceInput {
         users: audience.users,
         groups: audience.groups,
     }

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // The roles list (ACC-052, ACC-053): predefined roles first and marked, each with its
   // description, permission count and assignments; search by name and by permission. Each row is
   // one link to the role's page, so the whole row is the target on phones (D-019).
@@ -109,7 +110,7 @@
   }
 </script>
 
-<svelte:head><title>{m.rolesTitle()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.rolesTitle()} · {brand()}</title></svelte:head>
 
 {#if !roles || !canSeeRoles()}
   <ForbiddenState {home} />

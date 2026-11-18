@@ -1,7 +1,7 @@
 # The stress run of the performance budget (architecture.md §7, D-032) for `make bench-stress`:
 # 1M issues on PostgreSQL limited to 4 CPUs and 8 GB, configured for that size. Port 5435 on
 # loopback; its own volume, so the target dataset of `make bench` survives it.
-name: taskmaster-stress
+name: prostor-stress
 
 services:
   postgres:
@@ -41,15 +41,15 @@ services:
     # Parallel queries share memory through /dev/shm; Docker gives 64 MB by default.
     shm_size: 1g
     environment:
-      POSTGRES_USER: taskmaster
-      POSTGRES_PASSWORD: taskmaster
-      POSTGRES_DB: taskmaster_stress
+      POSTGRES_USER: prostor
+      POSTGRES_PASSWORD: prostor
+      POSTGRES_DB: prostor_stress
     ports:
       - "127.0.0.1:5435:5432"
     volumes:
       - stressdata:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U taskmaster -d taskmaster_stress"]
+      test: ["CMD-SHELL", "pg_isready -U prostor -d prostor_stress"]
       interval: 2s
       timeout: 3s
       retries: 30

@@ -1,25 +1,25 @@
 //! `/users/me/notifications`, `/notifications/subscriptions`, `/notifications` (the inbox),
 //! `/notifications/summary`, `/notifications/read` and `/issues/{id}/watchers` (NTF, plan step
-//! 1.10 §3.1, §3.5). Rules live in `taskmaster_service::notifications`.
+//! 1.10 §3.1, §3.5). Rules live in `prostor_service::notifications`.
 
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use taskmaster_api::accounts::{UserRef, UserRefKind};
-use taskmaster_api::error::{ErrorBody, FieldError};
-use taskmaster_api::notifications::{
+use prostor_api::accounts::{UserRef, UserRefKind};
+use prostor_api::error::{ErrorBody, FieldError};
+use prostor_api::notifications::{
     Inbox, InboxNotification, InboxQuery, InboxSummary, InboxThread, IssueWatchers,
     NewNotificationSubscription, NotificationBody, NotificationChange, NotificationIssue,
     NotificationKind, NotificationLine, NotificationRead, NotificationReport, NotificationSettings,
     NotificationSubscription, NotificationSubscriptionPatch, NotificationSubscriptions,
     SubscriptionSourceKind, WatchersChange,
 };
-use taskmaster_domain::access::Access;
-use taskmaster_domain::auth::Scope;
-use taskmaster_domain::notifications::{Folder, Kind, Line, Settings, Source};
-use taskmaster_domain::{IssueId, SubscriptionId};
-use taskmaster_service::notifications as service;
-use taskmaster_service::people::Names;
+use prostor_domain::access::Access;
+use prostor_domain::auth::Scope;
+use prostor_domain::notifications::{Folder, Kind, Line, Settings, Source};
+use prostor_domain::{IssueId, SubscriptionId};
+use prostor_service::notifications as service;
+use prostor_service::people::Names;
 
 use crate::AppState;
 use crate::access::Viewer;
@@ -68,10 +68,7 @@ fn parse_source(source: SubscriptionSourceKind, id: i64) -> Source {
     }
 }
 
-fn shown(
-    row: &taskmaster_store::notifications::Subscription,
-    name: &str,
-) -> NotificationSubscription {
+fn shown(row: &prostor_store::notifications::Subscription, name: &str) -> NotificationSubscription {
     let source = row.source();
     NotificationSubscription {
         id: row.id,

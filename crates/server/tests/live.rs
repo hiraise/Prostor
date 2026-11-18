@@ -7,11 +7,11 @@ use std::future::IntoFuture;
 use std::net::SocketAddr;
 
 use axum::http::{Method, StatusCode};
+use prostor_api::live::close;
+use prostor_server::lifecycle::Phase;
+use prostor_server::live::Config;
+use prostor_server::throttle::Throttle;
 use serde_json::{Value, json};
-use taskmaster_api::live::close;
-use taskmaster_server::lifecycle::Phase;
-use taskmaster_server::live::Config;
-use taskmaster_server::throttle::Throttle;
 use tokio_tungstenite::tungstenite;
 
 mod common;
@@ -351,13 +351,9 @@ async fn adm_002_a_setting_change_reaches_open_connections() {
     let head = answer[0]["head"].as_i64().unwrap();
 
     let mut conn = world.node.state.db.acquire().await.unwrap();
-    taskmaster_store::bus::notify(
-        &mut conn,
-        taskmaster_store::bus::SETTINGS,
-        "system_language",
-    )
-    .await
-    .unwrap();
+    prostor_store::bus::notify(&mut conn, prostor_store::bus::SETTINGS, "system_language")
+        .await
+        .unwrap();
     assert_eq!(
         bob.next().await,
         json!({
@@ -516,7 +512,7 @@ async fn live_shutdown_closes_with_restart() {
     let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
     let address = listener.local_addr().unwrap();
     let stop = tokio_util::sync::CancellationToken::new();
-    let app = taskmaster_server::router(world.node.state.clone())
+    let app = prostor_server::router(world.node.state.clone())
         .into_make_service_with_connect_info::<SocketAddr>();
     let server = tokio::spawn(
         axum::serve(listener, app)
@@ -748,7 +744,7 @@ async fn live_limit_oversized_message_closes() {
     let mut bob = world.live(&world.bob).await;
     let topics: Vec<String> = (0..2000).map(|n| format!("issue:{n}")).collect();
     let text = json!({ "type": "subscribe", "topics": topics }).to_string();
-    assert!(text.len() > taskmaster_server::live::MESSAGE_MAX);
+    assert!(text.len() > prostor_server::live::MESSAGE_MAX);
     bob.send_text(&text).await;
     assert_eq!(bob.closed().await, close::POLICY);
 }

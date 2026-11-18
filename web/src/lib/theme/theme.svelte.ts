@@ -9,7 +9,7 @@ export const THEME_PREFERENCES = ['system', 'light', 'dark'] as const;
 export type ThemePreference = (typeof THEME_PREFERENCES)[number];
 export type Theme = 'light' | 'dark';
 
-const STORAGE_KEY = 'taskmaster.theme';
+const STORAGE_KEY = 'prostor.theme';
 
 let preference = $state<ThemePreference>('system');
 const systemDark = new MediaQuery('(prefers-color-scheme: dark)', false);

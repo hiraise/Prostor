@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // The link types of the instance (LNK-018…LNK-021), oldest first: each with its internal name,
   // the words its sides use, its direction and how many links it has; built-in types are marked,
   // and the locked ones (duplicates, subtasks) offer no actions. System administrators create,
@@ -107,7 +108,7 @@
   }
 </script>
 
-<svelte:head><title>{m.linkTypesTitle()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.linkTypesTitle()} · {brand()}</title></svelte:head>
 
 {#snippet details(type: LinkType)}
   <span class="details">

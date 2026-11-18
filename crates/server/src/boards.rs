@@ -1,10 +1,10 @@
 //! `/boards`: boards, their columns, each person's view and the board view (BRD, step 1.8).
-//! Rules live in `taskmaster_service::boards`.
+//! Rules live in `prostor_service::boards`.
 
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use taskmaster_api::boards::{
+use prostor_api::boards::{
     BacklogMissing, BacklogOrder, BacklogSearch, Board, BoardBacklog, BoardBacklogQuery, BoardCell,
     BoardCellQuery, BoardColumn, BoardColumnPatch, BoardImpact, BoardList, BoardListQuery,
     BoardMode, BoardName, BoardPatch, BoardPreset, BoardProfile, BoardProfilePatch, BoardProject,
@@ -15,40 +15,40 @@ use taskmaster_api::boards::{
     PlacedCard, PlacedLane, Sprint, SprintCarry, SprintList, SprintName, SprintPatch,
     TruncatedCell, WipState,
 };
-use taskmaster_api::boards::{
+use prostor_api::boards::{
     BoardCards, BoardCardsInput, BoardHealth, BoardLanes, BoardLanesInput, CardColor, CellDraft,
     FieldBoardUse, FieldBoards, HealthKind, HealthSeverity, HealthSlot, LaneLabel, NewCellDraft,
 };
-use taskmaster_api::error::ErrorBody;
-use taskmaster_api::page::{Page, PageQuery};
-use taskmaster_domain::access::Access;
-use taskmaster_domain::auth::Scope;
-use taskmaster_domain::boards::ColorMode;
-use taskmaster_domain::boards::columns::WipState as DomainWip;
-use taskmaster_domain::boards::health::{Finding, Severity, Slot};
-use taskmaster_domain::boards::lanes as domain_lanes;
-use taskmaster_domain::boards::query_mode::Step;
-use taskmaster_domain::boards::sprints;
-use taskmaster_domain::boards::{Mode, Preset};
-use taskmaster_domain::settings::SYSTEM_LANGUAGE;
-use taskmaster_domain::sharing::Shared;
-use taskmaster_domain::{BoardId, ColumnId, IssueId, SprintId};
-use taskmaster_service::boards::backlog::{self as service_backlog, BacklogInput};
-use taskmaster_service::boards::card_setup::CardsChange;
-use taskmaster_service::boards::cards::{self as cards, Move, Placed};
-use taskmaster_service::boards::columns::{self as columns, ColumnChange, NewColumn};
-use taskmaster_service::boards::issue_side;
-use taskmaster_service::boards::lanes::{self as service_lanes, LanesChange};
-use taskmaster_service::boards::sprints::{self as service_sprints, SprintChange, SprintRow};
-use taskmaster_service::boards::view as service_view;
-use taskmaster_service::boards::{
+use prostor_api::error::ErrorBody;
+use prostor_api::page::{Page, PageQuery};
+use prostor_domain::access::Access;
+use prostor_domain::auth::Scope;
+use prostor_domain::boards::ColorMode;
+use prostor_domain::boards::columns::WipState as DomainWip;
+use prostor_domain::boards::health::{Finding, Severity, Slot};
+use prostor_domain::boards::lanes as domain_lanes;
+use prostor_domain::boards::query_mode::Step;
+use prostor_domain::boards::sprints;
+use prostor_domain::boards::{Mode, Preset};
+use prostor_domain::settings::SYSTEM_LANGUAGE;
+use prostor_domain::sharing::Shared;
+use prostor_domain::{BoardId, ColumnId, IssueId, SprintId};
+use prostor_service::boards::backlog::{self as service_backlog, BacklogInput};
+use prostor_service::boards::card_setup::CardsChange;
+use prostor_service::boards::cards::{self as cards, Move, Placed};
+use prostor_service::boards::columns::{self as columns, ColumnChange, NewColumn};
+use prostor_service::boards::issue_side;
+use prostor_service::boards::lanes::{self as service_lanes, LanesChange};
+use prostor_service::boards::sprints::{self as service_sprints, SprintChange, SprintRow};
+use prostor_service::boards::view as service_view;
+use prostor_service::boards::{
     self as service, BoardChange, BoardRow, LaneNames, ProfileChange, Sharing,
 };
-use taskmaster_service::boards::{drafts as service_drafts, health as service_health};
-use taskmaster_service::issues::Described;
-use taskmaster_service::people::Names;
-use taskmaster_service::tags;
-use taskmaster_store::boards::{After, Profile};
+use prostor_service::boards::{drafts as service_drafts, health as service_health};
+use prostor_service::issues::Described;
+use prostor_service::people::Names;
+use prostor_service::tags;
+use prostor_store::boards::{After, Profile};
 use time::{Date, OffsetDateTime};
 
 use crate::AppState;
@@ -277,7 +277,7 @@ fn profile(p: &Profile) -> BoardProfile {
     }
 }
 
-fn sprint(s: &taskmaster_store::boards::Sprint, current: Option<i64>, today: Date) -> Sprint {
+fn sprint(s: &prostor_store::boards::Sprint, current: Option<i64>, today: Date) -> Sprint {
     Sprint {
         finished: sprints::finished(&s.dates(), today),
         id: s.id,
@@ -440,9 +440,9 @@ fn excerpt(text: &str) -> String {
 
 /// The issues of an answer as cards show them, with what they name (D-044).
 fn card_issues(state: &AppState, viewer: &Access, d: &Described) -> (Vec<CardIssue>, CardRefs) {
+    use prostor_domain::fields::FieldKind;
+    use prostor_domain::issues::values::Value;
     use std::collections::BTreeSet;
-    use taskmaster_domain::fields::FieldKind;
-    use taskmaster_domain::issues::values::Value;
     let names = state.names();
     let (mut fields, mut values, mut users, mut groups) = (
         Vec::new(),
@@ -849,9 +849,9 @@ pub async fn add_column(
         (Some(value), None) => NewColumn::Value(value),
         (None, Some(name)) => NewColumn::NewValue(name),
         _ => {
-            return Err(taskmaster_service::Error::field(
+            return Err(prostor_service::Error::field(
                 "value",
-                taskmaster_domain::validation::Problem::Required,
+                prostor_domain::validation::Problem::Required,
                 "give either value or new_value",
             )
             .into());
@@ -1079,7 +1079,7 @@ fn placed(
     state: &AppState,
     viewer: &Access,
     p: &Placed,
-    messages: &[taskmaster_service::rules::Message],
+    messages: &[prostor_service::rules::Message],
 ) -> PlacedCard {
     let (mut shown, refs) = card_issues(state, viewer, &p.issues);
     PlacedCard {

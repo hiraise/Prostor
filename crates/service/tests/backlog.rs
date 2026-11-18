@@ -1,25 +1,25 @@
 //! Backlogs, template boards and boards from the issue's side (step 1.8b-4, D-045).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::role::PredefinedRole;
-use taskmaster_domain::boards::{Mode, Preset};
-use taskmaster_domain::issues::history::Origin;
-use taskmaster_domain::projects::Template;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::{BoardId, IssueId, ProjectId};
-use taskmaster_service::boards::backlog::{self, BacklogInput, Missing};
-use taskmaster_service::boards::issue_side;
-use taskmaster_service::boards::{self as boards, BoardChange, BoardRow, NewBoard, Sharing};
-use taskmaster_service::issues::{self, AudienceInput, NewIssue};
-use taskmaster_service::projects::{self, NewProjectInput};
-use taskmaster_service::setup::{self, Setup};
-use taskmaster_service::users::{self, NewAccount};
-use taskmaster_service::{Error, Passwords, access, roles, saved_searches};
-use taskmaster_store::PgPool;
-use taskmaster_store::access::Holder;
-use taskmaster_store::sessions::Origin as SessionOrigin;
-use taskmaster_testkit::TestDb;
+use prostor_domain::access::Access;
+use prostor_domain::access::role::PredefinedRole;
+use prostor_domain::boards::{Mode, Preset};
+use prostor_domain::issues::history::Origin;
+use prostor_domain::projects::Template;
+use prostor_domain::settings::Language;
+use prostor_domain::{BoardId, IssueId, ProjectId};
+use prostor_service::boards::backlog::{self, BacklogInput, Missing};
+use prostor_service::boards::issue_side;
+use prostor_service::boards::{self as boards, BoardChange, BoardRow, NewBoard, Sharing};
+use prostor_service::issues::{self, AudienceInput, NewIssue};
+use prostor_service::projects::{self, NewProjectInput};
+use prostor_service::setup::{self, Setup};
+use prostor_service::users::{self, NewAccount};
+use prostor_service::{Error, Passwords, access, roles, saved_searches};
+use prostor_store::PgPool;
+use prostor_store::access::Holder;
+use prostor_store::sessions::Origin as SessionOrigin;
+use prostor_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::datetime;
 
@@ -89,7 +89,7 @@ async fn member(pool: &PgPool, admin: &Access, username: &str, of: &[ProjectId])
     .unwrap()
     .id;
     if !of.is_empty() {
-        let role = taskmaster_store::roles::builtin_id(pool, PredefinedRole::ProjectMember.key())
+        let role = prostor_store::roles::builtin_id(pool, PredefinedRole::ProjectMember.key())
             .await
             .unwrap()
             .unwrap();
@@ -249,13 +249,13 @@ async fn brd_089_default_backlog() {
     assert_eq!(shown.len(), 2);
     // BRD-096: an issue sent to the board leaves the backlog.
     let sprint = board.full.sprints[0].id;
-    taskmaster_service::boards::cards::add(
+    prostor_service::boards::cards::add(
         pool,
         &admin,
         Origin::Web,
         board.full.board.id,
         sprint,
-        taskmaster_service::boards::cards::NewCard {
+        prostor_service::boards::cards::NewCard {
             issue: a,
             ..Default::default()
         },
@@ -279,7 +279,7 @@ async fn brd_089_default_backlog() {
         board.full.board.id,
         BoardChange {
             sharing: Some(Sharing {
-                view: taskmaster_domain::sharing::Audience {
+                view: prostor_domain::sharing::Audience {
                     users: vec![outsider.user()],
                     groups: Vec::new(),
                 },
@@ -470,7 +470,7 @@ async fn brd_093_order_rights() {
         id,
         BoardChange {
             sharing: Some(Sharing {
-                view: taskmaster_domain::sharing::Audience {
+                view: prostor_domain::sharing::Audience {
                     users: vec![other.user()],
                     groups: Vec::new(),
                 },
@@ -536,7 +536,7 @@ async fn brd_033_issue_boards() {
             comments: true,
             changes: true,
             from: None,
-            direction: taskmaster_store::issue_history::Direction::Older,
+            direction: prostor_store::issue_history::Direction::Older,
             limit: 10,
             around_comment: None,
         },
@@ -648,7 +648,7 @@ async fn prj_023_scrum_board() {
     assert_eq!(search.row.view_groups, b.view_groups);
     // A member of the team sees the board.
     let m = member(pool, &admin, "tom", &[]).await;
-    taskmaster_service::teams::add(pool, &admin, p, &[m.user()], &[])
+    prostor_service::teams::add(pool, &admin, p, &[m.user()], &[])
         .await
         .unwrap();
     let m = access::load(pool, m.user()).await.unwrap();

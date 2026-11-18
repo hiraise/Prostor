@@ -10,8 +10,8 @@ afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
   setPreferencesForTests(null);
-  localStorage.removeItem('taskmaster.nav.collapsed');
-  localStorage.removeItem('taskmaster.editor.toolbar');
+  localStorage.removeItem('prostor.nav.collapsed');
+  localStorage.removeItem('prostor.editor.toolbar');
 });
 
 describe('UI-018: personal interface settings', () => {
@@ -78,7 +78,7 @@ describe('UI-018: personal interface settings', () => {
     setPreferencesForTests({});
     // Opens this tab's channel, as a load or a change does.
     preferences.set({ links_collapsed: true });
-    const other = new BroadcastChannel('taskmaster-preferences');
+    const other = new BroadcastChannel('prostor-preferences');
     other.postMessage({ issue_panel_side: 'start', links_collapsed: null });
     other.close();
 
@@ -89,8 +89,8 @@ describe('UI-018: personal interface settings', () => {
 
   it('UI-018: what this browser kept moves to the server once, unless the server has its own', async () => {
     vi.useFakeTimers();
-    localStorage.setItem('taskmaster.nav.collapsed', 'true');
-    localStorage.setItem('taskmaster.editor.toolbar', 'hidden');
+    localStorage.setItem('prostor.nav.collapsed', 'true');
+    localStorage.setItem('prostor.editor.toolbar', 'hidden');
     const calls = fakeApi({
       'GET /users/me/preferences': { body: { editor_toolbar: true } },
       'PATCH /users/me/preferences': ({ body }) => ({ body }),
@@ -102,7 +102,7 @@ describe('UI-018: personal interface settings', () => {
     expect(preferences.value('rail_collapsed')).toBe(true);
     expect(preferences.value('editor_toolbar')).toBe(true);
     expect(calls.at(-1)?.body).toEqual({ rail_collapsed: true });
-    expect(localStorage.getItem('taskmaster.nav.collapsed')).toBeNull();
-    expect(localStorage.getItem('taskmaster.editor.toolbar')).toBeNull();
+    expect(localStorage.getItem('prostor.nav.collapsed')).toBeNull();
+    expect(localStorage.getItem('prostor.editor.toolbar')).toBeNull();
   });
 });

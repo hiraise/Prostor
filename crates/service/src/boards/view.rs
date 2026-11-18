@@ -4,18 +4,18 @@
 //! header filter narrows any board and its sort clause orders each cell (BRD-081, BRD-070).
 //! A board with lanes shows them in pages of [`lanes::PAGE`] (BRD-057), each cell capped.
 
+use prostor_domain::access::Access;
+use prostor_domain::boards::columns::{Wip, WipState};
+use prostor_domain::boards::lanes::{self as lanes, LaneKey, LaneMode};
+use prostor_domain::boards::{Mode, sprints};
+use prostor_domain::search::{Filter, SortSpec};
+use prostor_domain::validation::Problem;
+use prostor_domain::{BoardId, ColumnId, IssueId, ProjectId, SprintId, ValueId};
+use prostor_query::Problem as QueryProblem;
+use prostor_store::boards::view::{self as store_view, After, CardRow, Scope};
+use prostor_store::boards::{self as store, Sprint};
+use prostor_store::{PgPool, issues as store_issues, settings};
 use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::boards::columns::{Wip, WipState};
-use taskmaster_domain::boards::lanes::{self as lanes, LaneKey, LaneMode};
-use taskmaster_domain::boards::{Mode, sprints};
-use taskmaster_domain::search::{Filter, SortSpec};
-use taskmaster_domain::validation::Problem;
-use taskmaster_domain::{BoardId, ColumnId, IssueId, ProjectId, SprintId, ValueId};
-use taskmaster_query::Problem as QueryProblem;
-use taskmaster_store::boards::view::{self as store_view, After, CardRow, Scope};
-use taskmaster_store::boards::{self as store, Sprint};
-use taskmaster_store::{PgPool, issues as store_issues, settings};
 use time::{Date, OffsetDateTime};
 
 use super::lanes::LaneSetup;
@@ -176,7 +176,7 @@ pub(super) async fn lens(
 pub(super) fn scope<'a>(
     board: &'a BoardRow,
     sprint: SprintId,
-    field: taskmaster_domain::FieldId,
+    field: prostor_domain::FieldId,
     values: &'a [ValueId],
     lens: &'a Lens,
 ) -> Scope<'a> {
@@ -255,7 +255,7 @@ pub(super) fn pick(
 pub(super) fn visibility(
     viewer: &Access,
     board: &BoardRow,
-) -> taskmaster_store::visibility::Visibility {
+) -> prostor_store::visibility::Visibility {
     let all: Vec<ProjectId> = board.projects.iter().map(|p| p.id).collect();
     let deleting: Vec<ProjectId> = board
         .projects
@@ -298,10 +298,10 @@ async fn file_counts(
     viewer: &Access,
     d: &Described,
 ) -> Result<Vec<(IssueId, i64)>> {
-    use taskmaster_domain::access::visibility::Audience;
-    use taskmaster_domain::attachments::{self as rules, Facts};
+    use prostor_domain::access::visibility::Audience;
+    use prostor_domain::attachments::{self as rules, Facts};
     let ids: Vec<IssueId> = d.issues.iter().map(|v| v.issue.id).collect();
-    let files = taskmaster_store::attachments::audiences_of_issues(&mut *conn, &ids).await?;
+    let files = prostor_store::attachments::audiences_of_issues(&mut *conn, &ids).await?;
     let mut counts: Vec<(IssueId, i64)> = Vec::new();
     for f in &files {
         let Some(v) = d.issues.iter().find(|v| v.issue.id == f.issue_id) else {
@@ -447,7 +447,7 @@ pub async fn view(
         });
     }
     store::profiles::visit(&mut *conn, viewer.user(), id).await?;
-    let live_topic = taskmaster_domain::live::Topic::Board(id).to_string();
+    let live_topic = prostor_domain::live::Topic::Board(id).to_string();
     Ok(BoardView {
         board,
         sprint,
@@ -488,7 +488,7 @@ async fn page_lanes(
     sprint: SprintId,
     setup: &LaneSetup,
     sc: &Scope<'_>,
-    vis: &taskmaster_store::visibility::Visibility,
+    vis: &prostor_store::visibility::Visibility,
     offset: usize,
 ) -> Result<Paged> {
     let counts = store_view::cell_counts(&mut *conn, sc, vis).await?;

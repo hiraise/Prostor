@@ -1,8 +1,8 @@
 //! Cards: the issues of a sprint and their shared order (BRD-025, BRD-069). The order is
 //! `(rank, issue_id)`, unranked last; two cards may share a rank after concurrent drops.
 
+use prostor_domain::{BoardId, IssueId, SprintId};
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::{BoardId, IssueId, SprintId};
 
 /// Where an issue stands on one board: a sprint and its rank there.
 #[derive(Debug, Clone, PartialEq, Eq)]

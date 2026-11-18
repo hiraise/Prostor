@@ -2,28 +2,28 @@
 //! database (plan step 1.5 §C4, D-037). Each test names the catalog rows it covers.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::role::PredefinedRole;
-use taskmaster_domain::fields::FieldKind;
-use taskmaster_domain::issues::history::Origin;
-use taskmaster_domain::issues::values::Input;
-use taskmaster_domain::projects::Template;
-use taskmaster_domain::search::SortBy;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::{FieldId, IssueId, ProjectId, UserId};
-use taskmaster_query::ProblemCode;
-use taskmaster_service::fields::{self, NewFieldInput, SetSource};
-use taskmaster_service::issues::{self, AudienceInput, FieldChange, NewIssue};
-use taskmaster_service::project_fields::{self, AttachInput, SetUse};
-use taskmaster_service::projects::{self, NewProjectInput};
-use taskmaster_service::search::{self, SearchInput, SearchPage};
-use taskmaster_service::setup::{self, Setup};
-use taskmaster_service::users::{self, NewAccount};
-use taskmaster_service::{Passwords, access, comments, roles};
-use taskmaster_store::PgPool;
-use taskmaster_store::access::Holder;
-use taskmaster_store::sessions::Origin as SessionOrigin;
-use taskmaster_testkit::TestDb;
+use prostor_domain::access::Access;
+use prostor_domain::access::role::PredefinedRole;
+use prostor_domain::fields::FieldKind;
+use prostor_domain::issues::history::Origin;
+use prostor_domain::issues::values::Input;
+use prostor_domain::projects::Template;
+use prostor_domain::search::SortBy;
+use prostor_domain::settings::Language;
+use prostor_domain::{FieldId, IssueId, ProjectId, UserId};
+use prostor_query::ProblemCode;
+use prostor_service::fields::{self, NewFieldInput, SetSource};
+use prostor_service::issues::{self, AudienceInput, FieldChange, NewIssue};
+use prostor_service::project_fields::{self, AttachInput, SetUse};
+use prostor_service::projects::{self, NewProjectInput};
+use prostor_service::search::{self, SearchInput, SearchPage};
+use prostor_service::setup::{self, Setup};
+use prostor_service::users::{self, NewAccount};
+use prostor_service::{Passwords, access, comments, roles};
+use prostor_store::PgPool;
+use prostor_store::access::Holder;
+use prostor_store::sessions::Origin as SessionOrigin;
+use prostor_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::datetime;
 
@@ -77,7 +77,7 @@ async fn create_user(pool: &PgPool, actor: &Access, username: &str) -> UserId {
 
 async fn member(pool: &PgPool, actor: &Access, username: &str, of: ProjectId) -> Access {
     let user = create_user(pool, actor, username).await;
-    let role = taskmaster_store::roles::builtin_id(pool, PredefinedRole::ProjectMember.key())
+    let role = prostor_store::roles::builtin_id(pool, PredefinedRole::ProjectMember.key())
         .await
         .unwrap()
         .unwrap();

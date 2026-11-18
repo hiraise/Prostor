@@ -3,30 +3,28 @@
 //! and drafts, the panel and its pages, hierarchies and subtask counts.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::role::PredefinedRole;
-use taskmaster_domain::issues::history::{LoggedLink, Origin};
-use taskmaster_domain::issues::values::Input;
-use taskmaster_domain::links::{Direction, Refusal, Side};
-use taskmaster_domain::projects::Template;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::validation::Problem;
-use taskmaster_domain::{IssueId, LinkTypeId, ProjectId, UserId};
-use taskmaster_service::auth::SignedIn;
-use taskmaster_service::issue_links::{self, NewLinks, TypeInput, TypeUpdate};
-use taskmaster_service::issues::{
-    self, AudienceInput, FieldChange, IssueChange, IssueView, NewIssue,
-};
-use taskmaster_service::projects::{self, NewProjectInput};
-use taskmaster_service::search::{self, SearchInput};
-use taskmaster_service::setup::{self, Setup};
-use taskmaster_service::users::{self, NewAccount};
-use taskmaster_service::{Error, Passwords, access, roles};
-use taskmaster_store::PgPool;
-use taskmaster_store::access::Holder;
-use taskmaster_store::issue_history::Direction as Way;
-use taskmaster_store::sessions::Origin as SessionOrigin;
-use taskmaster_testkit::TestDb;
+use prostor_domain::access::Access;
+use prostor_domain::access::role::PredefinedRole;
+use prostor_domain::issues::history::{LoggedLink, Origin};
+use prostor_domain::issues::values::Input;
+use prostor_domain::links::{Direction, Refusal, Side};
+use prostor_domain::projects::Template;
+use prostor_domain::settings::Language;
+use prostor_domain::validation::Problem;
+use prostor_domain::{IssueId, LinkTypeId, ProjectId, UserId};
+use prostor_service::auth::SignedIn;
+use prostor_service::issue_links::{self, NewLinks, TypeInput, TypeUpdate};
+use prostor_service::issues::{self, AudienceInput, FieldChange, IssueChange, IssueView, NewIssue};
+use prostor_service::projects::{self, NewProjectInput};
+use prostor_service::search::{self, SearchInput};
+use prostor_service::setup::{self, Setup};
+use prostor_service::users::{self, NewAccount};
+use prostor_service::{Error, Passwords, access, roles};
+use prostor_store::PgPool;
+use prostor_store::access::Holder;
+use prostor_store::issue_history::Direction as Way;
+use prostor_store::sessions::Origin as SessionOrigin;
+use prostor_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::datetime;
 
@@ -141,7 +139,7 @@ async fn person(
     of: &[ProjectId],
 ) -> Access {
     let user = create_user(pool, actor, username).await;
-    let role = taskmaster_store::roles::builtin_id(pool, role.key())
+    let role = prostor_store::roles::builtin_id(pool, role.key())
         .await
         .unwrap()
         .unwrap();
@@ -209,7 +207,7 @@ async fn view(pool: &PgPool, viewer: &Access, issue: IssueId) -> IssueView {
 }
 
 async fn builtin(pool: &PgPool, key: &str) -> LinkTypeId {
-    taskmaster_store::links::type_by_builtin(pool, key)
+    prostor_store::links::type_by_builtin(pool, key)
         .await
         .unwrap()
         .unwrap()
@@ -311,7 +309,7 @@ async fn resolve(pool: &PgPool, actor: &Access, issue: IssueId) {
         .find(|f| f.field.field.name == "State")
         .unwrap();
     let set = state.field.attached.set_id.unwrap();
-    let fixed = taskmaster_store::value_sets::values_of(pool, &[set])
+    let fixed = prostor_store::value_sets::values_of(pool, &[set])
         .await
         .unwrap()
         .into_iter()

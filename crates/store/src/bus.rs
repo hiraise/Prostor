@@ -15,14 +15,14 @@ use tokio::task::JoinHandle;
 use tokio_util::sync::CancellationToken;
 
 /// A setting changed; the payload is its key.
-pub const SETTINGS: &str = "taskmaster_settings";
+pub const SETTINGS: &str = "prostor_settings";
 /// A job was queued.
-pub const JOBS: &str = "taskmaster_jobs";
+pub const JOBS: &str = "prostor_jobs";
 /// Something that decides people's access changed: roles, assignments, groups, memberships,
 /// capabilities, accounts (ACC-062). Nodes drop their compiled access.
-pub const ACCESS: &str = "taskmaster_access";
+pub const ACCESS: &str = "prostor_access";
 /// Live events were published (D-040); the payload is the newest event ID.
-pub const LIVE: &str = "taskmaster_live";
+pub const LIVE: &str = "prostor_live";
 /// Every channel a node listens to.
 const CHANNELS: [&str; 4] = [SETTINGS, JOBS, ACCESS, LIVE];
 

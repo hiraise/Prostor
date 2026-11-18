@@ -2,10 +2,10 @@
 //! of one sprint by column in one statement, each cell capped, with the counts over all cards.
 //! A query board's cards are the matching issues, ranked by the rows of its hidden sprint.
 
+use prostor_domain::boards::lanes::Bounds;
+use prostor_domain::search::{Filter, SortSpec};
+use prostor_domain::{FieldId, IssueId, ProjectId, SprintId, ValueId};
 use sqlx::{PgConnection, Postgres, QueryBuilder, Row};
-use taskmaster_domain::boards::lanes::Bounds;
-use taskmaster_domain::search::{Filter, SortSpec};
-use taskmaster_domain::{FieldId, IssueId, ProjectId, SprintId, ValueId};
 
 use crate::search::compile::{push_base, push_filter};
 use crate::search::order::push_order_exprs;

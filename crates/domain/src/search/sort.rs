@@ -1,8 +1,8 @@
 //! Sort keys (plan §3.5): at most three, then `id desc` as the tie-breaker; without `sort`,
 //! `updated desc`.
 
-use taskmaster_query::words::{self, Kind};
-use taskmaster_query::{Direction, ProblemCode, SortKey, fold};
+use prostor_query::words::{self, Kind};
+use prostor_query::{Direction, ProblemCode, SortKey, fold};
 
 use super::resolve::R;
 use super::{Binding, FieldRef, TextScope, TextTerm};

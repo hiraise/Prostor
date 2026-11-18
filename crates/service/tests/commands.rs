@@ -3,31 +3,31 @@
 //! atomicity — one transaction per issue — and permissions, on a real database.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+use prostor_domain::BoardId;
+use prostor_domain::access::Access;
+use prostor_domain::access::role::PredefinedRole;
+use prostor_domain::boards::Preset;
+use prostor_domain::issues::history::Origin;
+use prostor_domain::projects::Template;
+use prostor_domain::settings::Language;
+use prostor_domain::{IssueId, ProjectId, UserId};
+use prostor_query::command::CommandCode;
+use prostor_service::boards::sprints::{self as sprints_service, NewSprint};
+use prostor_service::boards::{self as boards_service, NewBoard, Sharing};
+use prostor_service::commands::bulk;
+use prostor_service::commands::{self, ApplyInput, Operation};
+use prostor_service::issues::{self, NewIssue};
+use prostor_service::projects::{self, NewProjectInput};
+use prostor_service::setup::{self, Setup};
+use prostor_service::teams;
+use prostor_service::users::{self, NewAccount};
+use prostor_service::{Error, Passwords, access, roles, value_sets};
+use prostor_store::PgPool;
+use prostor_store::access::Holder;
+use prostor_store::jobs::{self as jobs_queue, Handlers, JobState, Runner, RunnerConfig};
+use prostor_store::sessions::Origin as SessionOrigin;
+use prostor_testkit::TestDb;
 use std::time::Duration;
-use taskmaster_domain::BoardId;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::role::PredefinedRole;
-use taskmaster_domain::boards::Preset;
-use taskmaster_domain::issues::history::Origin;
-use taskmaster_domain::projects::Template;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::{IssueId, ProjectId, UserId};
-use taskmaster_query::command::CommandCode;
-use taskmaster_service::boards::sprints::{self as sprints_service, NewSprint};
-use taskmaster_service::boards::{self as boards_service, NewBoard, Sharing};
-use taskmaster_service::commands::bulk;
-use taskmaster_service::commands::{self, ApplyInput, Operation};
-use taskmaster_service::issues::{self, NewIssue};
-use taskmaster_service::projects::{self, NewProjectInput};
-use taskmaster_service::setup::{self, Setup};
-use taskmaster_service::teams;
-use taskmaster_service::users::{self, NewAccount};
-use taskmaster_service::{Error, Passwords, access, roles, value_sets};
-use taskmaster_store::PgPool;
-use taskmaster_store::access::Holder;
-use taskmaster_store::jobs::{self as jobs_queue, Handlers, JobState, Runner, RunnerConfig};
-use taskmaster_store::sessions::Origin as SessionOrigin;
-use taskmaster_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::datetime;
 
@@ -97,7 +97,7 @@ async fn member(pool: &PgPool, admin: &Access, username: &str, of: ProjectId) ->
     .await
     .unwrap()
     .id;
-    let role = taskmaster_store::roles::builtin_id(pool, PredefinedRole::ProjectMember.key())
+    let role = prostor_store::roles::builtin_id(pool, PredefinedRole::ProjectMember.key())
         .await
         .unwrap()
         .unwrap();
@@ -180,7 +180,7 @@ async fn value_of(pool: &PgPool, actor: &Access, project: ProjectId, field: &str
 /// The names of the issue's values of one field, by field name, sorted: set values by their
 /// titles, accounts by their full names.
 async fn names_of(pool: &PgPool, actor: &Access, issue: IssueId, field: &str) -> Vec<String> {
-    use taskmaster_domain::fields::FieldKind;
+    use prostor_domain::fields::FieldKind;
     let view = issues::get(pool, actor, issue).await.unwrap();
     let Some(found) = view.0.fields.iter().find(|f| f.field.field.name == field) else {
         return Vec::new();
@@ -190,12 +190,12 @@ async fn names_of(pool: &PgPool, actor: &Access, issue: IssueId, field: &str) ->
     };
     let mut conn = pool.acquire().await.unwrap();
     if found.field.kind.kind == FieldKind::User {
-        let users = taskmaster_store::users::get_many(&mut *conn, value.refs())
+        let users = prostor_store::users::get_many(&mut *conn, value.refs())
             .await
             .unwrap();
         users.iter().map(|u| u.full_name.clone()).collect()
     } else {
-        let mut rows = taskmaster_store::value_sets::get_values(&mut *conn, value.refs())
+        let mut rows = prostor_store::value_sets::get_values(&mut *conn, value.refs())
             .await
             .unwrap();
         rows.sort_by(|a, b| a.name.cmp(&b.name));
@@ -242,7 +242,7 @@ async fn cmd_003_bare_values_in_the_fixed_order() {
     let target = issue(pool, &admin, mars).await;
 
     // A bare tag name tags the issue.
-    let tag = taskmaster_service::tags::create(pool, &bob, "web", None)
+    let tag = prostor_service::tags::create(pool, &bob, "web", None)
         .await
         .unwrap();
     let answer = commands::apply(pool, &bob, WEB, &input("web", &[target]))
@@ -315,7 +315,7 @@ async fn cmd_003_bare_values_in_the_fixed_order() {
     );
 
     // A project name and a tag name colliding is ambiguous.
-    taskmaster_service::tags::create(pool, &bob, "Mars", None)
+    prostor_service::tags::create(pool, &bob, "Mars", None)
         .await
         .unwrap();
     let answer = commands::apply(pool, &bob, WEB, &input("mars", &[target]))
@@ -346,13 +346,13 @@ async fn cmd_004_field_kinds() {
     let web = project(pool, &admin, "Web", "WEB").await;
     let bob = member(pool, &admin, "Bob", web).await;
     // A date field: `Due date` is not attached to new projects (FLD-020).
-    taskmaster_service::project_fields::attach(
+    prostor_service::project_fields::attach(
         pool,
         &admin,
         web,
-        taskmaster_service::project_fields::AttachInput::New {
+        prostor_service::project_fields::AttachInput::New {
             name: "Deadline".to_owned(),
-            kind: taskmaster_domain::fields::FieldKind::Date,
+            kind: prostor_domain::fields::FieldKind::Date,
             multi: false,
             aliases: Vec::new(),
         },
@@ -917,7 +917,7 @@ async fn cmd_009_tag_commands() {
     let admin = admin(pool).await;
     let web = project(pool, &admin, "Web", "WEB").await;
     let target = issue(pool, &admin, web).await;
-    taskmaster_service::tags::create(pool, &admin, "urgent", None)
+    prostor_service::tags::create(pool, &admin, "urgent", None)
         .await
         .unwrap();
 
@@ -931,7 +931,7 @@ async fn cmd_009_tag_commands() {
     );
     assert!(answer.issues[0].ok);
     let mut conn = pool.acquire().await.unwrap();
-    let tagged = taskmaster_store::tags::on_issues(&mut *conn, &[target], admin.user(), &[])
+    let tagged = prostor_store::tags::on_issues(&mut *conn, &[target], admin.user(), &[])
         .await
         .unwrap();
     drop(conn);
@@ -942,7 +942,7 @@ async fn cmd_009_tag_commands() {
         .unwrap();
     assert!(answer.issues[0].ok);
     let mut conn = pool.acquire().await.unwrap();
-    let tagged = taskmaster_store::tags::on_issues(&mut *conn, &[target], admin.user(), &[])
+    let tagged = prostor_store::tags::on_issues(&mut *conn, &[target], admin.user(), &[])
         .await
         .unwrap();
     drop(conn);
@@ -971,7 +971,7 @@ async fn cmd_010_star_and_watchers() {
         .unwrap();
     assert!(answer.issues[0].ok, "{:?}", answer.issues[0].problem);
     assert_eq!(
-        taskmaster_store::issues::watched(pool, &[target], bob.user())
+        prostor_store::issues::watched(pool, &[target], bob.user())
             .await
             .unwrap(),
         [target]
@@ -983,7 +983,7 @@ async fn cmd_010_star_and_watchers() {
         .unwrap();
     assert!(answer.issues[0].ok, "{:?}", answer.issues[0].problem);
     assert_eq!(
-        taskmaster_store::issues::watched(pool, &[target], bob.user())
+        prostor_store::issues::watched(pool, &[target], bob.user())
             .await
             .unwrap(),
         [target]
@@ -1011,7 +1011,7 @@ async fn cmd_010_star_and_watchers() {
         .unwrap();
     assert!(answer.issues[0].ok);
     assert!(
-        taskmaster_store::issues::watched(pool, &[target], bob.user())
+        prostor_store::issues::watched(pool, &[target], bob.user())
             .await
             .unwrap()
             .is_empty()
@@ -1087,7 +1087,7 @@ async fn cmd_012_link_commands() {
         answer.plan.problems
     );
     assert!(answer.issues[0].ok);
-    let ends = taskmaster_store::links::of_issue(pool, one).await.unwrap();
+    let ends = prostor_store::links::of_issue(pool, one).await.unwrap();
     assert!(ends.iter().any(|end| end.other.id == two));
 
     // The other direction unlinks.
@@ -1100,7 +1100,7 @@ async fn cmd_012_link_commands() {
     .await
     .unwrap();
     assert!(answer.issues[0].ok, "{:?}", answer.issues[0].problem);
-    let ends = taskmaster_store::links::of_issue(pool, one).await.unwrap();
+    let ends = prostor_store::links::of_issue(pool, one).await.unwrap();
     assert!(ends.is_empty());
 }
 
@@ -1134,7 +1134,7 @@ async fn cmd_013_duplicate_in_one_step() {
         names_of(pool, &admin, one, "State").await,
         ["Duplicate".to_owned()]
     );
-    let ends = taskmaster_store::links::of_issue(pool, one).await.unwrap();
+    let ends = prostor_store::links::of_issue(pool, one).await.unwrap();
     assert!(ends.iter().any(|end| end.other.id == two));
 }
 
@@ -1279,14 +1279,14 @@ async fn cmd_016_board_commands() {
     );
     assert!(answer.issues[0].ok, "{:?}", answer.issues[0].problem);
     assert_eq!(
-        taskmaster_store::boards::cards::places(pool, board_id, target)
+        prostor_store::boards::cards::places(pool, board_id, target)
             .await
             .unwrap()
             .len(),
         1
     );
     assert_eq!(
-        taskmaster_store::boards::cards::places(pool, board_id, target)
+        prostor_store::boards::cards::places(pool, board_id, target)
             .await
             .unwrap()[0]
             .sprint,
@@ -1303,7 +1303,7 @@ async fn cmd_016_board_commands() {
     .unwrap();
     assert!(answer.issues[0].ok, "{:?}", answer.issues[0].problem);
     assert!(
-        taskmaster_store::boards::cards::places(pool, board_id, target)
+        prostor_store::boards::cards::places(pool, board_id, target)
             .await
             .unwrap()
             .is_empty()
@@ -1440,7 +1440,7 @@ async fn cmd_026_bulk_job_applies_and_reports() {
 
     let mut handlers = Handlers::new();
     handlers.add::<bulk::BulkWork, _, _>({
-        let pool = taskmaster_store::PgPool::clone(pool);
+        let pool = prostor_store::PgPool::clone(pool);
         move |context, job| {
             let pool = pool.clone();
             async move { bulk::run(&pool, &context, job).await }
@@ -1582,7 +1582,7 @@ async fn cmd_032_russian_command_words() {
         .unwrap();
     assert!(answer.issues[0].ok, "{:?}", answer.issues[0].problem);
     assert_eq!(
-        taskmaster_store::issues::watched(pool, &[target], bob.user())
+        prostor_store::issues::watched(pool, &[target], bob.user())
             .await
             .unwrap(),
         [target]
@@ -1605,8 +1605,8 @@ async fn cmd_032_russian_command_words() {
 
 // ---- 2.1b: the assist (plan §5) ----
 
-use taskmaster_query::completion::Group;
-use taskmaster_service::assist;
+use prostor_query::completion::Group;
+use prostor_service::assist;
 
 fn assist_input(text: &str, issues: &[IssueId], caret: usize) -> assist::CommandAssist {
     assist::CommandAssist {
@@ -1763,7 +1763,7 @@ async fn cmd_029_completion_by_context() {
     );
 
     // Tags, in both languages: the one the target carries is marked.
-    taskmaster_service::tags::create(pool, &bob, "web", None)
+    prostor_service::tags::create(pool, &bob, "web", None)
         .await
         .unwrap();
     commands::apply(pool, &bob, WEB, &input("тег web", &[target]))
@@ -1794,7 +1794,7 @@ async fn cmd_029_completion_by_context() {
             .iter()
             .any(|s| s.group == Group::User && s.own)
     );
-    let all_members = taskmaster_store::groups::builtin_ids(pool).await.unwrap().1;
+    let all_members = prostor_store::groups::builtin_ids(pool).await.unwrap().1;
     let assignment = roles::assignments_of_holder(pool, &admin, Holder::Group(all_members))
         .await
         .unwrap()[0]
@@ -1831,13 +1831,13 @@ async fn cmd_029_completion_by_context() {
     assert!(issues.contains(&("WEB-2", "Commanded")), "{issues:?}");
 
     // A date field: the words answer their concrete value in the caller's zone.
-    taskmaster_service::project_fields::attach(
+    prostor_service::project_fields::attach(
         pool,
         &admin,
         web,
-        taskmaster_service::project_fields::AttachInput::New {
+        prostor_service::project_fields::AttachInput::New {
             name: "Deadline".to_owned(),
-            kind: taskmaster_domain::fields::FieldKind::Date,
+            kind: prostor_domain::fields::FieldKind::Date,
             multi: false,
             aliases: Vec::new(),
         },
@@ -1880,24 +1880,24 @@ async fn cmd_030_history_feeds_the_recent_group() {
         .await
         .unwrap();
     let mut conn = pool.acquire().await.unwrap();
-    let mut lines = taskmaster_store::command_history::recent(&mut *conn, bob.user(), 20)
+    let mut lines = prostor_store::command_history::recent(&mut *conn, bob.user(), 20)
         .await
         .unwrap();
     assert_eq!(lines, ["state In progress"]);
 
     // The trim keeps the newest 20; a repeat bumps its line to the front.
     for n in 0..20 {
-        taskmaster_store::command_history::record(&mut conn, bob.user(), &format!("tag t{n}"))
+        prostor_store::command_history::record(&mut conn, bob.user(), &format!("tag t{n}"))
             .await
             .unwrap();
     }
-    taskmaster_store::command_history::record(&mut conn, bob.user(), "state In progress")
+    prostor_store::command_history::record(&mut conn, bob.user(), "state In progress")
         .await
         .unwrap();
-    lines = taskmaster_store::command_history::recent(&mut *conn, bob.user(), 20)
+    lines = prostor_store::command_history::recent(&mut *conn, bob.user(), 20)
         .await
         .unwrap();
-    assert_eq!(lines.len(), taskmaster_store::command_history::KEEP);
+    assert_eq!(lines.len(), prostor_store::command_history::KEEP);
     assert_eq!(lines[0], "state In progress");
     assert!(!lines.contains(&"state Nope".to_owned()));
     // The oldest of the overflow fell out; the rest stayed.

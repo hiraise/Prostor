@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   import { goto } from '$app/navigation';
   import { resolve } from '$app/paths';
   import { page } from '$app/state';
@@ -27,7 +28,7 @@
   }
 </script>
 
-<svelte:head><title>{m.groups()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.groups()} · {brand()}</title></svelte:head>
 
 {#if data.groups}
   <GroupsPage

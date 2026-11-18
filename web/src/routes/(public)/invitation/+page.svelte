@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // A link from an invitation email (ACC-004): join with one's own password and continue signed in.
   import { goto } from '$app/navigation';
 
@@ -17,7 +18,7 @@
   }
 </script>
 
-<svelte:head><title>{m.invitationTitle()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.invitationTitle()} · {brand()}</title></svelte:head>
 
 <PublicFrame title={m.invitationTitle()}>
   <InvitationForm ondone={done} />

@@ -1,5 +1,5 @@
 //! Searching issues (QRY-*, plan `docs/plans/step-1.5.md` §3–§4): a query's text is parsed
-//! (`taskmaster_query`), its names resolved against a catalog loaded for this viewer
+//! (`prostor_query`), its names resolved against a catalog loaded for this viewer
 //! (`domain::search`), and the result compiled to SQL (`store::search`).
 //!
 //! A query with an error does not run (`Error::InvalidQuery` lists every problem with its span):
@@ -9,21 +9,21 @@ use std::collections::BTreeSet;
 
 use base64::Engine as _;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
-use serde::{Deserialize, Serialize};
-use sqlx::PgConnection;
-use taskmaster_domain::access::permission::Permission;
-use taskmaster_domain::access::{Access, Projects};
-use taskmaster_domain::search::{
+use prostor_domain::access::permission::Permission;
+use prostor_domain::access::{Access, Projects};
+use prostor_domain::search::{
     self as domain, Binding, Catalog, Clock, Ctx, Filter, SortSpec, Stored,
 };
-use taskmaster_domain::validation::Problem as InputProblem;
-use taskmaster_domain::{BoardId, IssueId, ProjectId, TagId};
-use taskmaster_query::{Class, Problem, ProblemCode, Query, Severity, Span};
-use taskmaster_store::saved_searches::SavedSearchId;
-use taskmaster_store::search::catalog::{self, ProjectRow};
-use taskmaster_store::search::{self as store, SortValue};
-use taskmaster_store::visibility::{Visibility, holds};
-use taskmaster_store::{PgPool, issues as store_issues, settings, tags};
+use prostor_domain::validation::Problem as InputProblem;
+use prostor_domain::{BoardId, IssueId, ProjectId, TagId};
+use prostor_query::{Class, Problem, ProblemCode, Query, Severity, Span};
+use prostor_store::saved_searches::SavedSearchId;
+use prostor_store::search::catalog::{self, ProjectRow};
+use prostor_store::search::{self as store, SortValue};
+use prostor_store::visibility::{Visibility, holds};
+use prostor_store::{PgPool, issues as store_issues, settings, tags};
+use serde::{Deserialize, Serialize};
+use sqlx::PgConnection;
 use time::OffsetDateTime;
 
 use crate::issues::{Described, describe};
@@ -173,7 +173,7 @@ pub async fn search(pool: &PgPool, viewer: &Access, input: SearchInput) -> Resul
         next_cursor,
         notes: prepared.notes,
         sort: prepared.sort,
-        live_topic: taskmaster_domain::live::list_topic(
+        live_topic: prostor_domain::live::list_topic(
             &prepared.scope.projects,
             prepared.scope.narrowed,
         )
@@ -259,7 +259,7 @@ pub async fn check(
         time_zone,
         ..SearchInput::default()
     };
-    let mut q = taskmaster_query::parse(text);
+    let mut q = prostor_query::parse(text);
     let problems = match prepare_parsed(&mut conn, viewer, &input, &q).await {
         Ok(prepared) => prepared.notes,
         Err(Error::InvalidQuery(problems)) => problems,
@@ -267,7 +267,7 @@ pub async fn check(
     };
     q.problems.clone_from(&problems);
     Ok(Check {
-        tokens: taskmaster_query::classes(&q, text),
+        tokens: prostor_query::classes(&q, text),
         problems,
     })
 }
@@ -277,7 +277,7 @@ async fn prepare(
     viewer: &Access,
     input: &SearchInput,
 ) -> Result<Prepared> {
-    let q = taskmaster_query::parse(&input.text);
+    let q = prostor_query::parse(&input.text);
     if q.problems.iter().any(|p| p.severity == Severity::Error) {
         return Err(Error::InvalidQuery(q.problems));
     }
@@ -387,7 +387,7 @@ pub(crate) async fn unranked_until(
         saved_search: Some(id),
         ..SearchInput::default()
     };
-    let p = prepare_parsed(conn, viewer, &input, &taskmaster_query::parse("")).await?;
+    let p = prepare_parsed(conn, viewer, &input, &prostor_query::parse("")).await?;
     let hits = store::page(conn, &p.filter, &p.sort, &p.vis, None, Some(id), max).await?;
     Ok(hits
         .iter()
@@ -397,7 +397,7 @@ pub(crate) async fn unranked_until(
 
 /// The stored form of a query resolved with the viewer's names (QRY-063).
 pub(crate) async fn bind(conn: &mut PgConnection, viewer: &Access, text: &str) -> Result<Stored> {
-    let q = taskmaster_query::parse(text);
+    let q = prostor_query::parse(text);
     if q.problems.iter().any(|p| p.severity == Severity::Error) {
         return Err(Error::InvalidQuery(q.problems));
     }
@@ -449,7 +449,7 @@ async fn query_board(
     id: BoardId,
     now: Option<OffsetDateTime>,
 ) -> Result<Filter> {
-    let Some(board) = taskmaster_store::boards::get(&mut *conn, id).await? else {
+    let Some(board) = prostor_store::boards::get(&mut *conn, id).await? else {
         return Ok(Filter::False);
     };
     let Some(stored) = &board.query else {
@@ -487,7 +487,7 @@ pub(crate) async fn resolve_within(
     now: Option<OffsetDateTime>,
     query_boards: QueryBoards,
 ) -> Result<Within> {
-    let q = taskmaster_query::parse(text);
+    let q = prostor_query::parse(text);
     if q.problems.iter().any(|p| p.severity == Severity::Error) {
         return Err(Error::InvalidQuery(q.problems));
     }
@@ -590,7 +590,7 @@ pub(crate) async fn resolve_parsed(
     cat.link_sides = catalog::link_sides(&mut *conn).await?;
     if needs.all_boards || !needs.boards.is_empty() {
         let read = viewer.projects_with(Permission::IssueRead);
-        let reader = taskmaster_store::boards::Viewer {
+        let reader = prostor_store::boards::Viewer {
             me: viewer.user(),
             groups: viewer.groups(),
             read: &read,
@@ -653,7 +653,7 @@ pub(crate) async fn resolve_parsed(
         sort: resolved.sort,
         vis,
         notes: resolved.notes,
-        canonical: taskmaster_query::print(q),
+        canonical: prostor_query::print(q),
         single_id: resolved.single_id,
         concerns_resolution: resolved.concerns_resolution,
         bindings: resolved.bindings,

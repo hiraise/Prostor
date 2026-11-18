@@ -1,23 +1,23 @@
 //! Searching issues with the query language (QRY): `GET /issues`, the counts and the query check.
-//! Rules live in `taskmaster_service::search`; here byte spans become UTF-16 offsets.
+//! Rules live in `prostor_service::search`; here byte spans become UTF-16 offsets.
 
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::Response;
-use taskmaster_api::error::ErrorBody;
-use taskmaster_api::fields::{IssueFields, IssueFieldsQuery};
-use taskmaster_api::issues::{Issue, IssueCount};
-use taskmaster_api::search::{
+use prostor_api::error::ErrorBody;
+use prostor_api::fields::{IssueFields, IssueFieldsQuery};
+use prostor_api::issues::{Issue, IssueCount};
+use prostor_api::search::{
     CountItem, CountsAnswer, CountsRequest, IssueSearchPage, IssueSearchQuery, QueryAssist,
     QueryAssistQuery, QueryCheck, QueryCheckQuery, QueryProblem, QueryProblemCode, QuerySeverity,
     QueryToken, SortDirection, SortKeyName, SortUsed, TokenClass,
 };
-use taskmaster_domain::auth::Scope;
-use taskmaster_domain::search::{SortBy, SortSpec};
-use taskmaster_query::{Class, Direction, Problem, ProblemCode, Severity, Span, utf16};
-use taskmaster_service::Error;
-use taskmaster_service::assist;
-use taskmaster_service::search::{self, SearchInput};
+use prostor_domain::auth::Scope;
+use prostor_domain::search::{SortBy, SortSpec};
+use prostor_query::{Class, Direction, Problem, ProblemCode, Severity, Span, utf16};
+use prostor_service::Error;
+use prostor_service::assist;
+use prostor_service::search::{self, SearchInput};
 
 use crate::AppState;
 use crate::access::Viewer;
@@ -49,7 +49,7 @@ pub async fn fields(
 ) -> Result<Response, ApiError> {
     require_scope(&viewer.principal, Scope::TrackerRead)?;
     let found =
-        taskmaster_service::fields::of_readable(&state.db, &viewer.access, query.project).await?;
+        prostor_service::fields::of_readable(&state.db, &viewer.access, query.project).await?;
     Ok(json(
         StatusCode::OK,
         IssueFields {
@@ -92,7 +92,7 @@ pub async fn list(
 /// A page of issues on the wire; `text` is the query its notes point into.
 pub(crate) fn search_page(
     state: &AppState,
-    viewer: &taskmaster_domain::access::Access,
+    viewer: &prostor_domain::access::Access,
     text: &str,
     page: search::SearchPage,
 ) -> IssueSearchPage {

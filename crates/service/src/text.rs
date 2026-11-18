@@ -9,20 +9,20 @@
 
 use std::collections::HashMap;
 
+use prostor_domain::access::Access;
+use prostor_domain::issues::readable_id;
+use prostor_domain::{IssueId, UploadId, UserId};
+use prostor_markup::{Output, Profile, RENDER_VERSION};
+use prostor_store::PgPool;
+use prostor_store::attachments::{self, Attachment};
+use prostor_store::content::{self, Rendered};
+use prostor_store::issues::{self, Issue};
+use prostor_store::jobs::{self, Enqueue, JobError, JobKind};
+use prostor_store::projects::{self, Project};
+use prostor_store::uploads::{self, Upload};
+use prostor_store::users::{self, User};
 use serde::{Deserialize, Serialize};
 use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::issues::readable_id;
-use taskmaster_domain::{IssueId, UploadId, UserId};
-use taskmaster_markup::{Output, Profile, RENDER_VERSION};
-use taskmaster_store::PgPool;
-use taskmaster_store::attachments::{self, Attachment};
-use taskmaster_store::content::{self, Rendered};
-use taskmaster_store::issues::{self, Issue};
-use taskmaster_store::jobs::{self, Enqueue, JobError, JobKind};
-use taskmaster_store::projects::{self, Project};
-use taskmaster_store::uploads::{self, Upload};
-use taskmaster_store::users::{self, User};
 
 use crate::{Error, Result};
 
@@ -33,7 +33,7 @@ const INLINE_MAX: usize = 32 * 1024;
 pub async fn prepare(conn: &mut PgConnection, text: &str, profile: Profile) -> Result<Rendered> {
     let mut known = HashMap::new();
     if profile == Profile::Full {
-        let logins = taskmaster_markup::mentions(text);
+        let logins = prostor_markup::mentions(text);
         if !logins.is_empty() {
             for user in users::by_usernames(&mut *conn, &logins).await? {
                 known.insert(user.username.to_ascii_lowercase(), user.id);
@@ -54,7 +54,7 @@ pub async fn prepare_many(
     if profile == Profile::Full {
         let mut logins: Vec<String> = texts
             .iter()
-            .flat_map(|t| taskmaster_markup::mentions(t))
+            .flat_map(|t| prostor_markup::mentions(t))
             .collect();
         logins.sort_unstable();
         logins.dedup();
@@ -68,7 +68,7 @@ pub async fn prepare_many(
     let outputs = tokio::task::spawn_blocking(move || {
         texts
             .iter()
-            .map(|t| taskmaster_markup::render(t, profile, &known))
+            .map(|t| prostor_markup::render(t, profile, &known))
             .collect::<Vec<_>>()
     })
     .await
@@ -78,9 +78,9 @@ pub async fn prepare_many(
 
 async fn render(text: String, profile: Profile, known: HashMap<String, i64>) -> Result<Output> {
     if text.len() <= INLINE_MAX {
-        return Ok(taskmaster_markup::render(&text, profile, &known));
+        return Ok(prostor_markup::render(&text, profile, &known));
     }
-    tokio::task::spawn_blocking(move || taskmaster_markup::render(&text, profile, &known))
+    tokio::task::spawn_blocking(move || prostor_markup::render(&text, profile, &known))
         .await
         .map_err(|e| Error::Internal(format!("rendering stopped: {e}")))
 }
@@ -91,7 +91,7 @@ fn stored(output: Output) -> Rendered {
         users: output.users,
         issue_tokens: output.issue_tokens,
         files: output.files,
-        version: taskmaster_markup::RENDER_VERSION,
+        version: prostor_markup::RENDER_VERSION,
     }
 }
 
@@ -364,7 +364,7 @@ fn with_version(rendered: &Rendered, version: i16) -> Rendered {
 }
 
 /// Largest text a preview renders (the largest description).
-pub const PREVIEW_MAX: usize = taskmaster_domain::issues::DESCRIPTION_MAX;
+pub const PREVIEW_MAX: usize = prostor_domain::issues::DESCRIPTION_MAX;
 
 /// Renders a text for the editor's preview (CNT-029, CNT-038), exactly as it would be stored.
 /// `issue`, when given, must be visible to the viewer; its files and the viewer's `uploads` show
@@ -380,7 +380,7 @@ pub async fn preview(
     if text.len() > PREVIEW_MAX {
         return Err(Error::field(
             "text",
-            taskmaster_domain::validation::Problem::TooLong,
+            prostor_domain::validation::Problem::TooLong,
             format!("the text is larger than {PREVIEW_MAX} bytes"),
         ));
     }

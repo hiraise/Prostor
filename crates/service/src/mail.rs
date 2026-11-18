@@ -13,22 +13,22 @@ use lettre::message::{Mailbox, MultiPart};
 use lettre::transport::smtp::AsyncSmtpTransport;
 use lettre::transport::smtp::authentication::Credentials;
 use lettre::{AsyncTransport, Message, Tokio1Executor};
-use serde::{Deserialize, Serialize};
-use sqlx::PgConnection;
-use taskmaster_domain::Actor;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::permission::Permission;
-use taskmaster_domain::secret::Key;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::settings::{
+use prostor_domain::Actor;
+use prostor_domain::access::Access;
+use prostor_domain::access::permission::Permission;
+use prostor_domain::secret::Key;
+use prostor_domain::settings::Language;
+use prostor_domain::settings::{
     EMAIL_ENABLED, MAIL_FROM, MAIL_REPLY_TO, SMTP_PASSWORD, SMTP_URL, SMTP_USERNAME, Snapshot,
 };
-use taskmaster_store::PgPool;
-use taskmaster_store::jobs::{self, Enqueue, JobContext, JobError, JobKind};
-use taskmaster_store::settings as store;
+use prostor_store::PgPool;
+use prostor_store::jobs::{self, Enqueue, JobContext, JobError, JobKind};
+use prostor_store::settings as store;
+use serde::{Deserialize, Serialize};
+use sqlx::PgConnection;
 
-use taskmaster_domain::notifications::{Content, Kind, Line, Words};
-use taskmaster_domain::text::{Op, diff_words};
+use prostor_domain::notifications::{Content, Kind, Line, Words};
+use prostor_domain::text::{Op, diff_words};
 
 use crate::{Error, Result};
 
@@ -82,9 +82,9 @@ impl Letters {
         if !self.enabled {
             return Err(Error::Conflict("outgoing email is not configured"));
         }
-        self.base_url.as_deref().ok_or(Error::Conflict(
-            "set the address of taskmaster to send links",
-        ))
+        self.base_url
+            .as_deref()
+            .ok_or(Error::Conflict("set the address of prostor to send links"))
     }
 
     /// An address in the web app with a one-time secret after `#`: browsers never send the part
@@ -122,23 +122,23 @@ pub fn invitation(letters: &Letters, base: &str, to: &str, inviter: &str, secret
     let site = Letters::site(base);
     let (subject, lines, button) = match letters.language {
         Language::En => (
-            format!("{inviter} invited you to TaskMaster"),
+            format!("{inviter} invited you to Prostor"),
             vec![
                 "Hello,".to_owned(),
                 format!(
-                    "{inviter} has created an account for you in TaskMaster at {site}. To join, choose a password:"
+                    "{inviter} has created an account for you in Prostor at {site}. To join, choose a password:"
                 ),
                 "The link works for 14 days. If you did not expect this email, ignore it."
                     .to_owned(),
             ],
-            "Join TaskMaster",
+            "Join Prostor",
         ),
         Language::Ru => (
-            format!("{inviter} приглашает вас в TaskMaster"),
+            format!("{inviter} приглашает вас в Простор"),
             vec![
                 "Здравствуйте!".to_owned(),
                 format!(
-                    "{inviter} приглашает вас в TaskMaster ({site}): для вас уже создана учётная запись. Чтобы войти, задайте пароль:"
+                    "{inviter} приглашает вас в Простор ({site}): для вас уже создана учётная запись. Чтобы войти, задайте пароль:"
                 ),
                 "Ссылка действует 14 дней. Если вы не ждали этого письма, просто удалите его."
                     .to_owned(),
@@ -161,17 +161,17 @@ pub fn password_reset(
     let site = Letters::site(base);
     let (subject, lines, button) = match letters.language {
         Language::En => (
-            "Reset your TaskMaster password".to_owned(),
+            "Reset your Prostor password".to_owned(),
             vec![
-                format!("Someone asked to reset the password of the TaskMaster account {username} at {site}. To choose a new password, open this link:"),
+                format!("Someone asked to reset the password of the Prostor account {username} at {site}. To choose a new password, open this link:"),
                 "The link works once, for one hour. If you did not ask for this, ignore this email: your password stays the same.".to_owned(),
             ],
             "Choose a new password",
         ),
         Language::Ru => (
-            "Сброс пароля в taskmaster".to_owned(),
+            "Сброс пароля в prostor".to_owned(),
             vec![
-                format!("Кто-то запросил сброс пароля учётной записи {username} в TaskMaster ({site}). Чтобы задать новый пароль, откройте ссылку:"),
+                format!("Кто-то запросил сброс пароля учётной записи {username} в Просторе ({site}). Чтобы задать новый пароль, откройте ссылку:"),
                 "Ссылка действует один час и один раз. Если вы не запрашивали сброс, ничего не делайте: пароль останется прежним.".to_owned(),
             ],
             "Задать новый пароль",
@@ -192,10 +192,10 @@ pub fn email_verification(
     let site = Letters::site(base);
     let (subject, lines, button) = match letters.language {
         Language::En => (
-            "Confirm your email for taskmaster".to_owned(),
+            "Confirm your email for prostor".to_owned(),
             vec![
                 format!(
-                    "Confirm that {to} is the address of the TaskMaster account {username} at {site}:"
+                    "Confirm that {to} is the address of the Prostor account {username} at {site}:"
                 ),
                 "The link works for 3 days. If you did not expect this email, ignore it."
                     .to_owned(),
@@ -203,10 +203,10 @@ pub fn email_verification(
             "Confirm the address",
         ),
         Language::Ru => (
-            "Подтвердите адрес для taskmaster".to_owned(),
+            "Подтвердите адрес для prostor".to_owned(),
             vec![
                 format!(
-                    "Подтвердите, что {to} — адрес учётной записи {username} в TaskMaster ({site}):"
+                    "Подтвердите, что {to} — адрес учётной записи {username} в Просторе ({site}):"
                 ),
                 "Ссылка действует 3 дня. Если вы не ждали этого письма, ничего не делайте."
                     .to_owned(),
@@ -222,18 +222,18 @@ pub fn test_message(letters: &Letters, base: &str, to: &str) -> Mail {
     let site = Letters::site(base);
     let (subject, lines, button) = match letters.language {
         Language::En => (
-            "Test message from taskmaster".to_owned(),
+            "Test message from prostor".to_owned(),
             vec![format!(
-                "This is a test message from taskmaster at {site}. Email to {to} arrives."
+                "This is a test message from prostor at {site}. Email to {to} arrives."
             )],
-            "Open taskmaster",
+            "Open prostor",
         ),
         Language::Ru => (
-            "Проверочное письмо от taskmaster".to_owned(),
+            "Проверочное письмо от prostor".to_owned(),
             vec![format!(
-                "Это проверочное письмо от taskmaster ({site}). Письма на адрес {to} доходят."
+                "Это проверочное письмо от prostor ({site}). Письма на адрес {to} доходят."
             )],
-            "Открыть taskmaster",
+            "Открыть prostor",
         ),
     };
     render(to, subject, &lines, 1, base, button)
@@ -262,18 +262,18 @@ pub fn recovery_report(
     };
     let (subject, mut lines, button) = match letters.language {
         Language::En => (
-            "Administrator access recovered in taskmaster".to_owned(),
+            "Administrator access recovered in prostor".to_owned(),
             vec![format!(
-                "The recovery command ran at the taskmaster server {site} and {granted}."
+                "The recovery command ran at the prostor server {site} and {granted}."
             )],
-            "Open taskmaster",
+            "Open prostor",
         ),
         Language::Ru => (
-            "Восстановление доступа администратора в taskmaster".to_owned(),
+            "Восстановление доступа администратора в prostor".to_owned(),
             vec![format!(
-                "На сервере taskmaster {site} сработала команда восстановления: она {granted}."
+                "На сервере prostor {site} сработала команда восстановления: она {granted}."
             )],
-            "Открыть taskmaster",
+            "Открыть prostor",
         ),
     };
     if sessions_ended > 0 {
@@ -352,7 +352,7 @@ fn escape(text: &str) -> String {
 
 // ---- The transport of this node (NTF-002, NTF-004; plan step 1.10 §5.1) ----
 
-/// The mail server of the environment: `TASKMASTER_SMTP_URL` and `TASKMASTER_MAIL_FROM`, the source
+/// The mail server of the environment: `PROSTOR_SMTP_URL` and `PROSTOR_MAIL_FROM`, the source
 /// of the transport until the admin settings exist (D-026).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct EnvMail {
@@ -600,7 +600,7 @@ async fn stored_secret(
 
 /// Saves the mail settings (NTF-004, NTF-006, NTF-002): validates the whole set by building the
 /// transport it names, then stores each change with its audit event. Needs `system.write`; a
-/// secret value needs the instance key (`TASKMASTER_SECRET_KEY`). Switching email on requires a
+/// secret value needs the instance key (`PROSTOR_SECRET_KEY`). Switching email on requires a
 /// transport.
 pub async fn save_mail_settings(
     pool: &PgPool,
@@ -612,7 +612,7 @@ pub async fn save_mail_settings(
     actor.require(Permission::SystemWrite)?;
     if change.touches_secrets() && secret_key.is_none() {
         return Err(Error::Refused(
-            "this instance has no TASKMASTER_SECRET_KEY: set one (32 bytes, base64) to store mail secrets"
+            "this instance has no PROSTOR_SECRET_KEY: set one (32 bytes, base64) to store mail secrets"
                 .into(),
         ));
     }
@@ -651,7 +651,7 @@ pub async fn save_mail_settings(
     {
         return Err(Error::field(
             "smtp_url",
-            taskmaster_domain::validation::Problem::Invalid,
+            prostor_domain::validation::Problem::Invalid,
             "must be an SMTP address: smtp://host:port or smtps://host:port, credentials optional",
         ));
     }
@@ -659,15 +659,15 @@ pub async fn save_mail_settings(
         if !value.is_empty() && value.parse::<Mailbox>().is_err() {
             return Err(Error::field(
                 path,
-                taskmaster_domain::validation::Problem::Invalid,
-                "must be an email address, like `TaskMaster <tracker@example.com>`",
+                prostor_domain::validation::Problem::Invalid,
+                "must be an email address, like `Prostor <tracker@example.com>`",
             ));
         }
     }
     if !url.is_empty() && from.is_empty() {
         return Err(Error::field(
             "mail_from",
-            taskmaster_domain::validation::Problem::Invalid,
+            prostor_domain::validation::Problem::Invalid,
             "set the sender address that goes with this mail server",
         ));
     }
@@ -675,12 +675,12 @@ pub async fn save_mail_settings(
     if enabled && transport.is_none() {
         return Err(Error::field(
             "email_enabled",
-            taskmaster_domain::validation::Problem::Invalid,
+            prostor_domain::validation::Problem::Invalid,
             "these settings name no mail server: fill in the server and the sender before switching email on",
         ));
     }
 
-    let changer = taskmaster_domain::Actor::User(actor.user());
+    let changer = prostor_domain::Actor::User(actor.user());
     apply_secret(&mut tx, SMTP_URL.key, &change.smtp_url, changer, secret_key).await?;
     apply_secret(
         &mut tx,
@@ -750,14 +750,14 @@ async fn apply_secret(
     conn: &mut sqlx::PgConnection,
     key: &'static str,
     field: &Option<Option<String>>,
-    actor: taskmaster_domain::Actor,
+    actor: prostor_domain::Actor,
     secret_key: Option<&Key>,
 ) -> Result<()> {
     let Some(value) = field else { return Ok(()) };
     let value = value
         .as_ref()
         .map(|value| serde_json::Value::String(value.clone()));
-    let change = taskmaster_domain::settings::prepare(key, value.as_ref())?;
+    let change = prostor_domain::settings::prepare(key, value.as_ref())?;
     crate::settings::apply(conn, &change, actor, secret_key).await?;
     Ok(())
 }
@@ -766,10 +766,10 @@ async fn apply_open(
     conn: &mut sqlx::PgConnection,
     key: &'static str,
     value: Option<serde_json::Value>,
-    actor: taskmaster_domain::Actor,
+    actor: prostor_domain::Actor,
 ) -> Result<()> {
     if let Some(value) = value {
-        let change = taskmaster_domain::settings::prepare(key, Some(&value))?;
+        let change = prostor_domain::settings::prepare(key, Some(&value))?;
         crate::settings::apply(conn, &change, actor, None).await?;
     }
     Ok(())
@@ -790,7 +790,7 @@ pub async fn send_admin_test(
     if to.parse::<Mailbox>().is_err() {
         return Err(Error::field(
             "to",
-            taskmaster_domain::validation::Problem::Invalid,
+            prostor_domain::validation::Problem::Invalid,
             "must be an email address",
         ));
     }
@@ -827,7 +827,7 @@ impl std::fmt::Debug for Mailer {
 impl Mailer {
     /// `url`: `smtp://host:port` (STARTTLS when offered, `?tls=required` to insist),
     /// `smtps://host:port` (TLS from the start), with optional `user:password@`. `from`: an
-    /// address, optionally with a name: `TaskMaster <tracker@example.com>`.
+    /// address, optionally with a name: `Prostor <tracker@example.com>`.
     pub fn new(url: &str, from: &str) -> std::result::Result<Self, String> {
         Self::configure(url, from, None, None, None)
     }
@@ -1248,7 +1248,7 @@ mod tests {
             letters(Language::En).require().unwrap(),
             "https://tracker.example.com"
         );
-        assert!(Mailer::new("smtp://127.0.0.1:1025", "taskmaster <t@example.com>").is_ok());
+        assert!(Mailer::new("smtp://127.0.0.1:1025", "prostor <t@example.com>").is_ok());
         assert!(Mailer::new("smtp://127.0.0.1:1025", "not an address").is_err());
     }
 

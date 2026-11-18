@@ -1,6 +1,6 @@
-use taskmaster_domain::access::Denied;
-use taskmaster_domain::access::permission::PermissionSet;
-use taskmaster_domain::validation::{FieldProblem, Problem, Rejection};
+use prostor_domain::access::Denied;
+use prostor_domain::access::permission::PermissionSet;
+use prostor_domain::validation::{FieldProblem, Problem, Rejection};
 use thiserror::Error;
 
 /// Why a use case did not happen. The server maps each variant to an API error code.
@@ -39,10 +39,10 @@ pub enum Error {
     GravatarUnavailable(String),
     /// A link or a link type change breaks the link rules (D-034).
     #[error("{}", .0.message())]
-    Link(taskmaster_domain::links::Refusal),
+    Link(prostor_domain::links::Refusal),
     /// A search query has errors (QRY-002); every problem (notes too) with its span.
     #[error("the query has errors")]
-    InvalidQuery(Vec<taskmaster_query::Problem>),
+    InvalidQuery(Vec<prostor_query::Problem>),
     #[error(transparent)]
     Database(#[from] sqlx::Error),
     /// An unexpected failure outside the database (random source, hashing).
@@ -58,9 +58,9 @@ impl From<Denied> for Error {
     }
 }
 
-impl From<taskmaster_domain::sharing::Refusal> for Error {
-    fn from(refusal: taskmaster_domain::sharing::Refusal) -> Self {
-        use taskmaster_domain::sharing::Refusal;
+impl From<prostor_domain::sharing::Refusal> for Error {
+    fn from(refusal: prostor_domain::sharing::Refusal) -> Self {
+        use prostor_domain::sharing::Refusal;
         Error::Refused(
             match refusal {
                 Refusal::NotOwner => "only the owner or a user administrator may do this",

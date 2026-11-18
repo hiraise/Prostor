@@ -11,15 +11,15 @@ publish = false
 
 [workspace.dependencies]
 # Our crates
-taskmaster-api = { path = "crates/api" }
-taskmaster-domain = { path = "crates/domain" }
-taskmaster-files = { path = "crates/files" }
-taskmaster-markup = { path = "crates/markup" }
-taskmaster-query = { path = "crates/query" }
-taskmaster-server = { path = "crates/server" }
-taskmaster-service = { path = "crates/service" }
-taskmaster-store = { path = "crates/store" }
-taskmaster-testkit = { path = "crates/testkit" }
+prostor-api = { path = "crates/api" }
+prostor-domain = { path = "crates/domain" }
+prostor-files = { path = "crates/files" }
+prostor-markup = { path = "crates/markup" }
+prostor-query = { path = "crates/query" }
+prostor-server = { path = "crates/server" }
+prostor-service = { path = "crates/service" }
+prostor-store = { path = "crates/store" }
+prostor-testkit = { path = "crates/testkit" }
 
 axum = { version = "0.8.9", features = ["macros", "ws"] }
 tokio = { version = "1.54.0", features = ["macros", "rt-multi-thread", "net", "signal", "sync", "time"] }

@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "select t as \"t!\" from unnest($1::text[]) t\n           where numnode(phraseto_tsquery('taskmaster_text', t)) = 0",
+  "query": "select t as \"t!\" from unnest($1::text[]) t\n           where numnode(phraseto_tsquery('prostor_text', t)) = 0",
   "describe": {
     "columns": [
       {
@@ -19,5 +19,5 @@
       null
     ]
   },
-  "hash": "25a9a4555b74e42ae0dfe8be7530436422ba88c0f5fbc675b7ab758af0ba6b1c"
+  "hash": "3e90bcd4909ce19373e9289c2cad102b1ad95e9131d7af15e6a502d08d840009"
 }

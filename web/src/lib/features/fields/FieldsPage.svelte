@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // The fields of the instance (FLD-015…FLD-025, FLD-070): in the instance order with type, values,
   // aliases, badges for built-in fields, fields added to new projects and fields private by
   // default, and how many projects use each. Search by name or alias and "Show only unused".
@@ -158,7 +159,7 @@
   }
 </script>
 
-<svelte:head><title>{m.fieldsTitle()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.fieldsTitle()} · {brand()}</title></svelte:head>
 
 {#if !fields || !canSeeFields()}
   <ForbiddenState {home} />

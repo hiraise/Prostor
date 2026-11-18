@@ -2,32 +2,32 @@
 //! database. Cards are put on sprints with SQL until moves come (1.8a-3).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::role::PredefinedRole;
-use taskmaster_domain::boards::Preset;
-use taskmaster_domain::boards::columns::WipState;
-use taskmaster_domain::issues::history::Origin;
-use taskmaster_domain::projects::Template;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::sharing::Audience;
-use taskmaster_domain::validation::Problem;
-use taskmaster_domain::{BoardId, GroupId, IssueId, ProjectId, SprintId, UserId};
-use taskmaster_service::boards::cards;
-use taskmaster_service::boards::columns::{self, ColumnChange, NewColumn};
-use taskmaster_service::boards::view::{self, CELL_CAP};
-use taskmaster_service::boards::{
+use prostor_domain::access::Access;
+use prostor_domain::access::role::PredefinedRole;
+use prostor_domain::boards::Preset;
+use prostor_domain::boards::columns::WipState;
+use prostor_domain::issues::history::Origin;
+use prostor_domain::projects::Template;
+use prostor_domain::settings::Language;
+use prostor_domain::sharing::Audience;
+use prostor_domain::validation::Problem;
+use prostor_domain::{BoardId, GroupId, IssueId, ProjectId, SprintId, UserId};
+use prostor_service::boards::cards;
+use prostor_service::boards::columns::{self, ColumnChange, NewColumn};
+use prostor_service::boards::view::{self, CELL_CAP};
+use prostor_service::boards::{
     self as boards, BoardChange, BoardRow, NewBoard, ProfileChange, Sharing,
 };
-use taskmaster_service::groups::NewGroup;
-use taskmaster_service::issues::{self, AudienceInput, NewIssue};
-use taskmaster_service::projects::{self, NewProjectInput};
-use taskmaster_service::setup::{self, Setup};
-use taskmaster_service::users::{self, NewAccount};
-use taskmaster_service::{Error, Passwords, access, groups, roles};
-use taskmaster_store::PgPool;
-use taskmaster_store::access::Holder;
-use taskmaster_store::sessions::Origin as SessionOrigin;
-use taskmaster_testkit::TestDb;
+use prostor_service::groups::NewGroup;
+use prostor_service::issues::{self, AudienceInput, NewIssue};
+use prostor_service::projects::{self, NewProjectInput};
+use prostor_service::setup::{self, Setup};
+use prostor_service::users::{self, NewAccount};
+use prostor_service::{Error, Passwords, access, groups, roles};
+use prostor_store::PgPool;
+use prostor_store::access::Holder;
+use prostor_store::sessions::Origin as SessionOrigin;
+use prostor_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::datetime;
 
@@ -97,7 +97,7 @@ async fn member(pool: &PgPool, admin: &Access, username: &str, of: &[ProjectId])
     .unwrap()
     .id;
     if !of.is_empty() {
-        let role = taskmaster_store::roles::builtin_id(pool, PredefinedRole::ProjectMember.key())
+        let role = prostor_store::roles::builtin_id(pool, PredefinedRole::ProjectMember.key())
             .await
             .unwrap()
             .unwrap();
@@ -217,7 +217,7 @@ async fn shown_sprint(pool: &PgPool, who: &Access, board: BoardId) -> SprintId {
 
 /// Puts issues on a sprint with ranks in the given order (moves are 1.8a-3).
 async fn put(pool: &PgPool, sprint: SprintId, issues: &[IssueId]) {
-    let ranks = taskmaster_domain::rank::sequence(issues.len());
+    let ranks = prostor_domain::rank::sequence(issues.len());
     sqlx::query(
         "insert into sprint_issues (sprint_id, issue_id, rank)
          select $1, i, r from unnest($2::bigint[], $3::text[]) as t(i, r)",
@@ -921,9 +921,9 @@ async fn brd_068_view_visibility() {
     // ISS-024: cards count the files of the issue each viewer sees.
     for (key, audience) in [("a", Vec::new()), ("b", vec![mia.user()])] {
         let mut conn = pool.acquire().await.unwrap();
-        let file = taskmaster_store::attachments::insert(
+        let file = prostor_store::attachments::insert(
             &mut conn,
-            &taskmaster_store::attachments::NewAttachment {
+            &prostor_store::attachments::NewAttachment {
                 issue: open,
                 comment: None,
                 author: mia.user(),

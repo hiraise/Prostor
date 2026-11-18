@@ -2,17 +2,17 @@
 //! resetting keys, validation, unknown stored keys and the size limit.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use taskmaster_domain::UserId;
-use taskmaster_domain::preferences::{
+use prostor_domain::UserId;
+use prostor_domain::preferences::{
     COLUMNS_MAX, Home, PanelSide, Patch, Preferences, RECENT_MAX, SidebarSection,
 };
-use taskmaster_domain::validation::Problem;
-use taskmaster_service::preferences;
-use taskmaster_service::setup::{self, Setup};
-use taskmaster_service::{Error, Passwords};
-use taskmaster_store::PgPool;
-use taskmaster_store::sessions::Origin as SessionOrigin;
-use taskmaster_testkit::TestDb;
+use prostor_domain::validation::Problem;
+use prostor_service::preferences;
+use prostor_service::setup::{self, Setup};
+use prostor_service::{Error, Passwords};
+use prostor_store::PgPool;
+use prostor_store::sessions::Origin as SessionOrigin;
+use prostor_testkit::TestDb;
 use time::macros::datetime;
 
 async fn set_up(pool: &PgPool) -> UserId {

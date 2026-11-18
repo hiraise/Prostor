@@ -1,10 +1,10 @@
 //! Field values on issues (FLD-001…FLD-014, D-022): one table per value type. A page of issues
 //! loads its values with one query per table (architecture.md §4).
 
+use prostor_domain::fields::FieldKind;
+use prostor_domain::issues::values::Value;
+use prostor_domain::{FieldId, IssueId, ProjectId};
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::fields::FieldKind;
-use taskmaster_domain::issues::values::Value;
-use taskmaster_domain::{FieldId, IssueId, ProjectId};
 use time::{Date, OffsetDateTime};
 
 /// A stored value as it comes from its table; the field's kind tells what it means.

@@ -16,7 +16,7 @@ pub const PASSWORD_MIN: usize = 8;
 pub const PASSWORD_MAX: usize = 256;
 
 /// Usernames nobody may take: the guest account's, words with a meaning in addresses
-/// (`/users/me`), and the query keywords of [`taskmaster_query::RESERVED_USERNAMES`] (ACC-017).
+/// (`/users/me`), and the query keywords of [`prostor_query::RESERVED_USERNAMES`] (ACC-017).
 const RESERVED: &[&str] = &["guest", "me", "system"];
 
 /// A sign-in name. Unique ignoring case. ASCII only (D-023): letters, digits, `.`, `_` and `-`,
@@ -48,7 +48,7 @@ impl Username {
         }
         let lower = name.to_ascii_lowercase();
         if RESERVED.contains(&lower.as_str())
-            || taskmaster_query::RESERVED_USERNAMES.contains(&lower.as_str())
+            || prostor_query::RESERVED_USERNAMES.contains(&lower.as_str())
         {
             return Err(Rejection::new(Problem::Taken, "this username is reserved"));
         }

@@ -464,15 +464,15 @@ async fn report_job(
         let row = crate::notifications::system(&mut *tx, user, &content).await?;
         crate::live::publish(
             &mut tx,
-            &[taskmaster_domain::live::NewEvent {
-                kind: taskmaster_domain::live::EntityKind::Inbox,
+            &[prostor_domain::live::NewEvent {
+                kind: prostor_domain::live::EntityKind::Inbox,
                 entity: user,
                 version: row,
-                change: taskmaster_domain::live::Change::Created,
+                change: prostor_domain::live::Change::Created,
                 issues: Vec::new(),
                 projects: Vec::new(),
                 boards: Vec::new(),
-                patch: Some(taskmaster_domain::live::Patch::Notification {
+                patch: Some(prostor_domain::live::Patch::Notification {
                     id: row,
                     event: "system".to_owned(),
                     issue: None,
@@ -480,7 +480,7 @@ async fn report_job(
                     excerpt: format!("{kind}: {state}"),
                     reasons: Vec::new(),
                 }),
-                guard: taskmaster_domain::live::Guard::user(user),
+                guard: prostor_domain::live::Guard::user(user),
             }],
         )
         .await?;

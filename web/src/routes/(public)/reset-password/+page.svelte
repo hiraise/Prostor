@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // A link from a password-reset email (AUTH-008): choose a new password and continue signed in.
   import { goto } from '$app/navigation';
 
@@ -17,7 +18,7 @@
   }
 </script>
 
-<svelte:head><title>{m.resetTitle()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.resetTitle()} · {brand()}</title></svelte:head>
 
 <PublicFrame title={m.resetTitle()}>
   <ResetPasswordForm ondone={done} />

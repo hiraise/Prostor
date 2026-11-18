@@ -2,17 +2,17 @@
 //! deleting them, and assigning roles to accounts and groups. Only `system.write` holders create
 //! and edit roles (D-013); nobody gives a role a permission they do not hold (ACC-050).
 
-use serde_json::json;
-use taskmaster_domain::access::permission::{Permission, PermissionSet};
-use taskmaster_domain::access::role::{
+use prostor_domain::access::permission::{Permission, PermissionSet};
+use prostor_domain::access::role::{
     PredefinedRole, ROLE_DESCRIPTION_MAX, description, role_name, role_permissions, toggle,
 };
-use taskmaster_domain::access::{Access, AssignmentProblem, Scope, check_assignment};
-use taskmaster_domain::validation::{Problem, Problems};
-use taskmaster_domain::{ProjectId, RoleId};
-use taskmaster_store::access::{self as assignments, Assignment, Holder};
-use taskmaster_store::roles::{self, Role};
-use taskmaster_store::{PgPool, audit, groups, projects, unique_violation, users};
+use prostor_domain::access::{Access, AssignmentProblem, Scope, check_assignment};
+use prostor_domain::validation::{Problem, Problems};
+use prostor_domain::{ProjectId, RoleId};
+use prostor_store::access::{self as assignments, Assignment, Holder};
+use prostor_store::roles::{self, Role};
+use prostor_store::{PgPool, audit, groups, projects, unique_violation, users};
+use serde_json::json;
 
 use crate::access::{changed, keep_an_administrator, scope_of};
 use crate::{Error, Result};
@@ -146,7 +146,7 @@ pub async fn create(pool: &PgPool, actor: &Access, input: NewRole) -> Result<Rol
             Some(permission) => permissions.insert(permission),
             None => problems.add(
                 "permissions",
-                taskmaster_domain::validation::Rejection::new(
+                prostor_domain::validation::Rejection::new(
                     Problem::Invalid,
                     format!("unknown permission {key:?}"),
                 ),
@@ -504,6 +504,6 @@ fn name_taken(error: sqlx::Error) -> Error {
     }
 }
 
-fn actor_of(access: &Access) -> taskmaster_domain::Actor {
-    taskmaster_domain::Actor::User(access.user())
+fn actor_of(access: &Access) -> prostor_domain::Actor {
+    prostor_domain::Actor::User(access.user())
 }

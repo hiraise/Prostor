@@ -6,7 +6,7 @@ use std::time::Duration;
 use axum::extract::State;
 use axum::http::{HeaderValue, StatusCode, header};
 use axum::response::Response;
-use taskmaster_api::health::{LiveStatus, Liveness, Readiness, ReadyStatus};
+use prostor_api::health::{LiveStatus, Liveness, Readiness, ReadyStatus};
 
 use crate::AppState;
 use crate::error::json;
@@ -49,7 +49,7 @@ pub async fn ready(State(state): State<AppState>) -> Response {
         Phase::Starting => ReadyStatus::Starting,
         Phase::Migrating => ReadyStatus::Migrating,
         Phase::Stopping => ReadyStatus::Stopping,
-        Phase::Ready if taskmaster_store::ping(&state.db, DATABASE_TIMEOUT).await => {
+        Phase::Ready if prostor_store::ping(&state.db, DATABASE_TIMEOUT).await => {
             ReadyStatus::Ready
         }
         Phase::Ready => ReadyStatus::DatabaseUnavailable,

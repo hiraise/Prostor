@@ -7,10 +7,10 @@ use axum::http::{Request, StatusCode, header};
 use axum::response::{Json, Response};
 use axum::routing::{get, post};
 use http_body_util::BodyExt;
+use prostor_api::page::{MAX_LIMIT, PageQuery};
+use prostor_server::error::{ApiError, JsonBody, QueryParams};
 use serde::Deserialize;
 use serde_json::{Value, json};
-use taskmaster_api::page::{MAX_LIMIT, PageQuery};
-use taskmaster_server::error::{ApiError, JsonBody, QueryParams};
 use tower::ServiceExt;
 
 #[derive(Deserialize)]

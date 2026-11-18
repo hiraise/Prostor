@@ -5,12 +5,12 @@ use std::time::Instant;
 
 use axum::extract::State;
 use axum::response::Response;
-use taskmaster_api::auth::Session;
-use taskmaster_api::error::ErrorBody;
-use taskmaster_api::setup::{Language, SetupRequest};
-use taskmaster_domain::validation::Problem;
-use taskmaster_service::setup::Setup;
-use taskmaster_store::PgPool;
+use prostor_api::auth::Session;
+use prostor_api::error::ErrorBody;
+use prostor_api::setup::{Language, SetupRequest};
+use prostor_domain::validation::Problem;
+use prostor_service::setup::Setup;
+use prostor_store::PgPool;
 use time::OffsetDateTime;
 
 use crate::AppState;
@@ -61,7 +61,7 @@ pub async fn run(
         base_url: request.base_url,
         time_zone: request.time_zone,
     };
-    let result = taskmaster_service::setup::run(
+    let result = prostor_service::setup::run(
         &state.db,
         &state.passwords,
         setup,
@@ -72,7 +72,7 @@ pub async fn run(
     let signed_in = match result {
         Ok(signed_in) => signed_in,
         Err(error) => {
-            if let taskmaster_service::Error::Invalid(problems) = &error
+            if let prostor_service::Error::Invalid(problems) = &error
                 && problems
                     .iter()
                     .any(|p| p.path == "code" && p.problem == Problem::Incorrect)
@@ -101,5 +101,5 @@ pub async fn required(state: &AppState) -> Result<bool, sqlx::Error> {
 }
 
 async fn complete(pool: &PgPool) -> Result<bool, sqlx::Error> {
-    taskmaster_store::instance::setup_complete(pool).await
+    prostor_store::instance::setup_complete(pool).await
 }

@@ -4,15 +4,15 @@
 
 use std::sync::Arc;
 
+use prostor_domain::IssueId;
+use prostor_domain::UserId;
+use prostor_domain::access::Access;
+use prostor_domain::access::identity::{pseudonym, sees_name};
+use prostor_domain::access::permission::Permission;
+use prostor_store::issues as store_issues;
+use prostor_store::users::{self, DirectoryFilter, User};
+use prostor_store::{PgPool, instance};
 use sha2::{Digest, Sha256};
-use taskmaster_domain::IssueId;
-use taskmaster_domain::UserId;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::identity::{pseudonym, sees_name};
-use taskmaster_domain::access::permission::Permission;
-use taskmaster_store::issues as store_issues;
-use taskmaster_store::users::{self, DirectoryFilter, User};
-use taskmaster_store::{PgPool, instance};
 
 use crate::Result;
 use crate::secrets::random_bytes;

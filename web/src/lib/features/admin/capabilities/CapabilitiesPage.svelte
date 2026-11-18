@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // The «Возможности» screen of the administration area (ACC-064, ADM-023; plan step 1.11 §6.1):
   // features switched on for chosen groups — a name, a description and a group multiselect with a
   // search per row, one save per row, and a confirmation when a save would switch a capability
@@ -169,7 +170,7 @@
   onMount(() => void load());
 </script>
 
-<svelte:head><title>{m.capabilitiesTitle()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.capabilitiesTitle()} · {brand()}</title></svelte:head>
 
 <div class="capabilities-page">
   <PageHeader title={m.capabilitiesTitle()} />

@@ -2,8 +2,8 @@
 //! the handlers registered in `lib.rs`; the web app's TypeScript types are generated from it
 //! (`make api`).
 
-use taskmaster_api::error::{ErrorBody, ErrorCode, FieldError};
-use taskmaster_api::live::{LiveClientMessage, LiveServerMessage};
+use prostor_api::error::{ErrorBody, ErrorCode, FieldError};
+use prostor_api::live::{LiveClientMessage, LiveServerMessage};
 use utoipa::openapi::security::{ApiKey, ApiKeyValue, Http, HttpAuthScheme, SecurityScheme};
 use utoipa::{Modify, OpenApi};
 
@@ -12,8 +12,8 @@ use crate::auth::SESSION_COOKIE;
 #[derive(OpenApi)]
 #[openapi(
     info(
-        title = "TaskMaster API",
-        description = "The API of TaskMaster, used by its web app, scripts and integrations. \
+        title = "Prostor API",
+        description = "The API of Prostor, used by its web app, scripts and integrations. \
                        Conventions: snake_case JSON, one error format, cursor pagination."
     ),
     servers((url = "/api/v1")),

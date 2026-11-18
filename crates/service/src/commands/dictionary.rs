@@ -1,29 +1,29 @@
 //! The dictionary of one command call (plan §4.1): the name classes of the target issues'
 //! projects, assembled in one batch of reads — the same catalog `/queries/check` loads through,
 //! extended with the command-only entries (boards, sprints, groups, the empty-value names).
-//! One assembly per call, nothing cached; every name is folded ([`taskmaster_query::words::fold`]).
+//! One assembly per call, nothing cached; every name is folded ([`prostor_query::words::fold`]).
 
 use std::collections::{BTreeMap, HashMap};
 
-use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::Projects;
-use taskmaster_domain::access::permission::Permission;
-use taskmaster_domain::fields::FieldKind;
-use taskmaster_domain::links::Side;
-use taskmaster_domain::search::catalog::{Attached, FieldEntry};
-use taskmaster_domain::{
+use prostor_domain::access::Access;
+use prostor_domain::access::Projects;
+use prostor_domain::access::permission::Permission;
+use prostor_domain::fields::FieldKind;
+use prostor_domain::links::Side;
+use prostor_domain::search::catalog::{Attached, FieldEntry};
+use prostor_domain::{
     BoardId, FieldId, GroupId, IssueId, LinkTypeId, ProjectId, SetId, SprintId, TagId, UserId,
     ValueId,
 };
-use taskmaster_query::command::Dictionary;
-use taskmaster_query::words::{self, Kind, fold};
-use taskmaster_store::boards::Viewer as BoardViewer;
-use taskmaster_store::groups::Kinds;
-use taskmaster_store::search::catalog;
-use taskmaster_store::tags::Listing;
-use taskmaster_store::users::{self as store_users, DirectoryFilter};
-use taskmaster_store::{groups as store_groups, issues as store_issues, tags as store_tags};
+use prostor_query::command::Dictionary;
+use prostor_query::words::{self, Kind, fold};
+use prostor_store::boards::Viewer as BoardViewer;
+use prostor_store::groups::Kinds;
+use prostor_store::search::catalog;
+use prostor_store::tags::Listing;
+use prostor_store::users::{self as store_users, DirectoryFilter};
+use prostor_store::{groups as store_groups, issues as store_issues, tags as store_tags};
+use sqlx::PgConnection;
 
 use crate::Result;
 

@@ -5,21 +5,21 @@
 //! the comments, files, links, votes, watchers or history. The creation record names the
 //! original, and the stream renders «created by cloning X».
 
+use prostor_domain::IssueId;
+use prostor_domain::access::Access;
+use prostor_domain::issues as domain;
+use prostor_domain::issues::history::{Origin, Record};
+use prostor_domain::issues::rights;
+use prostor_domain::rules::Rule;
+use prostor_domain::settings::Language;
+use prostor_domain::validation::Problem;
+use prostor_markup::Profile;
+use prostor_store::PgPool;
+use prostor_store::issues::{self, Issue, NewDraft};
+use prostor_store::projects::Project;
+use prostor_store::rules as store_rules;
+use prostor_store::tags as store_tags;
 use sqlx::PgConnection;
-use taskmaster_domain::IssueId;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::issues as domain;
-use taskmaster_domain::issues::history::{Origin, Record};
-use taskmaster_domain::issues::rights;
-use taskmaster_domain::rules::Rule;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::validation::Problem;
-use taskmaster_markup::Profile;
-use taskmaster_store::PgPool;
-use taskmaster_store::issues::{self, Issue, NewDraft};
-use taskmaster_store::projects::Project;
-use taskmaster_store::rules as store_rules;
-use taskmaster_store::tags as store_tags;
 
 use super::{Answer, Ctx, instance_language};
 use crate::issues::{self as issue_use, Described, One, values};

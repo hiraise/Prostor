@@ -5,8 +5,8 @@
 use std::time::Duration;
 
 use axum::http::{Method, StatusCode};
+use prostor_server::throttle::Throttle;
 use serde_json::{Value, json};
-use taskmaster_server::throttle::Throttle;
 use time::OffsetDateTime;
 
 mod common;
@@ -120,10 +120,10 @@ impl World {
 
     /// Fires the sweep past the batching window, as its task would.
     async fn fire(&self) {
-        taskmaster_service::notifications::sweep(
+        prostor_service::notifications::sweep(
             &self.node.state.db,
             OffsetDateTime::now_utc() + Duration::from_secs(70),
-            &taskmaster_service::mail::Outgoing::default(),
+            &prostor_service::mail::Outgoing::default(),
         )
         .await
         .unwrap();

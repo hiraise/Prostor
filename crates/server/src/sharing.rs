@@ -2,16 +2,16 @@
 
 use std::collections::HashMap;
 
-use taskmaster_api::accounts::UserRef;
-use taskmaster_api::sharing::{ListingScope, SharedWith, SharedWithInput, SharingAbilities};
-use taskmaster_domain::access::Access;
-use taskmaster_domain::sharing::{self, Shared};
-use taskmaster_domain::{GroupId, UserId};
-use taskmaster_service::Error;
-use taskmaster_service::people::Names;
-use taskmaster_service::tags::Parties;
-use taskmaster_store::groups::Group;
-use taskmaster_store::users::User;
+use prostor_api::accounts::UserRef;
+use prostor_api::sharing::{ListingScope, SharedWith, SharedWithInput, SharingAbilities};
+use prostor_domain::access::Access;
+use prostor_domain::sharing::{self, Shared};
+use prostor_domain::{GroupId, UserId};
+use prostor_service::Error;
+use prostor_service::people::Names;
+use prostor_service::tags::Parties;
+use prostor_store::groups::Group;
+use prostor_store::users::User;
 
 use crate::error::ApiError;
 use crate::present::{group_ref, user_ref};
@@ -91,8 +91,8 @@ pub fn shared_with(input: SharedWithInput) -> sharing::Audience {
     }
 }
 
-pub fn tag_listing(scope: Option<ListingScope>) -> taskmaster_store::tags::Listing {
-    use taskmaster_store::tags::Listing;
+pub fn tag_listing(scope: Option<ListingScope>) -> prostor_store::tags::Listing {
+    use prostor_store::tags::Listing;
     match scope.unwrap_or_default() {
         ListingScope::Mine => Listing::Mine,
         ListingScope::Shared => Listing::Shared,
@@ -100,8 +100,8 @@ pub fn tag_listing(scope: Option<ListingScope>) -> taskmaster_store::tags::Listi
     }
 }
 
-pub fn search_listing(scope: Option<ListingScope>) -> taskmaster_store::saved_searches::Listing {
-    use taskmaster_store::saved_searches::Listing;
+pub fn search_listing(scope: Option<ListingScope>) -> prostor_store::saved_searches::Listing {
+    use prostor_store::saved_searches::Listing;
     match scope.unwrap_or_default() {
         ListingScope::Mine => Listing::Mine,
         ListingScope::Shared => Listing::Shared,

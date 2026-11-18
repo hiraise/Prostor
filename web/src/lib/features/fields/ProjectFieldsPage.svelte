@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // A project's fields (FLD-051…FLD-060): in the project's order with type, values, default value,
   // empty handling and privacy. The order changes by dragging or by "Move up/down" in each row's
   // menu (FLD-058). Choosing a field opens its settings and values beside the list on wide screens
@@ -198,7 +199,7 @@
   }
 </script>
 
-<svelte:head><title>{m.fieldsTitle()} · {project.name} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.fieldsTitle()} · {project.name} · {brand()}</title></svelte:head>
 
 <PageHeader title={m.fieldsTitle()}>
   {#snippet actions()}

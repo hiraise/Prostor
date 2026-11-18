@@ -1,15 +1,15 @@
 //! What a field of an issue may hold for the viewer (FLD-001…FLD-014): the pickers of the issue
 //! page and the new-issue form ask here. Drafts are issues too.
 
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::permission::Permission;
-use taskmaster_domain::fields::{FieldKind, may_edit_set};
-use taskmaster_domain::issues::rights;
-use taskmaster_domain::{FieldId, IssueId, SetId};
-use taskmaster_store::groups::{self, Group};
-use taskmaster_store::users::{self, User};
-use taskmaster_store::value_sets::{self, Value};
-use taskmaster_store::{PgPool, issues};
+use prostor_domain::access::Access;
+use prostor_domain::access::permission::Permission;
+use prostor_domain::fields::{FieldKind, may_edit_set};
+use prostor_domain::issues::rights;
+use prostor_domain::{FieldId, IssueId, SetId};
+use prostor_store::groups::{self, Group};
+use prostor_store::users::{self, User};
+use prostor_store::value_sets::{self, Value};
+use prostor_store::{PgPool, issues};
 
 use super::{checked, values};
 use crate::groups::team_visible;
@@ -45,7 +45,7 @@ pub async fn field_options(
     text: &str,
     limit: i64,
 ) -> Result<FieldOptions> {
-    let text: String = taskmaster_query::fold_value(text)
+    let text: String = prostor_query::fold_value(text)
         .chars()
         .take(SEARCH_MAX)
         .collect();
@@ -65,8 +65,8 @@ pub async fn field_options(
     match (f.kind.kind, f.attached.set_id) {
         (FieldKind::Group, _) => {
             let teams = match viewer.projects_with(Permission::ProjectBasic) {
-                taskmaster_domain::access::Projects::All => None,
-                taskmaster_domain::access::Projects::Only(ids) => Some(ids),
+                prostor_domain::access::Projects::All => None,
+                prostor_domain::access::Projects::Only(ids) => Some(ids),
             };
             let mut found =
                 groups::named_like(&mut *conn, &text, teams.as_deref(), limit + 1).await?;

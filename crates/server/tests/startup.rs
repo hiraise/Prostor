@@ -1,5 +1,5 @@
 //! A node against a real database: startup, readiness, migrations, bootstrap and settings.
-//! Tests that start a node run on the multi-thread runtime (see `taskmaster_testkit`).
+//! Tests that start a node run on the multi-thread runtime (see `prostor_testkit`).
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use std::sync::Arc;
@@ -8,15 +8,15 @@ use std::time::Duration;
 use axum::body::Body;
 use axum::http::{Request, StatusCode};
 use http_body_util::BodyExt;
+use prostor_domain::Actor;
+use prostor_server::lifecycle::Phase;
+use prostor_server::settings::SetError;
+use prostor_server::startup::{self, Services, StartupError};
+use prostor_server::web::NoAssets;
+use prostor_server::{AppState, router};
+use prostor_store::jobs::{Handlers, RunnerConfig};
+use prostor_testkit::TestDb;
 use serde_json::{Value, json};
-use taskmaster_domain::Actor;
-use taskmaster_server::lifecycle::Phase;
-use taskmaster_server::settings::SetError;
-use taskmaster_server::startup::{self, Services, StartupError};
-use taskmaster_server::web::NoAssets;
-use taskmaster_server::{AppState, router};
-use taskmaster_store::jobs::{Handlers, RunnerConfig};
-use taskmaster_testkit::TestDb;
 use tokio_util::sync::CancellationToken;
 use tower::ServiceExt;
 
@@ -74,7 +74,7 @@ async fn adm_048_startup_migrates_an_empty_database_then_reports_ready() {
             .fetch_all(db.pool())
             .await
             .unwrap();
-    let expected: Vec<(i64, bool)> = taskmaster_store::MIGRATOR
+    let expected: Vec<(i64, bool)> = prostor_store::MIGRATOR
         .iter()
         .map(|m| (m.version, true))
         .collect();
@@ -85,7 +85,7 @@ async fn adm_048_startup_migrates_an_empty_database_then_reports_ready() {
 #[tokio::test(flavor = "multi_thread")]
 async fn adm_048_a_second_start_finds_the_schema_up_to_date() {
     let db = TestDb::new().await;
-    let report = taskmaster_store::migrate(db.options()).await.unwrap();
+    let report = prostor_store::migrate(db.options()).await.unwrap();
     assert!(report.applied.is_empty());
     let state = node(&db);
     start(&state, &db).await.unwrap().unwrap().stop().await;
@@ -115,8 +115,8 @@ async fn adm_048_startup_refuses_a_database_of_a_newer_version() {
 
 #[tokio::test(flavor = "multi_thread")]
 async fn adm_033_startup_gives_up_waiting_for_the_database_on_shutdown() {
-    let options = taskmaster_store::connect_options("postgres://nobody@127.0.0.1:9/none").unwrap();
-    let state = AppState::new(Arc::new(NoAssets), taskmaster_store::pool(&options, 2));
+    let options = prostor_store::connect_options("postgres://nobody@127.0.0.1:9/none").unwrap();
+    let state = AppState::new(Arc::new(NoAssets), prostor_store::pool(&options, 2));
     let stop = CancellationToken::new();
     let cancel = stop.clone();
     tokio::spawn(async move {
@@ -205,9 +205,9 @@ async fn adm_002_setting_changes_are_validated_and_audited() {
     assert!(matches!(unknown, Err(SetError::Invalid(_))));
 
     let mut conn = db.pool().acquire().await.unwrap();
-    let admin = taskmaster_store::users::insert(
+    let admin = prostor_store::users::insert(
         &mut conn,
-        &taskmaster_store::users::NewUser {
+        &prostor_store::users::NewUser {
             username: "anna",
             full_name: "Anna",
             email: None,
@@ -234,7 +234,7 @@ async fn adm_002_setting_changes_are_validated_and_audited() {
     assert!(!set(Some(json!("https://tracker.example.com"))).await);
     assert!(set(None).await);
 
-    let events = taskmaster_store::audit::for_target(db.pool(), "setting:base_url", 10)
+    let events = prostor_store::audit::for_target(db.pool(), "setting:base_url", 10)
         .await
         .unwrap();
     assert_eq!(events.len(), 2);

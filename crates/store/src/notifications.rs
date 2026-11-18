@@ -4,10 +4,10 @@
 
 use std::time::Duration;
 
+use prostor_domain::notifications::{Folder, Kind, Settings, Source};
+use prostor_domain::{IssueId, SavedSearchId, SubscriptionId, TagId, UserId};
 use serde_json::Value as Json;
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::notifications::{Folder, Kind, Settings, Source};
-use taskmaster_domain::{IssueId, SavedSearchId, SubscriptionId, TagId, UserId};
 use time::OffsetDateTime;
 
 /// Both unique keys of `notification_subscriptions` mean the same thing: one subscription per

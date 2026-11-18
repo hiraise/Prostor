@@ -1,8 +1,8 @@
-//! Comments on issues (CNT-001…CNT-005). Rules: `taskmaster_domain::comments`; their records in
+//! Comments on issues (CNT-001…CNT-005). Rules: `prostor_domain::comments`; their records in
 //! the history: `issue_history`.
 
+use prostor_domain::{CommentId, GroupId, IssueId, UserId};
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::{CommentId, GroupId, IssueId, UserId};
 use time::OffsetDateTime;
 
 use crate::content::Rendered;

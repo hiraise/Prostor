@@ -12,12 +12,12 @@
 //!   resolved value of the scrum set is «Готово»/Done) — the same function, so a scrum project
 //!   needs no `subtasks_follow` of its own.
 
+use prostor_domain::fields::FieldKind;
+use prostor_domain::issues::values::Value;
+use prostor_domain::rules::{ASSIGNEE, EPIC, IDEAL_DAYS, Rule, STORY_POINTS, TASK, TYPE};
+use prostor_domain::validation::{Problem, Rejection};
+use prostor_store::value_sets;
 use sqlx::PgConnection;
-use taskmaster_domain::fields::FieldKind;
-use taskmaster_domain::issues::values::Value;
-use taskmaster_domain::rules::{ASSIGNEE, EPIC, IDEAL_DAYS, Rule, STORY_POINTS, TASK, TYPE};
-use taskmaster_domain::validation::{Problem, Rejection};
-use taskmaster_store::value_sets;
 
 use crate::Error;
 use crate::issues::values::{self, ProjectField, ProjectFields};
@@ -166,8 +166,8 @@ async fn estimate_blocked(
 /// The project's field a rule looks up (§3.4), in the engine's shared way.
 fn find_field<'a>(
     fields: &'a ProjectFields,
-    needle: &taskmaster_domain::rules::FieldRef,
-    language: taskmaster_domain::settings::Language,
+    needle: &prostor_domain::rules::FieldRef,
+    language: prostor_domain::settings::Language,
 ) -> Option<&'a ProjectField> {
     super::find_field(fields, needle, language)
 }

@@ -3,21 +3,21 @@
 //! editors of the board do all of it; a sprintless board has only its hidden sprint and none of
 //! this. Nothing runs on a schedule: a sprint whose end passed is finished on read.
 
+use prostor_domain::access::Access;
+use prostor_domain::boards::sprints::{self, SprintDates};
+use prostor_domain::boards::{self as domain, Mode, SPRINTS_MAX};
+use prostor_domain::issues::history::{Origin, Record};
+use prostor_domain::live::Change;
+use prostor_domain::rank;
+use prostor_domain::validation::{Problem, Problems};
+use prostor_domain::{Actor, BoardId, SprintId};
+use prostor_store::boards::cards as store_cards;
+use prostor_store::boards::sprints::{self as store, SprintSettings};
+use prostor_store::boards::{self as store_boards, Sprint};
+use prostor_store::issue_history::Author;
+use prostor_store::{PgPool, audit, issues, unique_violation};
 use serde_json::json;
 use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::boards::sprints::{self, SprintDates};
-use taskmaster_domain::boards::{self as domain, Mode, SPRINTS_MAX};
-use taskmaster_domain::issues::history::{Origin, Record};
-use taskmaster_domain::live::Change;
-use taskmaster_domain::rank;
-use taskmaster_domain::validation::{Problem, Problems};
-use taskmaster_domain::{Actor, BoardId, SprintId};
-use taskmaster_store::boards::cards as store_cards;
-use taskmaster_store::boards::sprints::{self as store, SprintSettings};
-use taskmaster_store::boards::{self as store_boards, Sprint};
-use taskmaster_store::issue_history::Author;
-use taskmaster_store::{PgPool, audit, issues, unique_violation};
 use time::{Date, OffsetDateTime};
 
 use super::cards::place;
@@ -474,7 +474,7 @@ async fn carry_locked(
         }
         store_cards::carry(conn, from.id, to.id, &moving, &ranks).await?;
         let records = vec![record.clone(); moving.len()];
-        taskmaster_store::issue_history::record_many(conn, &moving, author, &records).await?;
+        prostor_store::issue_history::record_many(conn, &moving, author, &records).await?;
         issues::touch_many(conn, &moving, actor.user()).await?;
         for issue in &moving {
             batch.issue_on_board(*issue, Change::Updated, board.id);

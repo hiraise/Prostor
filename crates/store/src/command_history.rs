@@ -1,8 +1,8 @@
 //! The command history (step 2.1 §6, CMD-030): the command lines a person applied, at most
 //! [`KEEP`], feeding the completion's `recent` group and the dialog's «repeat the last command».
 
+use prostor_domain::UserId;
 use sqlx::{Acquire, PgConnection, PgExecutor};
-use taskmaster_domain::UserId;
 
 /// How many lines one person's history keeps; the rest is trimmed on every record.
 pub const KEEP: usize = 20;

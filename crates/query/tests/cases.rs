@@ -5,8 +5,8 @@
 
 use std::collections::{BTreeMap, HashSet};
 
+use prostor_query::{Class, ProblemCode, Query, Span, classes, parse, print, utf16};
 use serde::Deserialize;
-use taskmaster_query::{Class, ProblemCode, Query, Span, classes, parse, print, utf16};
 
 #[derive(Debug, Deserialize)]
 struct Case {

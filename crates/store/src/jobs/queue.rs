@@ -2,11 +2,11 @@
 
 use std::time::Duration;
 
+use prostor_domain::{Actor, UserId};
 use serde::Serialize;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 use sqlx::{PgConnection, PgPool};
-use taskmaster_domain::{Actor, UserId};
 use time::OffsetDateTime;
 
 use crate::bus;
@@ -726,8 +726,8 @@ pub async fn count_by_state(pool: &PgPool) -> Result<Vec<(JobState, i64)>, sqlx:
 
 #[cfg(test)]
 mod tests {
+    use prostor_testkit::TestDb;
     use serde::Deserialize;
-    use taskmaster_testkit::TestDb;
 
     use super::*;
 

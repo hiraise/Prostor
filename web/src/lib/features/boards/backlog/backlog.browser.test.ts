@@ -122,12 +122,12 @@ function summaries(name: string): string[] {
 beforeEach(() => {
   headerFilter.clear();
   toasts.clear();
-  writeStored('taskmaster.board-backlog.9', null);
+  writeStored('prostor.board-backlog.9', null);
 });
 
 afterEach(() => {
   // The panel stays open per board in this browser: other test files expect it closed.
-  writeStored('taskmaster.board-backlog.9', null);
+  writeStored('prostor.board-backlog.9', null);
   vi.unstubAllGlobals();
   setSessionForTests(null);
   setAccessForTests(null);

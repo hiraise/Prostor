@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // The new-issue page (phones, and «Открыть на всю страницу»): the same form as the dialog. The
   // address names the draft once it exists, so a reload continues it; leaving the page closes the
   // form as the dialog's × does (ISS-010).
@@ -71,7 +72,7 @@
   }
 </script>
 
-<svelte:head><title>{m.newIssue()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.newIssue()} · {brand()}</title></svelte:head>
 
 <PageHeader title={m.newIssue()} />
 <div class="page">

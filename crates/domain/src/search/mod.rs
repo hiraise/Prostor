@@ -1,5 +1,5 @@
 //! Searching issues (QRY-*; plan `docs/plans/step-1.5.md` §3–§4): a parsed query
-//! (`taskmaster_query`) and a [`Catalog`] of the names it mentions become a [`Filter`] and a sort
+//! (`prostor_query`) and a [`Catalog`] of the names it mentions become a [`Filter`] and a sort
 //! the store compiles to SQL.
 //!
 //! The service: parses the text, takes [`needs`], loads the projects, computes [`scope`], loads
@@ -17,8 +17,8 @@ pub mod stored;
 mod tests;
 mod text;
 
+use prostor_query::{Problem, Span};
 use serde::{Deserialize, Serialize};
-use taskmaster_query::{Problem, Span};
 
 use crate::access::Projects;
 use crate::links::Side;
@@ -71,7 +71,7 @@ pub struct Resolved {
 #[serde(rename_all = "snake_case", tag = "t", content = "v")]
 pub enum Binding {
     Field(FieldId),
-    /// A key of `taskmaster_query::words`.
+    /// A key of `prostor_query::words`.
     Attribute(String),
     Keyword(String),
     Value(ValueId),

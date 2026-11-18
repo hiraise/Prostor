@@ -1,28 +1,28 @@
 //! Saved searches (QRY-053, QRY-063…QRY-068, PRJ-019; plan step 1.5 D1, D8) on a real database.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::capability::Capability;
-use taskmaster_domain::access::role::PredefinedRole;
-use taskmaster_domain::issues::history::Origin;
-use taskmaster_domain::projects::Template;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::sharing::Audience;
-use taskmaster_domain::{GroupId, IssueId, ProjectId, UserId};
-use taskmaster_query::ProblemCode;
-use taskmaster_service::groups::NewGroup;
-use taskmaster_service::issues::{self, NewIssue};
-use taskmaster_service::projects::{self, NewProjectInput};
-use taskmaster_service::saved_searches::{self as saved, SavedSearch, SearchChange, Sharing};
-use taskmaster_service::search::{self, SearchInput};
-use taskmaster_service::setup::{self, Setup};
-use taskmaster_service::users::{self, NewAccount};
-use taskmaster_service::{Error, Passwords, access, capabilities, groups, roles, tags};
-use taskmaster_store::PgPool;
-use taskmaster_store::access::Holder;
-use taskmaster_store::saved_searches::Listing;
-use taskmaster_store::sessions::Origin as SessionOrigin;
-use taskmaster_testkit::TestDb;
+use prostor_domain::access::Access;
+use prostor_domain::access::capability::Capability;
+use prostor_domain::access::role::PredefinedRole;
+use prostor_domain::issues::history::Origin;
+use prostor_domain::projects::Template;
+use prostor_domain::settings::Language;
+use prostor_domain::sharing::Audience;
+use prostor_domain::{GroupId, IssueId, ProjectId, UserId};
+use prostor_query::ProblemCode;
+use prostor_service::groups::NewGroup;
+use prostor_service::issues::{self, NewIssue};
+use prostor_service::projects::{self, NewProjectInput};
+use prostor_service::saved_searches::{self as saved, SavedSearch, SearchChange, Sharing};
+use prostor_service::search::{self, SearchInput};
+use prostor_service::setup::{self, Setup};
+use prostor_service::users::{self, NewAccount};
+use prostor_service::{Error, Passwords, access, capabilities, groups, roles, tags};
+use prostor_store::PgPool;
+use prostor_store::access::Holder;
+use prostor_store::saved_searches::Listing;
+use prostor_store::sessions::Origin as SessionOrigin;
+use prostor_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::datetime;
 
@@ -91,7 +91,7 @@ async fn member(pool: &PgPool, admin: &Access, username: &str, of: &[ProjectId])
     .await
     .unwrap()
     .id;
-    let role = taskmaster_store::roles::builtin_id(pool, PredefinedRole::ProjectMember.key())
+    let role = prostor_store::roles::builtin_id(pool, PredefinedRole::ProjectMember.key())
         .await
         .unwrap()
         .unwrap();
@@ -586,7 +586,7 @@ async fn prj_019_unassigned_search_of_a_new_project() {
     .await;
     let plain = project(pool, &w.admin, "PLN", Template::Blank).await;
     assert!(
-        taskmaster_store::saved_searches::assignee_field(pool, plain)
+        prostor_store::saved_searches::assignee_field(pool, plain)
             .await
             .unwrap()
             .is_none()

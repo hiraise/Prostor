@@ -7,19 +7,19 @@
 
 use std::collections::BTreeMap;
 
+use prostor_domain::access::Access;
+use prostor_domain::duration::Schedule;
+use prostor_domain::fields::{FieldKind, FieldType};
+use prostor_domain::issues::values::{self as rules, Input};
+use prostor_domain::links::Side;
+use prostor_domain::search::dates::Clock;
+use prostor_domain::{ProjectId, SetId};
+use prostor_query::command::{self, Command, CommandCode, Mode};
+use prostor_query::words::{self, fold};
+use prostor_query::{Atom, Span};
+use prostor_store::links;
+use prostor_store::value_sets;
 use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::duration::Schedule;
-use taskmaster_domain::fields::{FieldKind, FieldType};
-use taskmaster_domain::issues::values::{self as rules, Input};
-use taskmaster_domain::links::Side;
-use taskmaster_domain::search::dates::Clock;
-use taskmaster_domain::{ProjectId, SetId};
-use taskmaster_query::command::{self, Command, CommandCode, Mode};
-use taskmaster_query::words::{self, fold};
-use taskmaster_query::{Atom, Span};
-use taskmaster_store::links;
-use taskmaster_store::value_sets;
 
 use super::dictionary::{NamedField, Names};
 use super::{Operation, Party, Plan, PlanProblem, Planned, QuickFix};
@@ -96,7 +96,7 @@ fn one_param(key: &str, value: impl Into<String>) -> BTreeMap<String, String> {
 /// problem — the actor could not apply it anywhere — while anything that depends on the issue
 /// (its reporter, its audience, a draft) fails per issue at the writer's own checks.
 fn permissions(plan: &mut Plan, names: &Names, actor: &Access, input: &super::ApplyInput) {
-    use taskmaster_domain::access::permission::Permission;
+    use prostor_domain::access::permission::Permission;
     let targets = names.target_projects.clone();
     // The update right, or the reporter's own path to it (ISS-022, ACC-047).
     let may_update = |project: ProjectId| {
@@ -347,7 +347,7 @@ async fn resolve_command(
                 // («дубликат», "duplicate of").
                 let builtin = links::type_by_builtin(
                     conn,
-                    taskmaster_domain::links::BuiltinType::Duplicate.key(),
+                    prostor_domain::links::BuiltinType::Duplicate.key(),
                 )
                 .await
                 .map_err(Error::from)?

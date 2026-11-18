@@ -105,7 +105,7 @@ describe('SignInForm', () => {
   it('AUTH-005: says why the person is back, in Russian too', async () => {
     setLocale('ru');
     const screen = await render(SignInForm, { onsignedin: vi.fn(), reason: 'signed-out' });
-    await expect.element(screen.getByText('Вы вышли из TaskMaster.')).toBeVisible();
+    await expect.element(screen.getByText('Вы вышли из Простора.')).toBeVisible();
     await expect.element(screen.getByRole('button', { name: 'Войти' })).toBeVisible();
     await expectAccessible(screen.container);
   });

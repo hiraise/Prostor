@@ -9,26 +9,26 @@
 
 use std::collections::BTreeMap;
 
-use serde_json::json;
-use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::permission::Permission;
-use taskmaster_domain::access::visibility::Audience;
-use taskmaster_domain::issues::history::{LoggedLink, Origin, Record};
-use taskmaster_domain::issues::rights::{self, Facts};
-use taskmaster_domain::links::{
+use prostor_domain::access::Access;
+use prostor_domain::access::permission::Permission;
+use prostor_domain::access::visibility::Audience;
+use prostor_domain::issues::history::{LoggedLink, Origin, Record};
+use prostor_domain::issues::rights::{self, Facts};
+use prostor_domain::links::{
     self as domain, ADD_MAX, BuiltinType, DEPTH_MAX, Direction, LINKS_PER_ISSUE_MAX, Refusal, Side,
     TypeNames,
 };
-use taskmaster_domain::live::Change;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::validation::{Problem, Problems};
-use taskmaster_domain::{IssueId, LinkId, LinkTypeId, ProjectId};
-use taskmaster_store::issue_history::{self, Author};
-use taskmaster_store::issues::{self, Issue};
-use taskmaster_store::links::{self, End, Link, LinkType, Linked, NewLinkType, TypeChange};
-use taskmaster_store::projects::{self, Project};
-use taskmaster_store::{PgPool, audit, instance, unique_violation};
+use prostor_domain::live::Change;
+use prostor_domain::settings::Language;
+use prostor_domain::validation::{Problem, Problems};
+use prostor_domain::{IssueId, LinkId, LinkTypeId, ProjectId};
+use prostor_store::issue_history::{self, Author};
+use prostor_store::issues::{self, Issue};
+use prostor_store::links::{self, End, Link, LinkType, Linked, NewLinkType, TypeChange};
+use prostor_store::projects::{self, Project};
+use prostor_store::{PgPool, audit, instance, unique_violation};
+use serde_json::json;
+use sqlx::PgConnection;
 
 use crate::live::Batch;
 use crate::{Error, Result};
@@ -134,7 +134,7 @@ async fn checked_names(
             None => {
                 problems.add(
                     "target_name",
-                    taskmaster_domain::validation::Rejection::new(
+                    prostor_domain::validation::Rejection::new(
                         Problem::Required,
                         "a directed type needs a name for the target side",
                     ),
@@ -440,8 +440,8 @@ fn target(id: LinkTypeId) -> String {
     format!("link_type:{id}")
 }
 
-fn actor_of(access: &Access) -> taskmaster_domain::Actor {
-    taskmaster_domain::Actor::User(access.user())
+fn actor_of(access: &Access) -> prostor_domain::Actor {
+    prostor_domain::Actor::User(access.user())
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1055,7 +1055,7 @@ async fn remove_checked(
         return Ok(());
     }
     // The facts of a removed link are taken before it goes.
-    for facts in taskmaster_store::live::link_facts(&mut *tx, &[link]).await? {
+    for facts in prostor_store::live::link_facts(&mut *tx, &[link]).await? {
         batch.link_removed(facts);
     }
     links::delete(&mut *tx, link).await?;

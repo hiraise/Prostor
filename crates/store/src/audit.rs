@@ -1,9 +1,9 @@
 //! Audit events of administrative changes (architecture.md §9.17). Capture starts here;
 //! the viewer, filters and retention come with ADM-040…ADM-042.
 
+use prostor_domain::{Actor, UserId};
 use serde_json::Value;
 use sqlx::{PgConnection, PgPool};
-use taskmaster_domain::{Actor, UserId};
 use time::OffsetDateTime;
 
 #[derive(Debug, Clone, PartialEq)]

@@ -7,12 +7,12 @@ pub mod profiles;
 pub mod sprints;
 pub mod view;
 
+use prostor_domain::access::Projects;
+use prostor_domain::boards::access::BoardAccess;
+use prostor_domain::sharing::{Audience, Shared};
+use prostor_domain::{BoardId, FieldId, GroupId, ProjectId, SprintId, UserId};
 use serde_json::Value;
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::access::Projects;
-use taskmaster_domain::boards::access::BoardAccess;
-use taskmaster_domain::sharing::{Audience, Shared};
-use taskmaster_domain::{BoardId, FieldId, GroupId, ProjectId, SprintId, UserId};
 use time::OffsetDateTime;
 
 pub use columns::Column;

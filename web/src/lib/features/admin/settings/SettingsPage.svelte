@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // The «Настройки» screen of the administration area (ADM-002, ADM-003, ADM-004, ADM-015,
   // ADM-016, ADM-017, AUTH-004, UI-004, INT-056; plan step 1.11 §4, the API origins in 1.12
   // §7.2): three sections, each with its own save. «Сервер» carries the address of the instance
@@ -294,7 +295,7 @@
   }
 </script>
 
-<svelte:head><title>{m.settingsTitle()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.settingsTitle()} · {brand()}</title></svelte:head>
 
 <div class="settings-page">
   <PageHeader title={m.settingsTitle()} />

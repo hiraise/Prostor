@@ -1,8 +1,8 @@
-//! Link types and links between issues (LNK). Rules: `taskmaster_domain::links`; design:
+//! Link types and links between issues (LNK). Rules: `prostor_domain::links`; design:
 //! decisions.md D-034.
 
+use prostor_domain::{GroupId, IssueId, LinkId, LinkTypeId, ProjectId, UserId};
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::{GroupId, IssueId, LinkId, LinkTypeId, ProjectId, UserId};
 use time::OffsetDateTime;
 
 /// Name space of the advisory locks taken here (`'lnk'`).

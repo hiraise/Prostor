@@ -1,7 +1,7 @@
-//! Projects, their keys and favorites (PRJ). Rules for the values: `taskmaster_domain::projects`.
+//! Projects, their keys and favorites (PRJ). Rules for the values: `prostor_domain::projects`.
 
+use prostor_domain::{GroupId, ProjectId, UserId};
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::{GroupId, ProjectId, UserId};
 use time::OffsetDateTime;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

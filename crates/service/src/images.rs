@@ -6,8 +6,8 @@ use std::io::Cursor;
 
 use image::imageops::FilterType;
 use image::{DynamicImage, ImageDecoder, ImageFormat, ImageReader, Limits, RgbaImage};
-use taskmaster_domain::files::{IMAGE_PIXELS_MAX, Kind};
-use taskmaster_domain::validation::Problem;
+use prostor_domain::files::{IMAGE_PIXELS_MAX, Kind};
+use prostor_domain::validation::Problem;
 
 use crate::{Error, Result};
 

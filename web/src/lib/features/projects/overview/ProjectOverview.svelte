@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // A project's overview (PRJ-014): its description (rendered Markdown whose checklist people who
   // configure the project can tick, PRJ-006, CNT-041), owner, creation date, team, former keys and
   // template, with links to its settings for people who configure it. The header has the page's
@@ -106,7 +107,7 @@
   }
 </script>
 
-<svelte:head><title>{project.name} · TaskMaster</title></svelte:head>
+<svelte:head><title>{project.name} · {brand()}</title></svelte:head>
 
 <PageHeader title={project.name}>
   {#snippet actions()}

@@ -1,6 +1,6 @@
 [package]
-name = "taskmaster-query"
-description = "taskmaster query language: lexer, error-tolerant parser, vocabulary, highlighting and printer"
+name = "prostor-query"
+description = "prostor query language: lexer, error-tolerant parser, vocabulary, highlighting and printer"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

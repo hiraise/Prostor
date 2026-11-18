@@ -2,8 +2,8 @@
 //! group members (`groups::add_members`); groups in the team are listed here and bring all their
 //! current members.
 
+use prostor_domain::{GroupId, ProjectId, UserId};
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::{GroupId, ProjectId, UserId};
 
 /// Creates the team of a new project, named after it.
 pub async fn create(

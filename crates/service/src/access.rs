@@ -4,15 +4,15 @@
 
 use std::collections::BTreeMap;
 
+use prostor_domain::access::capability::{Capability, CapabilitySet};
+use prostor_domain::access::group::BuiltinGroup;
+use prostor_domain::access::role::role_permissions;
+use prostor_domain::access::{Access, Grant, Scope};
+use prostor_domain::{GroupId, ProjectId, RoleId, UserId};
+use prostor_store::access::{self as assignments, GrantRow, Holder};
+use prostor_store::users::User;
+use prostor_store::{PgPool, bus, groups, roles, users};
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::access::capability::{Capability, CapabilitySet};
-use taskmaster_domain::access::group::BuiltinGroup;
-use taskmaster_domain::access::role::role_permissions;
-use taskmaster_domain::access::{Access, Grant, Scope};
-use taskmaster_domain::{GroupId, ProjectId, RoleId, UserId};
-use taskmaster_store::access::{self as assignments, GrantRow, Holder};
-use taskmaster_store::users::User;
-use taskmaster_store::{PgPool, bus, groups, roles, users};
 
 use crate::{Error, Result};
 

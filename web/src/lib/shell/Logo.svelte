@@ -1,6 +1,8 @@
 <script lang="ts">
-  // The TaskMaster mark (three lanes of work flowing right) and the wordmark. Decorative: the link
-  // around it carries the accessible name.
+  // The Prostor mark (three lanes of work flowing right) and the wordmark, which follows the
+  // interface language (D-066). Decorative: the link around it carries the accessible name.
+  import { brandLead, brandTail } from '#lib/i18n/messages/brand.ts';
+
   let { compact = false }: { compact?: boolean } = $props();
 </script>
 
@@ -11,7 +13,7 @@
     <rect x="11" y="15" width="14" height="4" rx="2" class="lane" opacity=".75" />
     <rect x="7" y="21" width="9" height="4" rx="2" class="lane" opacity=".5" />
   </svg>
-  {#if !compact}<span class="word">Task<b>Master</b></span>{/if}
+  {#if !compact}<span class="word">{brandLead()}<b>{brandTail()}</b></span>{/if}
 </span>
 
 <style>

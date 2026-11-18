@@ -433,7 +433,7 @@ fn followed(open: &[(i32, Vec<i64>)]) -> Vec<Followed> {
     followed
 }
 
-/// The clients' process (`taskmaster-bench --live-clients`). Each line of stdin is a batch of
+/// The clients' process (`prostor-bench --live-clients`). Each line of stdin is a batch of
 /// sockets to open, `{"address"?, "subscribers": [{"token", "topics"}]}` (the address comes with
 /// the first); each is answered with `{"opened": [indices in the batch], "failure"}`. Between and
 /// after them it writes `{"issue", "at"}` for every issue event a socket gets on a topic it

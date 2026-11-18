@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // The «Почта» screen of the administration area (NTF-002, NTF-004, NTF-006, NTF-007; plan step
   // 1.10 §5.1): the mail server with its secrets, the sender and the reply address, the instance
   // switch and a test send. Secret values never come back — the screen shows that one is stored,
@@ -116,7 +117,7 @@
   }
 </script>
 
-<svelte:head><title>{m.mailTitle()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.mailTitle()} · {brand()}</title></svelte:head>
 
 <div class="mail-page">
   <PageHeader title={m.mailTitle()} />
@@ -188,7 +189,7 @@
         <TextField
           label={m.fromLabel()}
           hint={m.fromHint()}
-          placeholder="TaskMaster <tracker@example.com>"
+          placeholder="Prostor <tracker@example.com>"
           bind:value={mailFrom}
         />
         <TextField label={m.replyToLabel()} hint={m.replyToHint()} bind:value={mailReplyTo} />

@@ -58,7 +58,7 @@ describe('BRD-068: the board', () => {
 
   it('shows the board name in the switcher in full, and cuts only a truly long one', async () => {
     server({});
-    const screen = await render(BoardPage, { board: board({ name: 'TaskMaster' }) });
+    const screen = await render(BoardPage, { board: board({ name: 'Prostor' }) });
     const switcherTitle = () =>
       need(screen.container.querySelector('h1 button span'), 'switcher title');
     // A free row must not truncate the name (the switcher used to collapse to “Trackfl…”).

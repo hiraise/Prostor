@@ -3,8 +3,8 @@
 
 use base64::Engine;
 use base64::engine::general_purpose::URL_SAFE_NO_PAD;
+use prostor_domain::auth::codes;
 use sha2::{Digest, Sha256};
-use taskmaster_domain::auth::codes;
 
 use crate::{Error, Result};
 

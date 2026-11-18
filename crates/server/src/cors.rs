@@ -8,7 +8,7 @@ use axum::extract::{Request, State};
 use axum::http::{HeaderMap, HeaderValue, Method, StatusCode, header};
 use axum::middleware::Next;
 use axum::response::Response;
-use taskmaster_domain::settings::API_ALLOWED_ORIGINS;
+use prostor_domain::settings::API_ALLOWED_ORIGINS;
 
 use crate::AppState;
 

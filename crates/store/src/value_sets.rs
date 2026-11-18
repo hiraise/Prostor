@@ -1,8 +1,8 @@
 //! Value sets and their values (FLD-029…FLD-049): named lists of allowed values that fields and
 //! projects share or own. User sets list accounts and groups instead of values (FLD-040).
 
+use prostor_domain::{FieldId, GroupId, ProjectId, SetId, UserId, ValueId};
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::{FieldId, GroupId, ProjectId, SetId, UserId, ValueId};
 use time::{Date, OffsetDateTime};
 
 #[derive(Debug, Clone, PartialEq, Eq)]

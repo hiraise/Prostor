@@ -9,14 +9,14 @@
 
 use std::time::Duration;
 
-use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::access::visibility::Audience;
-use taskmaster_domain::issues::rights::Facts;
-use taskmaster_domain::live::{Change, EntityKind, Guard, NewEvent};
-use taskmaster_domain::{
+use prostor_domain::access::visibility::Audience;
+use prostor_domain::issues::rights::Facts;
+use prostor_domain::live::{Change, EntityKind, Guard, NewEvent};
+use prostor_domain::{
     AttachmentId, BoardId, CommentId, GroupId, IssueId, LinkId, ProjectId, UserId, attachments,
     comments,
 };
+use sqlx::{PgConnection, PgExecutor};
 use time::OffsetDateTime;
 
 use crate::bus;

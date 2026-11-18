@@ -9,34 +9,34 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 use bytes::Bytes;
-use taskmaster_domain::access::capability::CapabilitySet;
-use taskmaster_domain::access::role::PredefinedRole;
-use taskmaster_domain::access::visibility::Kind;
-use taskmaster_domain::access::{Access, Grant, Scope};
-use taskmaster_domain::issues::history::Origin;
-use taskmaster_domain::issues::values::Input;
-use taskmaster_domain::links::{BuiltinType, Side};
-use taskmaster_domain::live::{Change, EntityKind, LINK_VERSION, NewEvent};
-use taskmaster_domain::projects::Template;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::{FieldId, IssueId, ProjectId, UploadId, ValueId};
-use taskmaster_files::FileStore;
-use taskmaster_service::attachments::{self as service_files, AttachmentChange};
-use taskmaster_service::comments::{self, CommentChange, NewComment};
-use taskmaster_service::issue_links::{self, NewLinks};
-use taskmaster_service::issues::jobs::FieldWork;
-use taskmaster_service::issues::{self, AudienceInput, FieldChange, IssueChange, NewIssue};
-use taskmaster_service::live::Batch;
-use taskmaster_service::projects::{self, NewProjectInput};
-use taskmaster_service::setup::{self, Setup};
-use taskmaster_service::users::{self, NewAccount};
-use taskmaster_service::{Passwords, access, tags, uploads};
-use taskmaster_store::PgPool;
-use taskmaster_store::attachments::{self, NewAttachment};
-use taskmaster_store::links;
-use taskmaster_store::live::{self as log, Stored};
-use taskmaster_store::sessions::Origin as SessionOrigin;
-use taskmaster_testkit::TestDb;
+use prostor_domain::access::capability::CapabilitySet;
+use prostor_domain::access::role::PredefinedRole;
+use prostor_domain::access::visibility::Kind;
+use prostor_domain::access::{Access, Grant, Scope};
+use prostor_domain::issues::history::Origin;
+use prostor_domain::issues::values::Input;
+use prostor_domain::links::{BuiltinType, Side};
+use prostor_domain::live::{Change, EntityKind, LINK_VERSION, NewEvent};
+use prostor_domain::projects::Template;
+use prostor_domain::settings::Language;
+use prostor_domain::{FieldId, IssueId, ProjectId, UploadId, ValueId};
+use prostor_files::FileStore;
+use prostor_service::attachments::{self as service_files, AttachmentChange};
+use prostor_service::comments::{self, CommentChange, NewComment};
+use prostor_service::issue_links::{self, NewLinks};
+use prostor_service::issues::jobs::FieldWork;
+use prostor_service::issues::{self, AudienceInput, FieldChange, IssueChange, NewIssue};
+use prostor_service::live::Batch;
+use prostor_service::projects::{self, NewProjectInput};
+use prostor_service::setup::{self, Setup};
+use prostor_service::users::{self, NewAccount};
+use prostor_service::{Passwords, access, tags, uploads};
+use prostor_store::PgPool;
+use prostor_store::attachments::{self, NewAttachment};
+use prostor_store::links;
+use prostor_store::live::{self as log, Stored};
+use prostor_store::sessions::Origin as SessionOrigin;
+use prostor_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::datetime;
 
@@ -541,7 +541,7 @@ impl Scene {
             .find(|f| f.field.field.name == "State")
             .unwrap();
         let set = state.field.attached.set_id.unwrap();
-        let value = taskmaster_store::value_sets::values_of(self.pool(), &[set])
+        let value = prostor_store::value_sets::values_of(self.pool(), &[set])
             .await
             .unwrap()
             .into_iter()

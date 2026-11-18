@@ -7,15 +7,15 @@
 //! viewer may not see are skipped and still counted. The row count is capped by a constant until
 //! the setting of 2.11 (`ADM-005`).
 
+use prostor_domain::access::Access;
+use prostor_domain::issues::values::Value;
+use prostor_domain::settings::Language;
+use prostor_domain::{IssueId, ProjectId};
+use prostor_store::PgPool;
+use prostor_store::issues::Issue;
+use prostor_store::projects;
+use prostor_store::{issues as store_issues, settings};
 use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::issues::values::Value;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::{IssueId, ProjectId};
-use taskmaster_store::PgPool;
-use taskmaster_store::issues::Issue;
-use taskmaster_store::projects;
-use taskmaster_store::{issues as store_issues, settings};
 use time::OffsetDateTime;
 
 use super::{Described, IssueView, can_read, describe};
@@ -392,7 +392,7 @@ fn cell(d: &Described, value: &Value, shapes: &Shapes) -> String {
         Value::Duration(minutes) => shapes.duration(*minutes),
         Value::Refs(ids) => {
             // Set values keep the set's order; accounts and groups the given order.
-            let mut held: Vec<&taskmaster_store::value_sets::Value> =
+            let mut held: Vec<&prostor_store::value_sets::Value> =
                 ids.iter().filter_map(|id| d.value(*id)).collect();
             if held.is_empty() {
                 ids.iter()
@@ -415,7 +415,7 @@ fn cell(d: &Described, value: &Value, shapes: &Shapes) -> String {
 }
 
 /// A person's full name, their login when the account is gone.
-fn name(d: &Described, id: taskmaster_domain::UserId) -> String {
+fn name(d: &Described, id: prostor_domain::UserId) -> String {
     d.user(id)
         .map(|user| user.full_name.clone())
         .unwrap_or_default()

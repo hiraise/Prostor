@@ -1,21 +1,21 @@
 //! `/saved-searches`: queries under a name, shared like tags (QRY-063…QRY-068). Rules live in
-//! `taskmaster_service::saved_searches`.
+//! `prostor_service::saved_searches`.
 
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
-use taskmaster_api::error::ErrorBody;
-use taskmaster_api::page::{Page, PageQuery};
-use taskmaster_api::saved_searches::{
+use prostor_api::error::ErrorBody;
+use prostor_api::page::{Page, PageQuery};
+use prostor_api::saved_searches::{
     BuiltinSearchKey, NewSavedSearch, SavedSearch, SavedSearchPatch, SearchSharing,
 };
-use taskmaster_api::sharing::ScopeQuery;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::auth::Scope;
-use taskmaster_domain::settings::SYSTEM_LANGUAGE;
-use taskmaster_service::saved_searches::{self as service, SearchChange, Sharing};
-use taskmaster_service::tags;
-use taskmaster_store::saved_searches::SavedSearchId;
+use prostor_api::sharing::ScopeQuery;
+use prostor_domain::access::Access;
+use prostor_domain::auth::Scope;
+use prostor_domain::settings::SYSTEM_LANGUAGE;
+use prostor_service::saved_searches::{self as service, SearchChange, Sharing};
+use prostor_service::tags;
+use prostor_store::saved_searches::SavedSearchId;
 
 use crate::AppState;
 use crate::access::Viewer;
@@ -79,9 +79,7 @@ async fn one(
     shown(state, viewer, std::slice::from_ref(&found))
         .await?
         .pop()
-        .ok_or_else(|| {
-            taskmaster_service::Error::Internal("the search is missing".to_owned()).into()
-        })
+        .ok_or_else(|| prostor_service::Error::Internal("the search is missing".to_owned()).into())
 }
 
 /// Saved searches by name (QRY-063, QRY-065): the caller's own with the predefined ones (QRY-068),

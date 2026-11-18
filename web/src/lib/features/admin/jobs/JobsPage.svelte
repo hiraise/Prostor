@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // The «Задания» screen of the administration area (ADM-031, ADM-032; plan step 1.11 §6.2): the
   // background jobs of the instance, newest first — the kind in our words with its target, the
   // start time, the initiator, a state badge and the progress line; a failed row says why. State
@@ -131,7 +132,7 @@
   }
 </script>
 
-<svelte:head><title>{m.jobsTitle()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.jobsTitle()} · {brand()}</title></svelte:head>
 
 <div class="jobs-page">
   {#if !canSeeJobs()}

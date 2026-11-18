@@ -2,19 +2,19 @@
 //! replacement. Who may do what: ACC-051 (`Access::may_manage_groups`, `may_see_groups`); adding
 //! members also needs every permission the group gives (ACC-050).
 
-use serde_json::json;
-use taskmaster_domain::access::group::{
+use prostor_domain::access::group::{
     BuiltinGroup, GROUP_DESCRIPTION_MAX, builtin_matching, group_name,
 };
-use taskmaster_domain::access::permission::Permission;
-use taskmaster_domain::access::role::description;
-use taskmaster_domain::access::{Access, Projects};
-use taskmaster_domain::validation::{Problem, Problems};
-use taskmaster_domain::{GroupId, UserId};
-use taskmaster_store::access::{self as assignments, Assignment, Holder};
-use taskmaster_store::groups::{self, Group, Listed};
-use taskmaster_store::roles::{self, Role};
-use taskmaster_store::{PgPool, audit, projects, teams, unique_violation, users, value_sets};
+use prostor_domain::access::permission::Permission;
+use prostor_domain::access::role::description;
+use prostor_domain::access::{Access, Projects};
+use prostor_domain::validation::{Problem, Problems};
+use prostor_domain::{GroupId, UserId};
+use prostor_store::access::{self as assignments, Assignment, Holder};
+use prostor_store::groups::{self, Group, Listed};
+use prostor_store::roles::{self, Role};
+use prostor_store::{PgPool, audit, projects, teams, unique_violation, users, value_sets};
+use serde_json::json;
 
 use crate::access::{changed, grants_of_group, keep_an_administrator};
 use crate::{Error, Result};
@@ -444,13 +444,13 @@ pub async fn delete(
     teams::replace_groups(&mut tx, &ids, replacement).await?;
     value_sets::replace_groups(&mut tx, &ids, replacement).await?;
     projects::replace_audience(&mut tx, &ids, replacement).await?;
-    taskmaster_store::issues::replace_audience_groups(&mut tx, &ids, replacement).await?;
-    taskmaster_store::comments::replace_audience_groups(&mut tx, &ids, replacement).await?;
-    taskmaster_store::attachments::replace_audience_groups(&mut tx, &ids, replacement).await?;
-    taskmaster_store::issue_values::replace_groups(&mut tx, &ids, replacement).await?;
-    taskmaster_store::tags::replace_audience_groups(&mut tx, &ids, replacement).await?;
-    taskmaster_store::saved_searches::replace_audience_groups(&mut tx, &ids, replacement).await?;
-    taskmaster_store::boards::replace_audience_groups(&mut tx, &ids, replacement).await?;
+    prostor_store::issues::replace_audience_groups(&mut tx, &ids, replacement).await?;
+    prostor_store::comments::replace_audience_groups(&mut tx, &ids, replacement).await?;
+    prostor_store::attachments::replace_audience_groups(&mut tx, &ids, replacement).await?;
+    prostor_store::issue_values::replace_groups(&mut tx, &ids, replacement).await?;
+    prostor_store::tags::replace_audience_groups(&mut tx, &ids, replacement).await?;
+    prostor_store::saved_searches::replace_audience_groups(&mut tx, &ids, replacement).await?;
+    prostor_store::boards::replace_audience_groups(&mut tx, &ids, replacement).await?;
     groups::delete(&mut tx, &ids, replacement).await?;
     keep_an_administrator(&mut tx).await?;
     for group in found.iter().filter(|group| group.id != replacement) {
@@ -501,6 +501,6 @@ fn name_taken(error: sqlx::Error) -> Error {
     }
 }
 
-fn actor_of(access: &Access) -> taskmaster_domain::Actor {
-    taskmaster_domain::Actor::User(access.user())
+fn actor_of(access: &Access) -> prostor_domain::Actor {
+    prostor_domain::Actor::User(access.user())
 }

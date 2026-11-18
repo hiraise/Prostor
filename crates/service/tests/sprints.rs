@@ -2,33 +2,33 @@
 //! 1.8 B2, B3), the header filter and its sort (BRD-070, BRD-081) on a real database.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::role::PredefinedRole;
-use taskmaster_domain::boards::query_mode::Step;
-use taskmaster_domain::boards::{Mode, Preset};
-use taskmaster_domain::issues::history::Origin;
-use taskmaster_domain::issues::values::Input;
-use taskmaster_domain::projects::Template;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::sharing::Audience;
-use taskmaster_domain::validation::Problem;
-use taskmaster_domain::{BoardId, IssueId, ProjectId, SprintId};
-use taskmaster_domain::{ColumnId, FieldId};
-use taskmaster_service::boards::backlog::{self, BacklogInput};
-use taskmaster_service::boards::cards::{self, Move, NewCard};
-use taskmaster_service::boards::membership::{self, Target};
-use taskmaster_service::boards::sprints::{self, NewSprint, SprintChange};
-use taskmaster_service::boards::{self as boards, BoardChange, BoardRow, NewBoard, Sharing, view};
-use taskmaster_service::issues::{self, FieldChange, NewIssue};
-use taskmaster_service::projects::{self, NewProjectInput};
-use taskmaster_service::search::{self, SearchInput};
-use taskmaster_service::setup::{self, Setup};
-use taskmaster_service::users::{self, NewAccount};
-use taskmaster_service::{Error, Passwords, access, roles};
-use taskmaster_store::PgPool;
-use taskmaster_store::access::Holder;
-use taskmaster_store::sessions::Origin as SessionOrigin;
-use taskmaster_testkit::TestDb;
+use prostor_domain::access::Access;
+use prostor_domain::access::role::PredefinedRole;
+use prostor_domain::boards::query_mode::Step;
+use prostor_domain::boards::{Mode, Preset};
+use prostor_domain::issues::history::Origin;
+use prostor_domain::issues::values::Input;
+use prostor_domain::projects::Template;
+use prostor_domain::settings::Language;
+use prostor_domain::sharing::Audience;
+use prostor_domain::validation::Problem;
+use prostor_domain::{BoardId, IssueId, ProjectId, SprintId};
+use prostor_domain::{ColumnId, FieldId};
+use prostor_service::boards::backlog::{self, BacklogInput};
+use prostor_service::boards::cards::{self, Move, NewCard};
+use prostor_service::boards::membership::{self, Target};
+use prostor_service::boards::sprints::{self, NewSprint, SprintChange};
+use prostor_service::boards::{self as boards, BoardChange, BoardRow, NewBoard, Sharing, view};
+use prostor_service::issues::{self, FieldChange, NewIssue};
+use prostor_service::projects::{self, NewProjectInput};
+use prostor_service::search::{self, SearchInput};
+use prostor_service::setup::{self, Setup};
+use prostor_service::users::{self, NewAccount};
+use prostor_service::{Error, Passwords, access, roles};
+use prostor_store::PgPool;
+use prostor_store::access::Holder;
+use prostor_store::sessions::Origin as SessionOrigin;
+use prostor_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::{date, datetime};
 
@@ -97,7 +97,7 @@ async fn member(pool: &PgPool, admin: &Access, username: &str, of: &[ProjectId])
     .await
     .unwrap()
     .id;
-    let role = taskmaster_store::roles::builtin_id(pool, PredefinedRole::ProjectMember.key())
+    let role = prostor_store::roles::builtin_id(pool, PredefinedRole::ProjectMember.key())
         .await
         .unwrap()
         .unwrap();
@@ -193,7 +193,7 @@ fn first_sprint(b: &BoardRow) -> SprintId {
 }
 
 async fn add(pool: &PgPool, who: &Access, board: BoardId, sprint: SprintId, issue: IssueId) {
-    taskmaster_service::boards::cards::add(
+    prostor_service::boards::cards::add(
         pool,
         who,
         Origin::Web,
@@ -1310,15 +1310,9 @@ async fn brd_030_viewer_relative() {
     .fetch_one(pool)
     .await
     .unwrap();
-    taskmaster_service::value_sets::add_members(
-        pool,
-        &admin,
-        set_id,
-        &[leo.user(), mia.user()],
-        &[],
-    )
-    .await
-    .unwrap();
+    prostor_service::value_sets::add_members(pool, &admin, set_id, &[leo.user(), mia.user()], &[])
+        .await
+        .unwrap();
     set(pool, &admin, a, assignee, leo.user()).await;
     set(pool, &admin, b, assignee, mia.user()).await;
     let k = boards::create(

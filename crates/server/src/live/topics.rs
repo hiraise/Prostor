@@ -3,11 +3,11 @@
 
 use std::collections::HashSet;
 
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::permission::Permission;
-use taskmaster_domain::live::{Guard, ListScope, Topic};
-use taskmaster_domain::{BoardId, IssueId, ProjectId};
-use taskmaster_store::PgPool;
+use prostor_domain::access::Access;
+use prostor_domain::access::permission::Permission;
+use prostor_domain::live::{Guard, ListScope, Topic};
+use prostor_domain::{BoardId, IssueId, ProjectId};
+use prostor_store::PgPool;
 
 /// The accepted topics and the denied strings, each in the order asked, without repeats.
 pub struct Checked {
@@ -34,7 +34,7 @@ pub async fn check(db: &PgPool, access: &Access, asked: &[String]) -> Result<Che
     let visible: HashSet<IssueId> = if ids.is_empty() {
         HashSet::new()
     } else {
-        taskmaster_store::live::issue_facts(db, &ids)
+        prostor_store::live::issue_facts(db, &ids)
             .await?
             .into_iter()
             .filter(|facts| {
@@ -53,7 +53,7 @@ pub async fn check(db: &PgPool, access: &Access, asked: &[String]) -> Result<Che
     let boards: Vec<(BoardId, Vec<ProjectId>)> = if board_ids.is_empty() {
         Vec::new()
     } else {
-        taskmaster_store::boards::get_many(db, &board_ids)
+        prostor_store::boards::get_many(db, &board_ids)
             .await?
             .into_iter()
             .filter(|b| b.access().can_view(access))

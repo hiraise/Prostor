@@ -3,32 +3,32 @@
 //! on a real database.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::capability::Capability;
-use taskmaster_domain::access::role::PredefinedRole;
-use taskmaster_domain::issues::history::Origin;
-use taskmaster_domain::notifications::{Kind, Settings, Source};
-use taskmaster_domain::projects::Template;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::sharing::Audience;
-use taskmaster_domain::{FieldId, IssueId, ProjectId, UserId};
-use taskmaster_service::comments;
-use taskmaster_service::groups::{self, NewGroup};
-use taskmaster_service::issues::{self, NewIssue};
-use taskmaster_service::notifications::{self as ntf};
-use taskmaster_service::projects::{self, NewProjectInput};
-use taskmaster_service::roles::NewRole;
-use taskmaster_service::rules;
-use taskmaster_service::saved_searches::{self as saved, SearchChange, Sharing as SearchSharing};
-use taskmaster_service::setup::{self, Setup};
-use taskmaster_service::tags::{self, Sharing as TagSharing, TagChange};
-use taskmaster_service::users::{self, NewAccount};
-use taskmaster_service::{Error, Passwords, access, capabilities, roles};
-use taskmaster_store::PgPool;
-use taskmaster_store::access::Holder;
-use taskmaster_store::saved_searches::Listing;
-use taskmaster_store::sessions::Origin as SessionOrigin;
-use taskmaster_testkit::TestDb;
+use prostor_domain::access::Access;
+use prostor_domain::access::capability::Capability;
+use prostor_domain::access::role::PredefinedRole;
+use prostor_domain::issues::history::Origin;
+use prostor_domain::notifications::{Kind, Settings, Source};
+use prostor_domain::projects::Template;
+use prostor_domain::settings::Language;
+use prostor_domain::sharing::Audience;
+use prostor_domain::{FieldId, IssueId, ProjectId, UserId};
+use prostor_service::comments;
+use prostor_service::groups::{self, NewGroup};
+use prostor_service::issues::{self, NewIssue};
+use prostor_service::notifications::{self as ntf};
+use prostor_service::projects::{self, NewProjectInput};
+use prostor_service::roles::NewRole;
+use prostor_service::rules;
+use prostor_service::saved_searches::{self as saved, SearchChange, Sharing as SearchSharing};
+use prostor_service::setup::{self, Setup};
+use prostor_service::tags::{self, Sharing as TagSharing, TagChange};
+use prostor_service::users::{self, NewAccount};
+use prostor_service::{Error, Passwords, access, capabilities, roles};
+use prostor_store::PgPool;
+use prostor_store::access::Holder;
+use prostor_store::saved_searches::Listing;
+use prostor_store::sessions::Origin as SessionOrigin;
+use prostor_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::datetime;
 
@@ -97,7 +97,7 @@ async fn member(pool: &PgPool, admin: &Access, username: &str, of: &[ProjectId])
     .await
     .unwrap()
     .id;
-    let role = taskmaster_store::roles::builtin_id(pool, PredefinedRole::ProjectMember.key())
+    let role = prostor_store::roles::builtin_id(pool, PredefinedRole::ProjectMember.key())
         .await
         .unwrap()
         .unwrap();
@@ -186,7 +186,7 @@ async fn world(pool: &PgPool) -> World {
 }
 
 /// Anna's tag, shared for viewing with Bob.
-async fn shared_tag(pool: &PgPool, w: &World) -> taskmaster_store::tags::Tag {
+async fn shared_tag(pool: &PgPool, w: &World) -> prostor_store::tags::Tag {
     let anna = sharer(pool, &w.admin, &w.anna).await;
     let tag = tags::create(pool, &anna, "Release", None).await.unwrap();
     tags::update(
@@ -207,10 +207,7 @@ async fn shared_tag(pool: &PgPool, w: &World) -> taskmaster_store::tags::Tag {
 }
 
 /// Anna's saved search, shared for viewing with Bob.
-async fn shared_search(
-    pool: &PgPool,
-    w: &World,
-) -> taskmaster_service::saved_searches::SavedSearch {
+async fn shared_search(pool: &PgPool, w: &World) -> prostor_service::saved_searches::SavedSearch {
     let anna = sharer(pool, &w.admin, &w.anna).await;
     let s = saved::create(pool, &anna, "Open ones", "State: Open")
         .await
@@ -878,7 +875,7 @@ async fn ntf_016_manage_watchers() {
 /// list's own rights (NTF-015 above).
 async fn watchers_of(pool: &PgPool, issue: IssueId) -> Vec<UserId> {
     let mut conn = pool.acquire().await.unwrap();
-    taskmaster_store::notifications::issue_watchers(&mut *conn, issue)
+    prostor_store::notifications::issue_watchers(&mut *conn, issue)
         .await
         .unwrap()
 }
@@ -1013,7 +1010,7 @@ async fn iss_030_autowatch_assignee() {
     let x = watched_issue(pool, &w.admin, w.web, "Work", &[]).await;
     let field = assignee_field(pool, &w.admin, x).await;
     // The assignee field draws on the project team; both candidates join it.
-    taskmaster_service::teams::add(pool, &w.admin, w.web, &[w.bob.user(), w.anna.user()], &[])
+    prostor_service::teams::add(pool, &w.admin, w.web, &[w.bob.user(), w.anna.user()], &[])
         .await
         .unwrap();
     // Naming someone in a user field — the assignee here — makes them a watcher.
@@ -1023,7 +1020,7 @@ async fn iss_030_autowatch_assignee() {
         Origin::Web,
         x,
         field,
-        issues::FieldChange::Set(Some(taskmaster_domain::issues::values::Input::Ids(vec![
+        issues::FieldChange::Set(Some(prostor_domain::issues::values::Input::Ids(vec![
             w.bob.user(),
         ]))),
         false,
@@ -1042,7 +1039,7 @@ async fn iss_030_autowatch_assignee() {
             summary: "Carried".to_owned(),
             fields: vec![issues::FieldInput {
                 field,
-                value: Some(taskmaster_domain::issues::values::Input::Ids(vec![
+                value: Some(prostor_domain::issues::values::Input::Ids(vec![
                     w.bob.user(),
                 ])),
             }],
@@ -1075,7 +1072,7 @@ async fn iss_030_autowatch_assignee() {
         Origin::Web,
         x,
         field,
-        issues::FieldChange::Set(Some(taskmaster_domain::issues::values::Input::Ids(vec![
+        issues::FieldChange::Set(Some(prostor_domain::issues::values::Input::Ids(vec![
             w.anna.user(),
         ]))),
         false,
@@ -1153,15 +1150,15 @@ async fn ntf_014_clones_take_no_watchers() {
 
 use std::time::Duration;
 
-use taskmaster_domain::Actor;
-use taskmaster_domain::issues::values::Input;
-use taskmaster_domain::notifications::{Content, Line};
-use taskmaster_service::comments::NewComment;
-use taskmaster_service::issues::{AudienceInput, FieldChange, IssueChange};
-use taskmaster_store::jobs::{
+use prostor_domain::Actor;
+use prostor_domain::issues::values::Input;
+use prostor_domain::notifications::{Content, Line};
+use prostor_service::comments::NewComment;
+use prostor_service::issues::{AudienceInput, FieldChange, IssueChange};
+use prostor_store::jobs::{
     self as jobs_queue, Enqueue, Handlers, JobError, JobKind, Runner, RunnerConfig,
 };
-use taskmaster_store::notifications as inbox;
+use prostor_store::notifications as inbox;
 
 /// A published issue watched by the given people.
 async fn watched_issue(
@@ -1170,7 +1167,7 @@ async fn watched_issue(
     project: ProjectId,
     summary: &str,
     watchers: &[UserId],
-) -> taskmaster_domain::IssueId {
+) -> prostor_domain::IssueId {
     issues::create(
         pool,
         author,
@@ -1204,7 +1201,7 @@ async fn fire(pool: &PgPool, ahead: Duration) -> u64 {
     ntf::sweep(
         pool,
         OffsetDateTime::now_utc() + ahead,
-        &taskmaster_service::mail::Outgoing::default(),
+        &prostor_service::mail::Outgoing::default(),
     )
     .await
     .unwrap()
@@ -1221,7 +1218,7 @@ fn kinds(rows: &[inbox::Notification]) -> Vec<&'static str> {
 }
 
 /// Changes the summary of an issue (an `updated` event, NTF-045).
-async fn retitle(pool: &PgPool, actor: &Access, issue: taskmaster_domain::IssueId, summary: &str) {
+async fn retitle(pool: &PgPool, actor: &Access, issue: prostor_domain::IssueId, summary: &str) {
     let version = issues::get(pool, actor, issue)
         .await
         .unwrap()
@@ -1259,7 +1256,7 @@ async fn ntf_045_kinds_of_update() {
     assert_eq!(kinds(&rows), ["created"]);
 
     // A comment, a vote and a tag change are kinds of their own; every one is due at once.
-    taskmaster_service::comments::create(
+    prostor_service::comments::create(
         pool,
         &carol,
         Origin::Web,
@@ -1288,7 +1285,7 @@ async fn ntf_045_kinds_of_update() {
         .iter()
         .find(|f| f.field.field.name == "State")
         .expect("the scrum template has a State field");
-    let values = taskmaster_store::value_sets::values_of(
+    let values = prostor_store::value_sets::values_of(
         pool,
         &[state.field.attached.set_id.expect("state has a set")],
     )
@@ -1305,14 +1302,14 @@ async fn ntf_045_kinds_of_update() {
         .find(|v| v.name != "Duplicate")
         .unwrap()
         .clone();
-    taskmaster_service::value_sets::update_value(
+    prostor_service::value_sets::update_value(
         pool,
         &w.admin,
         resolving.set_id,
         resolving.id,
-        taskmaster_service::value_sets::ValueInput {
+        prostor_service::value_sets::ValueInput {
             resolved: Some(true),
-            ..taskmaster_service::value_sets::ValueInput::default()
+            ..prostor_service::value_sets::ValueInput::default()
         },
         resolving.version,
     )
@@ -1364,14 +1361,8 @@ async fn ntf_045_kinds_of_update() {
     // The resolution fires at once, and with it the field's own `updated` batch flushes
     // (NTF-044) — the newest row is that flush, the resolution sits just under it.
     let rows = delivered(pool, w.anna.user()).await;
-    assert_eq!(
-        rows[0].kind,
-        taskmaster_domain::notifications::Kind::Updated
-    );
-    assert_eq!(
-        rows[1].kind,
-        taskmaster_domain::notifications::Kind::Resolved
-    );
+    assert_eq!(rows[0].kind, prostor_domain::notifications::Kind::Updated);
+    assert_eq!(rows[1].kind, prostor_domain::notifications::Kind::Resolved);
 }
 
 #[tokio::test]
@@ -1401,7 +1392,7 @@ async fn ntf_042_reasons_union() {
         pool,
         &w.anna,
         Source::Tag(tag.id),
-        &[taskmaster_domain::notifications::Kind::Updated],
+        &[prostor_domain::notifications::Kind::Updated],
     )
     .await
     .unwrap();
@@ -1471,7 +1462,7 @@ async fn ntf_042_search_subscriber() {
         pool,
         &w.anna,
         Source::Search(search.row.id),
-        &[taskmaster_domain::notifications::Kind::Updated],
+        &[prostor_domain::notifications::Kind::Updated],
     )
     .await
     .unwrap();
@@ -1484,7 +1475,7 @@ async fn ntf_042_search_subscriber() {
         .iter()
         .find(|f| f.field.field.name == "State")
         .expect("the scrum template has a State field");
-    let values = taskmaster_store::value_sets::values_of(
+    let values = prostor_store::value_sets::values_of(
         pool,
         &[state.field.attached.set_id.expect("state has a set")],
     )
@@ -1496,14 +1487,14 @@ async fn ntf_042_search_subscriber() {
         .find(|v| v.name != "Duplicate")
         .unwrap()
         .clone();
-    taskmaster_service::value_sets::update_value(
+    prostor_service::value_sets::update_value(
         pool,
         &w.admin,
         resolving.set_id,
         resolving.id,
-        taskmaster_service::value_sets::ValueInput {
+        prostor_service::value_sets::ValueInput {
             resolved: Some(true),
-            ..taskmaster_service::value_sets::ValueInput::default()
+            ..prostor_service::value_sets::ValueInput::default()
         },
         resolving.version,
     )
@@ -1561,7 +1552,7 @@ async fn ntf_035_mention_without_access_dropped() {
     .unwrap()
     .id;
 
-    taskmaster_service::comments::create(
+    prostor_service::comments::create(
         pool,
         &w.bob,
         Origin::Web,
@@ -1713,27 +1704,27 @@ async fn ntf_043_private_fields_filtered() {
 
     // The State field becomes private (FLD-060); the change is Carol's, who may write private
     // fields. Dana cannot read them; Anna can.
-    let fields = taskmaster_service::project_fields::list(pool, &w.admin, web)
+    let fields = prostor_service::project_fields::list(pool, &w.admin, web)
         .await
         .unwrap();
     let state = fields
         .iter()
         .find(|f| f.field.name == "State")
         .expect("the scrum template has a State field");
-    taskmaster_service::project_fields::update(
+    prostor_service::project_fields::update(
         pool,
         &w.admin,
         web,
         state.field.id,
-        taskmaster_service::project_fields::SettingsChange {
+        prostor_service::project_fields::SettingsChange {
             private: Some(true),
             version: state.attached.version,
-            ..taskmaster_service::project_fields::SettingsChange::default()
+            ..prostor_service::project_fields::SettingsChange::default()
         },
     )
     .await
     .unwrap();
-    let values = taskmaster_store::value_sets::values_of(
+    let values = prostor_store::value_sets::values_of(
         pool,
         &[state.attached.set_id.expect("state has a set")],
     )
@@ -1920,10 +1911,7 @@ async fn ntf_027_created_fires() {
     fire(pool, Duration::from_secs(2)).await;
     let rows = delivered(pool, w.admin.user()).await;
     assert_eq!(rows.len(), 1, "{rows:?}");
-    assert_eq!(
-        rows[0].kind,
-        taskmaster_domain::notifications::Kind::Created
-    );
+    assert_eq!(rows[0].kind, prostor_domain::notifications::Kind::Created);
     assert!(rows[0].reasons[0].starts_with("search:"));
 
     // The admin's own new issue is their own change: no notification (NTF-030).
@@ -1947,7 +1935,7 @@ async fn ntf_027_created_fires() {
             project: web,
             summary: "Taken".to_owned(),
             publish: true,
-            fields: vec![taskmaster_service::issues::FieldInput {
+            fields: vec![prostor_service::issues::FieldInput {
                 field: assignee.field.id(),
                 value: Some(Input::Ids(vec![w.admin.user()])),
             }],
@@ -1959,10 +1947,7 @@ async fn ntf_027_created_fires() {
     fire(pool, Duration::from_secs(2)).await;
     let rows = delivered(pool, w.admin.user()).await;
     assert_eq!(rows.len(), 2, "{rows:?}");
-    assert_eq!(
-        rows[0].kind,
-        taskmaster_domain::notifications::Kind::Created
-    );
+    assert_eq!(rows[0].kind, prostor_domain::notifications::Kind::Created);
     assert!(rows[0].reasons.iter().any(|reason| reason == "watch"));
 }
 
@@ -2050,15 +2035,15 @@ async fn adm_031_job_report() {
 // The emails of fired notifications (plan §6.4, 1.10c-2)
 //
 
-use taskmaster_domain::settings::BASE_URL;
-use taskmaster_service::mail::{self, EnvMail, Mail, Outgoing};
-use taskmaster_service::settings as instance_settings;
+use prostor_domain::settings::BASE_URL;
+use prostor_service::mail::{self, EnvMail, Mail, Outgoing};
+use prostor_service::settings as instance_settings;
 
 /// The outgoing email state of an instance whose transport comes from the environment (D-026):
 /// on, and the sender address carries no display name, so NTF-008's case is the default here.
 fn email_on() -> Outgoing {
     mail::outgoing(
-        &taskmaster_domain::settings::Snapshot::default(),
+        &prostor_domain::settings::Snapshot::default(),
         Some(&EnvMail {
             url: "smtp://127.0.0.1:1025".to_owned(),
             from: "tracker@example.com".to_owned(),
@@ -2067,7 +2052,7 @@ fn email_on() -> Outgoing {
 }
 
 /// Fires with email on and links in place (NTF-010): the instance's base URL points somewhere.
-async fn fire_email(pool: &PgPool, admin: &taskmaster_domain::access::Access, ahead: Duration) {
+async fn fire_email(pool: &PgPool, admin: &prostor_domain::access::Access, ahead: Duration) {
     instance_settings::set(
         pool,
         BASE_URL.key,
@@ -2230,7 +2215,7 @@ async fn ntf_062_subject_kinds() {
     let issue = watched_issue(pool, &w.bob, w.web, "Crash", &[w.anna.user()]).await;
     fire_email(pool, &w.admin, Duration::from_secs(2)).await;
 
-    taskmaster_service::comments::create(
+    prostor_service::comments::create(
         pool,
         &carol,
         Origin::Web,
@@ -2257,7 +2242,7 @@ async fn ntf_062_subject_kinds() {
         .iter()
         .find(|f| f.field.field.name == "State")
         .expect("the scrum template has a State field");
-    let values = taskmaster_store::value_sets::values_of(
+    let values = prostor_store::value_sets::values_of(
         pool,
         &[state.field.attached.set_id.expect("state has a set")],
     )
@@ -2269,14 +2254,14 @@ async fn ntf_062_subject_kinds() {
         .find(|v| v.name != "Duplicate")
         .unwrap()
         .clone();
-    taskmaster_service::value_sets::update_value(
+    prostor_service::value_sets::update_value(
         pool,
         &w.admin,
         resolving.set_id,
         resolving.id,
-        taskmaster_service::value_sets::ValueInput {
+        prostor_service::value_sets::ValueInput {
             resolved: Some(true),
-            ..taskmaster_service::value_sets::ValueInput::default()
+            ..prostor_service::value_sets::ValueInput::default()
         },
         resolving.version,
     )
@@ -2350,7 +2335,7 @@ async fn ntf_063_footer_reasons_no_mute() {
         .await
         .unwrap();
     fire_email(pool, &w.admin, Duration::from_secs(2)).await;
-    taskmaster_service::comments::create(
+    prostor_service::comments::create(
         pool,
         &w.bob,
         Origin::Web,
@@ -2465,15 +2450,15 @@ async fn ntf_008_actor_display_name() {
         "{unnamed}"
     );
     let named = mail::outgoing(
-        &taskmaster_domain::settings::Snapshot::default(),
+        &prostor_domain::settings::Snapshot::default(),
         Some(&EnvMail {
             url: "smtp://127.0.0.1:1025".to_owned(),
-            from: "taskmaster <tracker@example.com>".to_owned(),
+            from: "prostor <tracker@example.com>".to_owned(),
         }),
     );
     let named = wire(&named);
     assert!(
-        named.contains("From: taskmaster <tracker@example.com>"),
+        named.contains("From: prostor <tracker@example.com>"),
         "{named}"
     );
 }

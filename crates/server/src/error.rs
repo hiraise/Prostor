@@ -9,10 +9,10 @@ use axum::extract::rejection::{JsonRejection, QueryRejection};
 use axum::extract::{FromRequest, FromRequestParts};
 use axum::http::{HeaderValue, StatusCode, header};
 use axum::response::{IntoResponse, Json, Response};
+use prostor_api::error::{ErrorBody, ErrorCode, FieldError};
+use prostor_api::search::{QueryProblem, QuerySeverity};
+use prostor_domain::links::Refusal;
 use serde::Serialize;
-use taskmaster_api::error::{ErrorBody, ErrorCode, FieldError};
-use taskmaster_api::search::{QueryProblem, QuerySeverity};
-use taskmaster_domain::links::Refusal;
 
 /// An error answer of the API.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -179,9 +179,9 @@ impl From<sqlx::Error> for ApiError {
     }
 }
 
-impl From<taskmaster_service::Error> for ApiError {
-    fn from(error: taskmaster_service::Error) -> Self {
-        use taskmaster_service::Error;
+impl From<prostor_service::Error> for ApiError {
+    fn from(error: prostor_service::Error) -> Self {
+        use prostor_service::Error;
         match error {
             Error::Invalid(problems) => Self::invalid(
                 problems

@@ -1,13 +1,13 @@
 //! Personal API tokens (AUTH-029, AUTH-030): created with a name and scopes, shown once, used as a
 //! bearer token, deleted to revoke.
 
+use prostor_domain::UserId;
+use prostor_domain::accounts::plain_text;
+use prostor_domain::auth::{Principal, Scopes, TOKEN_NAME_MAX};
+use prostor_domain::validation::Problems;
+use prostor_store::api_tokens::{self, ApiToken, NewToken};
+use prostor_store::{PgPool, audit};
 use serde_json::json;
-use taskmaster_domain::UserId;
-use taskmaster_domain::accounts::plain_text;
-use taskmaster_domain::auth::{Principal, Scopes, TOKEN_NAME_MAX};
-use taskmaster_domain::validation::Problems;
-use taskmaster_store::api_tokens::{self, ApiToken, NewToken};
-use taskmaster_store::{PgPool, audit};
 
 use crate::secrets::{self, Secret};
 use crate::{Error, Result};

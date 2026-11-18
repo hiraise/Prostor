@@ -14,31 +14,29 @@ pub mod membership;
 pub mod sprints;
 pub mod view;
 
+use prostor_domain::access::Access;
+use prostor_domain::access::permission::Permission;
+use prostor_domain::boards::access::{BoardAccess, may_create};
+use prostor_domain::boards::lanes::LaneKey;
+use prostor_domain::boards::presets::{self, Attached as PresetField, ProjectFields, SetValue};
+use prostor_domain::boards::sprints::{INTERNAL_NAME, current, free_numbered_name, numbered_name};
+use prostor_domain::boards::{self as domain, ColorMode, Mode, Preset};
+use prostor_domain::fields::FieldKind;
+use prostor_domain::fields::builtin::BuiltinField;
+use prostor_domain::live::Change;
+use prostor_domain::rank;
+use prostor_domain::search::Binding;
+use prostor_domain::settings::Language;
+use prostor_domain::sharing::Audience;
+use prostor_domain::validation::{Problem, Problems};
+use prostor_domain::{Actor, BoardId, ColumnId, FieldId, ProjectId, SprintId, UserId};
+use prostor_store::boards::{self as store, After, Full, Listed, Profile, Settings, Viewer};
+use prostor_store::fields::{self as store_fields, Field};
+use prostor_store::projects::{self, Project};
+use prostor_store::value_sets::{self, Value};
+use prostor_store::{PgPool, audit, users};
 use serde_json::json;
 use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::permission::Permission;
-use taskmaster_domain::boards::access::{BoardAccess, may_create};
-use taskmaster_domain::boards::lanes::LaneKey;
-use taskmaster_domain::boards::presets::{self, Attached as PresetField, ProjectFields, SetValue};
-use taskmaster_domain::boards::sprints::{
-    INTERNAL_NAME, current, free_numbered_name, numbered_name,
-};
-use taskmaster_domain::boards::{self as domain, ColorMode, Mode, Preset};
-use taskmaster_domain::fields::FieldKind;
-use taskmaster_domain::fields::builtin::BuiltinField;
-use taskmaster_domain::live::Change;
-use taskmaster_domain::rank;
-use taskmaster_domain::search::Binding;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::sharing::Audience;
-use taskmaster_domain::validation::{Problem, Problems};
-use taskmaster_domain::{Actor, BoardId, ColumnId, FieldId, ProjectId, SprintId, UserId};
-use taskmaster_store::boards::{self as store, After, Full, Listed, Profile, Settings, Viewer};
-use taskmaster_store::fields::{self as store_fields, Field};
-use taskmaster_store::projects::{self, Project};
-use taskmaster_store::value_sets::{self, Value};
-use taskmaster_store::{PgPool, audit, users};
 
 use crate::live::Batch;
 use crate::seed::internal;
@@ -63,7 +61,7 @@ pub struct BoardRow {
     /// The board query by the viewer's names (mode `query`, BRD-029).
     pub query: Option<String>,
     /// What the board query lost (a deleted value…): the board shows no cards until it is fixed.
-    pub query_problems: Vec<taskmaster_query::Problem>,
+    pub query_problems: Vec<prostor_query::Problem>,
     /// The fields the card settings name that exist (BRD-059…BRD-062).
     pub fields: Vec<Field>,
     /// Fields of the board projects the viewer may not read (FLD-062): the settings leave them
@@ -72,7 +70,7 @@ pub struct BoardRow {
     /// The fields attached to the board projects.
     pub attached: Vec<store_fields::Attached>,
     /// What keeps the board from working (BRD-023), errors first.
-    pub health: Vec<taskmaster_domain::boards::health::Finding>,
+    pub health: Vec<prostor_domain::boards::health::Finding>,
     /// What the lane values name, so empty lanes have titles too (BRD-053).
     pub lane_names: LaneNames,
 }
@@ -82,8 +80,8 @@ pub struct BoardRow {
 pub struct LaneNames {
     pub values: Vec<Value>,
     pub users: Vec<users::User>,
-    pub groups: Vec<taskmaster_store::groups::Group>,
-    pub tags: Vec<taskmaster_store::tags::Tag>,
+    pub groups: Vec<prostor_store::groups::Group>,
+    pub tags: Vec<prostor_store::tags::Tag>,
 }
 
 impl BoardRow {
@@ -158,7 +156,7 @@ pub struct BoardChange {
     /// The sprint new issues join on a sprint board (BRD-026); `Some(None)` clears it.
     pub auto_sprint: Option<Option<SprintId>>,
     /// The saved search used as the backlog (BRD-090); `Some(None)` leaves the board without.
-    pub backlog: Option<Option<taskmaster_store::saved_searches::SavedSearchId>>,
+    pub backlog: Option<Option<prostor_store::saved_searches::SavedSearchId>>,
     /// Makes a new default backlog owned by the caller and uses it (BRD-089); wins over `backlog`.
     pub new_backlog: bool,
     /// The lanes (BRD-049…BRD-055); value lanes reorder here too.
@@ -228,7 +226,7 @@ fn target(id: BoardId) -> String {
     format!("board:{id}")
 }
 
-fn rejected(path: &str) -> impl FnOnce(taskmaster_domain::validation::Rejection) -> Error + '_ {
+fn rejected(path: &str) -> impl FnOnce(prostor_domain::validation::Rejection) -> Error + '_ {
     move |r| Error::field(path, r.problem, r.message)
 }
 
@@ -339,12 +337,12 @@ pub(crate) async fn load(
         groups: if group_ids.is_empty() {
             Vec::new()
         } else {
-            taskmaster_store::groups::get_many(&mut *conn, &group_ids).await?
+            prostor_store::groups::get_many(&mut *conn, &group_ids).await?
         },
         tags: if tag_ids.is_empty() {
             Vec::new()
         } else {
-            taskmaster_store::tags::get_many(&mut *conn, &tag_ids)
+            prostor_store::tags::get_many(&mut *conn, &tag_ids)
                 .await?
                 .into_iter()
                 .filter(|t| {
@@ -576,7 +574,7 @@ pub async fn create(
     let sharing = if input.sharing.is_private() {
         input.sharing
     } else {
-        if !viewer.capability(taskmaster_domain::access::capability::Capability::ShareViews) {
+        if !viewer.capability(prostor_domain::access::capability::Capability::ShareViews) {
             return Err(Error::Refused("sharing is not switched on for you".into()));
         }
         check_sharing(&mut tx, viewer, viewer.user(), input.sharing).await?
@@ -984,12 +982,12 @@ async fn pin_cards(conn: &mut PgConnection, actor: &Access, board: &store::Board
         .iter()
         .map(|c| c.value_id)
         .collect();
-    let everyone = taskmaster_store::visibility::Visibility {
+    let everyone = prostor_store::visibility::Visibility {
         me: actor.user(),
-        read: taskmaster_domain::access::Projects::All,
+        read: prostor_domain::access::Projects::All,
         create_only: Vec::new(),
-        bypass: taskmaster_domain::access::Projects::All,
-        comment_read: taskmaster_domain::access::Projects::All,
+        bypass: prostor_domain::access::Projects::All,
+        comment_read: prostor_domain::access::Projects::All,
         groups: actor.groups().to_vec(),
         within: None,
     };

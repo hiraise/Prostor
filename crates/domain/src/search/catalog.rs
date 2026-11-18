@@ -3,7 +3,7 @@
 
 use std::collections::BTreeSet;
 
-use taskmaster_query::{fold, fold_value};
+use prostor_query::{fold, fold_value};
 
 use super::filter::Filter;
 use crate::boards::sprints::SprintDates;

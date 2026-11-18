@@ -2,21 +2,21 @@
 //! contract. The command half answers the dialog's preview and completion (`CMD-028`,
 //! `CMD-029`); the query half answers the query bar's check plus completion (`QRY-056`…
 //! `QRY-058`). The pure model — contexts, matching, ranges — lives in
-//! [`taskmaster_query::completion`]; this module assembles the candidates from the dictionary
+//! [`prostor_query::completion`]; this module assembles the candidates from the dictionary
 //! of the scope the caret's context implies: names, rights, presence, resolved dates.
 
 use std::collections::{HashMap, HashSet};
 
-use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::fields::FieldKind;
-use taskmaster_domain::search::dates::Clock;
-use taskmaster_domain::{FieldId, IssueId, ProjectId, TagId};
-use taskmaster_query::completion::{
+use prostor_domain::access::Access;
+use prostor_domain::fields::FieldKind;
+use prostor_domain::search::dates::Clock;
+use prostor_domain::{FieldId, IssueId, ProjectId, TagId};
+use prostor_query::completion::{
     self, Candidate, CommandContext, Group, Place, QueryContext, Suggestion,
 };
-use taskmaster_query::words::{self, Kind};
-use taskmaster_store::PgPool;
+use prostor_query::words::{self, Kind};
+use prostor_store::PgPool;
+use sqlx::PgConnection;
 
 use crate::Result;
 use crate::commands::dictionary::{self, Names};
@@ -61,7 +61,7 @@ pub struct OperationMarks {
 /// The direction an operation changes things in, for the preview's `+`/`−` marks.
 fn mode_of(operation: &commands::Operation) -> Option<&'static str> {
     use commands::Operation;
-    use taskmaster_query::command::Mode;
+    use prostor_query::command::Mode;
     match operation {
         Operation::SetField { change, .. } => match change {
             crate::issues::FieldChange::Set(_) => Some("set"),
@@ -94,7 +94,7 @@ fn marks_of(
     presence: Option<&Presence>,
 ) -> Vec<OperationMarks> {
     use commands::Operation;
-    use taskmaster_domain::issues::values::Input;
+    use prostor_domain::issues::values::Input;
     plan.operations
         .iter()
         .map(|planned| {
@@ -157,10 +157,10 @@ pub async fn commands(
     let presence = load_presence(&mut conn, actor, &input.issues).await?;
     // The person's lately applied lines (CMD-030): the `recent` group, above everything else a
     // fresh command could start from.
-    let recents = taskmaster_store::command_history::recent(
+    let recents = prostor_store::command_history::recent(
         &mut *conn,
         actor.user(),
-        taskmaster_store::command_history::KEEP as i64,
+        prostor_store::command_history::KEEP as i64,
     )
     .await?;
     let candidates = if let CommandContext::LinkTarget = context {
@@ -200,9 +200,9 @@ pub async fn query(
     let implied = match project {
         Some(one) => vec![one],
         None => {
-            let q = taskmaster_query::parse(text);
+            let q = prostor_query::parse(text);
             let entries = readable_entries(&mut conn, viewer).await?;
-            let scope = taskmaster_domain::search::scope(&q, &entries, None);
+            let scope = prostor_domain::search::scope(&q, &entries, None);
             if scope.narrowed {
                 scope.projects
             } else {
@@ -226,7 +226,7 @@ async fn targets(
     input: &CommandAssist,
 ) -> Result<Vec<ProjectId>> {
     if !input.issues.is_empty() {
-        let found = taskmaster_store::issues::get_many(&mut *conn, &input.issues).await?;
+        let found = prostor_store::issues::get_many(&mut *conn, &input.issues).await?;
         let mut projects: Vec<ProjectId> = found.iter().map(|issue| issue.project_id).collect();
         projects.sort_unstable();
         projects.dedup();
@@ -236,11 +236,8 @@ async fn targets(
     if let Some(text) = input.query.as_deref().filter(|text| !text.is_empty()) {
         let entries = readable_entries(conn, actor).await?;
         let within = input.project.map(|p| vec![p]);
-        let scope = taskmaster_domain::search::scope(
-            &taskmaster_query::parse(text),
-            &entries,
-            within.as_deref(),
-        );
+        let scope =
+            prostor_domain::search::scope(&prostor_query::parse(text), &entries, within.as_deref());
         if scope.narrowed {
             return Ok(scope.projects);
         }
@@ -274,8 +271,8 @@ async fn readable(
 async fn readable_entries(
     conn: &mut PgConnection,
     actor: &Access,
-) -> Result<Vec<taskmaster_domain::search::catalog::ProjectEntry>> {
-    let rows = taskmaster_store::search::catalog::projects(&mut *conn).await?;
+) -> Result<Vec<prostor_domain::search::catalog::ProjectEntry>> {
+    let rows = prostor_store::search::catalog::projects(&mut *conn).await?;
     let vis = search::visibility(actor, &rows);
     Ok(rows
         .into_iter()
@@ -460,7 +457,7 @@ fn query_candidates(
             },
             None => {
                 for field in names.fields_named(folded) {
-                    if !taskmaster_domain::issues::values::editable(field.builtin.as_deref()) {
+                    if !prostor_domain::issues::values::editable(field.builtin.as_deref()) {
                         continue;
                     }
                     let tier = if field_in(field, implied) { 0 } else { 1 };
@@ -546,7 +543,7 @@ async fn load_presence(
     if issues.is_empty() {
         return Ok(None);
     }
-    let found = taskmaster_store::issues::get_many(&mut *conn, issues).await?;
+    let found = prostor_store::issues::get_many(&mut *conn, issues).await?;
     let mut projects: Vec<ProjectId> = found.iter().map(|issue| issue.project_id).collect();
     projects.sort_unstable();
     projects.dedup();
@@ -557,7 +554,7 @@ async fn load_presence(
         .collect();
     let values = crate::issues::values::of_issues(&mut *conn, &pairs, &project_fields).await?;
     let tag_rows =
-        taskmaster_store::tags::on_issues(&mut *conn, issues, actor.user(), actor.groups()).await?;
+        prostor_store::tags::on_issues(&mut *conn, issues, actor.user(), actor.groups()).await?;
 
     let mut presence = Presence::default();
     let mut first = true;
@@ -768,7 +765,7 @@ fn boards(names: &Names, out: &mut Vec<Candidate>) {
     }
 }
 
-fn sprints(names: &Names, of_board: Option<taskmaster_domain::BoardId>, out: &mut Vec<Candidate>) {
+fn sprints(names: &Names, of_board: Option<prostor_domain::BoardId>, out: &mut Vec<Candidate>) {
     for sprint in &names.sprints {
         if of_board.is_some_and(|board| sprint.board != board) {
             continue;

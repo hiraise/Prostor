@@ -1,6 +1,6 @@
 //! Files (D-033): `/uploads` (the one endpoint with a raw body, D-016), the attachments of issues,
 //! signed file links under `/files`, avatars and project logos. Rules and flows live in
-//! `taskmaster_service::{uploads, attachments, files, pictures}`.
+//! `prostor_service::{uploads, attachments, files, pictures}`.
 //!
 //! Files are sent with `ServeFile` (ranges for video, conditional requests) and headers that keep
 //! a browser from running them: the kind comes from the bytes, everything but pictures, three
@@ -13,18 +13,18 @@ use axum::body::Body;
 use axum::extract::{Path, Request, State};
 use axum::http::{HeaderValue, StatusCode, header};
 use axum::response::{IntoResponse, Response};
-use taskmaster_api::error::{ErrorBody, ErrorCode};
-use taskmaster_api::files::{
+use prostor_api::error::{ErrorBody, ErrorCode};
+use prostor_api::files::{
     Attachment, AttachmentPage, AttachmentPatch, AttachmentQuery, FileLinkQuery, NewAttachments,
     Picture, PictureInput, Upload, UploadQuery,
 };
-use taskmaster_domain::access::Access;
-use taskmaster_domain::auth::Scope;
-use taskmaster_domain::files::Kind;
-use taskmaster_domain::{AttachmentId, IssueId, ProjectId, UploadId, UserId};
-use taskmaster_service::attachments::{self, AttachmentChange, Listed};
-use taskmaster_service::files::{self, LinkQuery};
-use taskmaster_service::{pictures, uploads};
+use prostor_domain::access::Access;
+use prostor_domain::auth::Scope;
+use prostor_domain::files::Kind;
+use prostor_domain::{AttachmentId, IssueId, ProjectId, UploadId, UserId};
+use prostor_service::attachments::{self, AttachmentChange, Listed};
+use prostor_service::files::{self, LinkQuery};
+use prostor_service::{pictures, uploads};
 use time::OffsetDateTime;
 use tower::ServiceExt;
 use tower_http::services::ServeFile;
@@ -141,7 +141,7 @@ pub async fn upload(
         .and_then(|v| v.to_str().ok())
         .and_then(|v| v.parse::<u64>().ok());
     if declared.is_some_and(|size| size > limit) {
-        return Err(taskmaster_service::Error::TooLarge(limit).into());
+        return Err(prostor_service::Error::TooLarge(limit).into());
     }
     let body = request.into_body().into_data_stream();
     let stored = uploads::receive(
@@ -258,7 +258,7 @@ pub async fn list(
         Some(limit) if (1..=100).contains(&limit) => i64::from(limit),
         Some(_) => {
             return Err(ApiError::invalid(vec![
-                taskmaster_api::error::FieldError::new(
+                prostor_api::error::FieldError::new(
                     "limit",
                     "out_of_range",
                     "limit must be between 1 and 100",
@@ -646,7 +646,7 @@ pub async fn set_logo(
         request.upload,
     )
     .await?;
-    let found = taskmaster_store::projects::get(&state.db, project)
+    let found = prostor_store::projects::get(&state.db, project)
         .await?
         .ok_or_else(not_found)?;
     Ok(picture(logo_url(&found)))

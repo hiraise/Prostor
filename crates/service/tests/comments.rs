@@ -4,28 +4,28 @@
 //! re-rendering job, and what deleting accounts and groups does to comments.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+use prostor_domain::access::capability::CapabilitySet;
+use prostor_domain::access::role::PredefinedRole;
+use prostor_domain::access::{Access, Grant, Scope};
+use prostor_domain::issues::history::Origin;
+use prostor_domain::projects::Template;
+use prostor_domain::settings::Language;
+use prostor_domain::validation::Problem;
+use prostor_domain::{CommentId, IssueId, ProjectId, UserId};
+use prostor_service::auth::SignedIn;
+use prostor_service::comments::{self, CommentChange, NewComment};
+use prostor_service::issues::activity::{self, Item, Query};
+use prostor_service::issues::{self, AudienceInput, IssueChange, IssueView, NewIssue};
+use prostor_service::projects::{self, NewProjectInput, ProjectChange};
+use prostor_service::setup::{self, Setup};
+use prostor_service::users::{self, NewAccount};
+use prostor_service::{Error, Passwords, access, groups, roles, text};
+use prostor_store::PgPool;
+use prostor_store::access::Holder;
+use prostor_store::issue_history::Direction;
+use prostor_store::sessions::Origin as SessionOrigin;
+use prostor_testkit::TestDb;
 use serde_json::json;
-use taskmaster_domain::access::capability::CapabilitySet;
-use taskmaster_domain::access::role::PredefinedRole;
-use taskmaster_domain::access::{Access, Grant, Scope};
-use taskmaster_domain::issues::history::Origin;
-use taskmaster_domain::projects::Template;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::validation::Problem;
-use taskmaster_domain::{CommentId, IssueId, ProjectId, UserId};
-use taskmaster_service::auth::SignedIn;
-use taskmaster_service::comments::{self, CommentChange, NewComment};
-use taskmaster_service::issues::activity::{self, Item, Query};
-use taskmaster_service::issues::{self, AudienceInput, IssueChange, IssueView, NewIssue};
-use taskmaster_service::projects::{self, NewProjectInput, ProjectChange};
-use taskmaster_service::setup::{self, Setup};
-use taskmaster_service::users::{self, NewAccount};
-use taskmaster_service::{Error, Passwords, access, groups, roles, text};
-use taskmaster_store::PgPool;
-use taskmaster_store::access::Holder;
-use taskmaster_store::issue_history::Direction;
-use taskmaster_store::sessions::Origin as SessionOrigin;
-use taskmaster_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::datetime;
 
@@ -108,7 +108,7 @@ async fn person(
     of: &[ProjectId],
 ) -> Access {
     let user = create_user(pool, actor, username).await;
-    let role = taskmaster_store::roles::builtin_id(pool, role.key())
+    let role = prostor_store::roles::builtin_id(pool, role.key())
         .await
         .unwrap()
         .unwrap();
@@ -554,7 +554,7 @@ async fn cnt_004_edits_keep_both_versions() {
     assert_eq!(edited.comment.updated_by, Some(member.user()));
     assert!(edited.comment.updated_at.is_some());
     // The edit is recorded with both versions, but it is no stream item.
-    let records = taskmaster_store::issue_history::all_of(pool, issue)
+    let records = prostor_store::issue_history::all_of(pool, issue)
         .await
         .unwrap();
     let record = records.iter().find(|e| e.kind == "comment_edited").unwrap();
@@ -601,7 +601,7 @@ async fn cnt_004_edits_keep_both_versions() {
     )
     .await
     .unwrap();
-    let again = taskmaster_store::issue_history::all_of(pool, issue)
+    let again = prostor_store::issue_history::all_of(pool, issue)
         .await
         .unwrap();
     assert_eq!(again.len(), records.len());
@@ -649,7 +649,7 @@ async fn cnt_005_deleted_comments_are_placeholders_until_restored() {
     let (back, _) = comments::restore(pool, &member, WEB, id).await.unwrap();
     assert!(!back.is_deleted());
     assert_eq!(seen(pool, &other, issue).await, [Some("Oops".to_owned())]);
-    let kinds: Vec<String> = taskmaster_store::issue_history::all_of(pool, issue)
+    let kinds: Vec<String> = prostor_store::issue_history::all_of(pool, issue)
         .await
         .unwrap()
         .into_iter()
@@ -919,7 +919,7 @@ async fn cnt_054_mentions_are_stored_and_offered_to_those_who_see_the_issue() {
     assert_eq!(named, [member.user(), outsider]);
 
     // Candidates: matching people who can see the issue.
-    let candidates = taskmaster_service::people::mention_candidates(pool, &admin, issue, "js", 10)
+    let candidates = prostor_service::people::mention_candidates(pool, &admin, issue, "js", 10)
         .await
         .unwrap();
     assert_eq!(
@@ -937,7 +937,7 @@ async fn cnt_054_mentions_are_stored_and_offered_to_those_who_see_the_issue() {
         CapabilitySet::default(),
     );
     assert!(
-        taskmaster_service::people::mention_candidates(pool, &no_directory, issue, "js", 10)
+        prostor_service::people::mention_candidates(pool, &no_directory, issue, "js", 10)
             .await
             .unwrap()
             .is_empty()
@@ -1043,7 +1043,7 @@ async fn cnt_056_issue_ids_resolve_for_each_viewer() {
         pool,
         &member,
         "WEB-1 APP-1",
-        taskmaster_markup::Profile::Full,
+        prostor_markup::Profile::Full,
         Some(issue),
         &[],
     )
@@ -1126,7 +1126,7 @@ async fn content_render_job_brings_old_texts_up_to_date() {
     text::run_render(
         pool,
         text::RenderJob {
-            version: taskmaster_markup::RENDER_VERSION,
+            version: prostor_markup::RENDER_VERSION,
         },
     )
     .await
@@ -1138,15 +1138,12 @@ async fn content_render_job_brings_old_texts_up_to_date() {
     );
     let shown = comments::get(pool, &admin, id).await.unwrap().0;
     assert_eq!(shown.comment.mentioned_users, [admin.user()]);
+    assert_eq!(shown.comment.render_version, prostor_markup::RENDER_VERSION);
     assert_eq!(
-        shown.comment.render_version,
-        taskmaster_markup::RENDER_VERSION
-    );
-    assert_eq!(
-        taskmaster_store::content::instance_version(pool)
+        prostor_store::content::instance_version(pool)
             .await
             .unwrap(),
-        taskmaster_markup::RENDER_VERSION
+        prostor_markup::RENDER_VERSION
     );
 }
 
@@ -1203,7 +1200,7 @@ async fn acc_006_acc_032_deleted_accounts_and_groups_leave_comment_audiences() {
     groups::delete(pool, &admin, &[old.id], new.id)
         .await
         .unwrap();
-    let row = taskmaster_store::comments::get(pool, posted.comment.id)
+    let row = prostor_store::comments::get(pool, posted.comment.id)
         .await
         .unwrap()
         .unwrap();

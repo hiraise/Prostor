@@ -1,8 +1,8 @@
 //! Role assignments and capability groups (ACC-058…ACC-064): who holds which role where, and what
 //! compiling a person's access needs to read.
 
+use prostor_domain::{GroupId, ProjectId, RoleId, UserId};
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::{GroupId, ProjectId, RoleId, UserId};
 use time::OffsetDateTime;
 
 /// Who holds an assignment.

@@ -1,10 +1,10 @@
 //! The per-project toggles of the built-in behaviors (AUT-023, step 1.9). Rows are written by
 //! project creation (the template's set) and by the settings tab only; a rule with no row is off.
 
+use prostor_domain::ProjectId;
+use prostor_domain::projects::Template;
+use prostor_domain::rules::{Rule, template_set};
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::ProjectId;
-use taskmaster_domain::projects::Template;
-use taskmaster_domain::rules::{Rule, template_set};
 
 /// One toggle row of a project.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

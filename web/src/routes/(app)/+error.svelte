@@ -5,6 +5,7 @@
   import { page } from '$app/state';
 
   import * as states from '#lib/i18n/messages/states.ts';
+  import { brand } from '#lib/i18n/messages/brand.ts';
   import { homeHref } from '#lib/shell/sections.ts';
   import ErrorState from '#lib/ui/ErrorState.svelte';
   import NotFoundState from '#lib/ui/NotFoundState.svelte';
@@ -12,7 +13,7 @@
 
 <svelte:head>
   <title
-    >{page.status === 404 ? states.notFoundTitle() : states.loadFailedTitle()} · TaskMaster</title
+    >{page.status === 404 ? states.notFoundTitle() : states.loadFailedTitle()} · {brand()}</title
   >
 </svelte:head>
 

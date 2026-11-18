@@ -4,25 +4,25 @@
 //! same flow. A member reads and saves nothing.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+use prostor_domain::Actor;
+use prostor_domain::access::Access;
+use prostor_domain::preferences;
+use prostor_domain::settings::{self, DateFormat, Flag, Home, Snapshot};
+use prostor_service::access;
+use prostor_service::settings as service;
+use prostor_service::setup::{self, Setup};
+use prostor_service::users;
+use prostor_store::PgPool;
+use prostor_store::sessions::Origin as SessionOrigin;
+use prostor_testkit::TestDb;
 use serde_json::{Value, json};
-use taskmaster_domain::Actor;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::preferences;
-use taskmaster_domain::settings::{self, DateFormat, Flag, Home, Snapshot};
-use taskmaster_service::access;
-use taskmaster_service::settings as service;
-use taskmaster_service::setup::{self, Setup};
-use taskmaster_service::users;
-use taskmaster_store::PgPool;
-use taskmaster_store::sessions::Origin as SessionOrigin;
-use taskmaster_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::datetime;
 
 const T0: OffsetDateTime = datetime!(2026-11-09 09:00 UTC);
 
-fn passwords() -> taskmaster_service::Passwords {
-    taskmaster_service::Passwords::new(4)
+fn passwords() -> prostor_service::Passwords {
+    prostor_service::Passwords::new(4)
 }
 
 /// A local flag of the tests (ADM-023): the production list is empty in P1, the flow is the same.
@@ -78,7 +78,7 @@ async fn member(pool: &PgPool, admin: &Access, username: &str) -> Access {
 
 /// The settings snapshot of this database.
 async fn snapshot(pool: &PgPool) -> Snapshot {
-    let rows = taskmaster_store::settings::load(pool).await.unwrap();
+    let rows = prostor_store::settings::load(pool).await.unwrap();
     let (snapshot, errors) = Snapshot::from_stored(rows);
     assert!(errors.is_empty(), "{errors:?}");
     snapshot
@@ -89,7 +89,7 @@ async fn set(
     admin: &Access,
     key: &str,
     value: Option<&Value>,
-) -> Result<bool, taskmaster_service::settings::SetError> {
+) -> Result<bool, prostor_service::settings::SetError> {
     service::set(pool, key, value, Actor::User(admin.user()), None).await
 }
 
@@ -110,7 +110,7 @@ async fn adm_003_base_url_validation() {
     .await
     .unwrap_err();
     assert!(
-        matches!(error, taskmaster_service::Error::Forbidden(_)),
+        matches!(error, prostor_service::Error::Forbidden(_)),
         "{error:?}"
     );
 
@@ -125,8 +125,8 @@ async fn adm_003_base_url_validation() {
         assert!(
             matches!(
                 error,
-                taskmaster_service::settings::SetError::Invalid(
-                    taskmaster_domain::settings::SettingError::Invalid { .. }
+                prostor_service::settings::SetError::Invalid(
+                    prostor_domain::settings::SettingError::Invalid { .. }
                 )
             ),
             "{bad}: {error:?}"
@@ -148,7 +148,7 @@ async fn adm_003_base_url_validation() {
         Some("https://tracker.example.com".to_owned())
     );
     assert!(view.is_stored("base_url"));
-    let events = taskmaster_store::audit::for_target(pool, "setting:base_url", 5)
+    let events = prostor_store::audit::for_target(pool, "setting:base_url", 5)
         .await
         .unwrap();
     assert_eq!(events.len(), 1);
@@ -192,8 +192,8 @@ async fn adm_016_format_validation() {
         assert!(
             matches!(
                 error,
-                taskmaster_service::settings::SetError::Invalid(
-                    taskmaster_domain::settings::SettingError::WrongType { .. }
+                prostor_service::settings::SetError::Invalid(
+                    prostor_domain::settings::SettingError::WrongType { .. }
                 )
             ),
             "{bad}: {error:?}"
@@ -235,8 +235,8 @@ async fn ui_004_default_home() {
         .unwrap_err();
     assert!(matches!(
         error,
-        taskmaster_service::settings::SetError::Invalid(
-            taskmaster_domain::settings::SettingError::WrongType { .. }
+        prostor_service::settings::SetError::Invalid(
+            prostor_domain::settings::SettingError::WrongType { .. }
         )
     ));
 }
@@ -257,7 +257,7 @@ async fn adm_023_flag_registry() {
     let view = snapshot(pool).await;
     assert!(!view.flag(&TEST_FLAG));
     assert!(view.flag_is_stored(&TEST_FLAG));
-    let events = taskmaster_store::audit::for_target(pool, "setting:flag.test_flag", 5)
+    let events = prostor_store::audit::for_target(pool, "setting:flag.test_flag", 5)
         .await
         .unwrap();
     assert_eq!(events.len(), 1);
@@ -273,7 +273,7 @@ async fn adm_023_flag_registry() {
     let plain = member(pool, &admin, "plain").await;
     let error = service::admin_view(&plain, &snapshot(pool).await).unwrap_err();
     assert!(
-        matches!(error, taskmaster_service::Error::Forbidden(_)),
+        matches!(error, prostor_service::Error::Forbidden(_)),
         "{error:?}"
     );
 }
@@ -295,8 +295,8 @@ async fn auth_004_bounds() {
         assert!(
             matches!(
                 error,
-                taskmaster_service::settings::SetError::Invalid(
-                    taskmaster_domain::settings::SettingError::Invalid { .. }
+                prostor_service::settings::SetError::Invalid(
+                    prostor_domain::settings::SettingError::Invalid { .. }
                 )
             ),
             "{key} = {bad}: {error:?}"

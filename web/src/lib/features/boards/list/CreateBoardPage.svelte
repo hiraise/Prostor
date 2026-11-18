@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // The new-board form as a page (BRD-003): phones open it instead of the dialog.
   import type { Board } from '#lib/api/schema.gen.ts';
   import type { ProjectChoice } from '#lib/features/projects/index.ts';
@@ -22,7 +23,7 @@
   }
 </script>
 
-<svelte:head><title>{m.newBoard()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.newBoard()} · {brand()}</title></svelte:head>
 
 <PageHeader title={m.newBoard()} />
 <div class="page">

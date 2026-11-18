@@ -5,15 +5,15 @@
 //! [`save`] (plan step 1.11 §3.1); instance-wide flags (ADM-023, §3.2) go through
 //! [`set_flag`].
 
+use prostor_domain::Actor;
+use prostor_domain::access::Access;
+use prostor_domain::access::permission::Permission;
+use prostor_domain::secret::Key;
+use prostor_domain::settings::{self, Change, Definition, SettingError, Snapshot};
+use prostor_store::PgPool;
+use prostor_store::{audit, bus, settings as store};
 use serde_json::{Value, json};
 use sqlx::PgConnection;
-use taskmaster_domain::Actor;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::permission::Permission;
-use taskmaster_domain::secret::Key;
-use taskmaster_domain::settings::{self, Change, Definition, SettingError, Snapshot};
-use taskmaster_store::PgPool;
-use taskmaster_store::{audit, bus, settings as store};
 
 /// The keys that belong to the mail screen and its API («Почта», 1.10c), not to the general
 /// settings screen: they never appear in [`admin_view`] and a change set refuses them.
@@ -51,11 +51,7 @@ impl From<SetError> for crate::Error {
             }
             SetError::Invalid(
                 SettingError::WrongType { key, message } | SettingError::Invalid { key, message },
-            ) => crate::Error::field(
-                &key,
-                taskmaster_domain::validation::Problem::Invalid,
-                message,
-            ),
+            ) => crate::Error::field(&key, prostor_domain::validation::Problem::Invalid, message),
             SetError::Refused(message) => crate::Error::Refused(message),
             SetError::Database(error) => crate::Error::Database(error),
         }
@@ -185,7 +181,7 @@ pub async fn save(
         } else if settings::find(key).is_none() {
             return Err(crate::Error::field(
                 key,
-                taskmaster_domain::validation::Problem::Invalid,
+                prostor_domain::validation::Problem::Invalid,
                 "no such setting",
             ));
         } else {
@@ -213,7 +209,7 @@ pub async fn apply(
     let secret = settings::find(key).is_some_and(Definition::secret);
     if secret && change.value().is_some() && secret_key.is_none() {
         return Err(SetError::Refused(
-            "this instance has no TASKMASTER_SECRET_KEY: set one (32 bytes, base64) to store secrets"
+            "this instance has no PROSTOR_SECRET_KEY: set one (32 bytes, base64) to store secrets"
                 .into(),
         ));
     }

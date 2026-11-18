@@ -1,18 +1,18 @@
 //! Loaders of `domain::search::Catalog`: one query per kind of name. Names are narrowed in SQL by
-//! the folded forms of `taskmaster_query::{fold, fold_value}` (`lower`, `ё` → `е`, and for full
+//! the folded forms of `prostor_query::{fold, fold_value}` (`lower`, `ё` → `е`, and for full
 //! names runs of spaces, `-` and `_` as one space); the resolver compares again in Rust.
 
-use sqlx::{PgConnection, Postgres, QueryBuilder, Row};
-use taskmaster_domain::access::Projects;
-use taskmaster_domain::boards::sprints::SprintDates;
-use taskmaster_domain::fields::FieldKind;
-use taskmaster_domain::links::Side;
-use taskmaster_domain::search::Filter;
-use taskmaster_domain::search::catalog::{
+use prostor_domain::access::Projects;
+use prostor_domain::boards::sprints::SprintDates;
+use prostor_domain::fields::FieldKind;
+use prostor_domain::links::Side;
+use prostor_domain::search::Filter;
+use prostor_domain::search::catalog::{
     Attached, BoardEntry, FieldEntry, GroupEntry, IssueEntry, LinkSideEntry, ProjectEntry,
     SprintEntry, TagEntry, UserEntry, ValueEntry,
 };
-use taskmaster_domain::{BoardId, GroupId, IssueId, ProjectId, SetId, UserId};
+use prostor_domain::{BoardId, GroupId, IssueId, ProjectId, SetId, UserId};
+use sqlx::{PgConnection, Postgres, QueryBuilder, Row};
 
 use crate::boards::Viewer;
 
@@ -385,7 +385,7 @@ pub async fn common_words(
 ) -> Result<Vec<String>, sqlx::Error> {
     sqlx::query_scalar!(
         r#"select t as "t!" from unnest($1::text[]) t
-           where numnode(phraseto_tsquery('taskmaster_text', t)) = 0"#,
+           where numnode(phraseto_tsquery('prostor_text', t)) = 0"#,
         texts
     )
     .fetch_all(conn)

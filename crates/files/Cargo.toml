@@ -1,6 +1,6 @@
 [package]
-name = "taskmaster-files"
-description = "taskmaster file store: uploaded files and pictures in a directory (D-033)"
+name = "prostor-files"
+description = "prostor file store: uploaded files and pictures in a directory (D-033)"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

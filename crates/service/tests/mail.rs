@@ -5,18 +5,18 @@
 //! to the built-in administrator.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use taskmaster_domain::access::Access;
-use taskmaster_domain::secret::Key;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::settings::Snapshot;
-use taskmaster_service::access;
-use taskmaster_service::mail::{self, EnvMail, Mail, MailSettingsChange as Change, MailSource};
-use taskmaster_service::recovery::{self, Target};
-use taskmaster_service::setup::{self, Setup};
-use taskmaster_service::users;
-use taskmaster_store::PgPool;
-use taskmaster_store::sessions::Origin as SessionOrigin;
-use taskmaster_testkit::TestDb;
+use prostor_domain::access::Access;
+use prostor_domain::secret::Key;
+use prostor_domain::settings::Language;
+use prostor_domain::settings::Snapshot;
+use prostor_service::access;
+use prostor_service::mail::{self, EnvMail, Mail, MailSettingsChange as Change, MailSource};
+use prostor_service::recovery::{self, Target};
+use prostor_service::setup::{self, Setup};
+use prostor_service::users;
+use prostor_store::PgPool;
+use prostor_store::sessions::Origin as SessionOrigin;
+use prostor_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::datetime;
 
@@ -24,8 +24,8 @@ const T0: OffsetDateTime = datetime!(2026-11-08 09:00 UTC);
 /// Mailpit of `make db-up`, the transport a successful test send goes through.
 const MAILPIT: &str = "smtp://127.0.0.1:1025";
 
-fn passwords() -> taskmaster_service::Passwords {
-    taskmaster_service::Passwords::new(4)
+fn passwords() -> prostor_service::Passwords {
+    prostor_service::Passwords::new(4)
 }
 
 fn key() -> Key {
@@ -37,7 +37,7 @@ fn change() -> Change {
         smtp_url: Some(Some(MAILPIT.to_owned())),
         smtp_username: Some(Some("tracker".to_owned())),
         smtp_password: Some(Some("hunter2".to_owned())),
-        mail_from: Some("TaskMaster <tracker@example.com>".to_owned()),
+        mail_from: Some("Prostor <tracker@example.com>".to_owned()),
         mail_reply_to: Some("replies@example.com".to_owned()),
         email_enabled: None,
     }
@@ -83,18 +83,18 @@ async fn member(pool: &PgPool, admin: &Access, username: &str) -> Access {
     .await
     .unwrap()
     .id;
-    let role = taskmaster_store::roles::builtin_id(
+    let role = prostor_store::roles::builtin_id(
         pool,
-        taskmaster_domain::access::role::PredefinedRole::ProjectMember.key(),
+        prostor_domain::access::role::PredefinedRole::ProjectMember.key(),
     )
     .await
     .unwrap()
     .unwrap();
-    taskmaster_service::roles::assign(
+    prostor_service::roles::assign(
         pool,
         admin,
         role,
-        taskmaster_store::access::Holder::User(user),
+        prostor_store::access::Holder::User(user),
         &[None],
     )
     .await
@@ -104,8 +104,8 @@ async fn member(pool: &PgPool, admin: &Access, username: &str) -> Access {
 
 /// The settings snapshot of this database, secrets decrypted.
 async fn snapshot(pool: &PgPool, key: &Key) -> Snapshot {
-    let rows = taskmaster_store::settings::load(pool).await.unwrap();
-    let (secrets, unreadable) = taskmaster_store::settings::load_secrets(pool, Some(key))
+    let rows = prostor_store::settings::load(pool).await.unwrap();
+    let (secrets, unreadable) = prostor_store::settings::load_secrets(pool, Some(key))
         .await
         .unwrap();
     assert!(
@@ -135,7 +135,7 @@ async fn ntf_004_transport_settings() {
             .unwrap_err(),
     ] {
         assert!(
-            matches!(error, taskmaster_service::Error::Forbidden(_)),
+            matches!(error, prostor_service::Error::Forbidden(_)),
             "{error:?}"
         );
     }
@@ -145,7 +145,7 @@ async fn ntf_004_transport_settings() {
         .await
         .unwrap_err();
     assert!(
-        matches!(error, taskmaster_service::Error::Refused(ref message) if message.contains("TASKMASTER_SECRET_KEY")),
+        matches!(error, prostor_service::Error::Refused(ref message) if message.contains("PROSTOR_SECRET_KEY")),
         "{error:?}"
     );
 
@@ -156,7 +156,7 @@ async fn ntf_004_transport_settings() {
     assert_eq!(view.source, MailSource::Settings);
     assert!(view.configured);
     assert!(!view.email_enabled, "the switch starts off (NTF-002)");
-    assert_eq!(view.mail_from, "TaskMaster <tracker@example.com>");
+    assert_eq!(view.mail_from, "Prostor <tracker@example.com>");
     assert!(view.has_smtp_url && view.has_username && view.has_password);
 
     // The secrets are sealed: no plaintext in either settings table.
@@ -184,7 +184,7 @@ async fn ntf_004_transport_settings() {
 
     // The audit trail says a secret changed, never what it was.
     for setting in ["smtp_url", "smtp_username", "smtp_password"] {
-        let events = taskmaster_store::audit::for_target(pool, &format!("setting:{setting}"), 5)
+        let events = prostor_store::audit::for_target(pool, &format!("setting:{setting}"), 5)
             .await
             .unwrap();
         assert_eq!(events.len(), 1, "{setting}");
@@ -193,10 +193,10 @@ async fn ntf_004_transport_settings() {
         assert_eq!(events[0].details.get("new"), None);
     }
     // The open settings carry their values in the audit, as before.
-    let events = taskmaster_store::audit::for_target(pool, "setting:mail_from", 5)
+    let events = prostor_store::audit::for_target(pool, "setting:mail_from", 5)
         .await
         .unwrap();
-    assert_eq!(events[0].details["new"], "TaskMaster <tracker@example.com>");
+    assert_eq!(events[0].details["new"], "Prostor <tracker@example.com>");
 
     // A bad server address is refused with the field named; the sender must come with it.
     let broken = Change {
@@ -207,7 +207,7 @@ async fn ntf_004_transport_settings() {
         .await
         .unwrap_err();
     assert!(
-        matches!(&error, taskmaster_service::Error::Invalid(problems) if problems.iter().any(|p| p.path == "smtp_url")),
+        matches!(&error, prostor_service::Error::Invalid(problems) if problems.iter().any(|p| p.path == "smtp_url")),
         "{error:?}"
     );
     let no_sender = Change {
@@ -218,7 +218,7 @@ async fn ntf_004_transport_settings() {
         .await
         .unwrap_err();
     assert!(
-        matches!(&error, taskmaster_service::Error::Invalid(problems) if problems.iter().any(|p| p.path == "mail_from")),
+        matches!(&error, prostor_service::Error::Invalid(problems) if problems.iter().any(|p| p.path == "mail_from")),
         "{error:?}"
     );
 
@@ -275,7 +275,7 @@ async fn ntf_006_from_reply_to() {
         .unwrap();
     let wire = String::from_utf8_lossy(&message.formatted()).into_owned();
     assert!(
-        wire.contains("From: TaskMaster <tracker@example.com>"),
+        wire.contains("From: Prostor <tracker@example.com>"),
         "{wire}"
     );
     assert!(
@@ -298,7 +298,7 @@ async fn ntf_006_from_reply_to() {
     .await
     .unwrap_err();
     assert!(
-        matches!(&error, taskmaster_service::Error::Invalid(problems) if problems.iter().any(|p| p.path == "mail_reply_to")),
+        matches!(&error, prostor_service::Error::Invalid(problems) if problems.iter().any(|p| p.path == "mail_reply_to")),
         "{error:?}"
     );
 
@@ -338,7 +338,7 @@ async fn ntf_007_admin_test_send() {
     let key = key();
 
     // Only administrators send to any address.
-    let mailer = mail::Mailer::new(MAILPIT, "TaskMaster <tracker@example.com>").unwrap();
+    let mailer = mail::Mailer::new(MAILPIT, "Prostor <tracker@example.com>").unwrap();
     let error = mail::send_admin_test(
         &plain,
         "anyone@example.com",
@@ -349,7 +349,7 @@ async fn ntf_007_admin_test_send() {
     .await
     .unwrap_err();
     assert!(
-        matches!(error, taskmaster_service::Error::Forbidden(_)),
+        matches!(error, prostor_service::Error::Forbidden(_)),
         "{error:?}"
     );
 
@@ -364,12 +364,12 @@ async fn ntf_007_admin_test_send() {
     .await
     .unwrap_err();
     assert!(
-        matches!(&error, taskmaster_service::Error::Invalid(problems) if problems.iter().any(|p| p.path == "to")),
+        matches!(&error, prostor_service::Error::Invalid(problems) if problems.iter().any(|p| p.path == "to")),
         "{error:?}"
     );
 
     // A dead transport answers with its complaint in full (NTF-007).
-    let dead = mail::Mailer::new("smtp://127.0.0.1:1", "taskmaster <t@example.com>").unwrap();
+    let dead = mail::Mailer::new("smtp://127.0.0.1:1", "prostor <t@example.com>").unwrap();
     let error = mail::send_admin_test(
         &admin,
         "anyone@example.com",
@@ -380,7 +380,7 @@ async fn ntf_007_admin_test_send() {
     .await
     .unwrap_err();
     assert!(
-        matches!(&error, taskmaster_service::Error::Refused(complaint) if !complaint.is_empty()),
+        matches!(&error, prostor_service::Error::Refused(complaint) if !complaint.is_empty()),
         "{error:?}"
     );
 
@@ -391,7 +391,7 @@ async fn ntf_007_admin_test_send() {
         &admin,
         &Change {
             smtp_url: Some(Some(MAILPIT.to_owned())),
-            mail_from: Some("TaskMaster <tracker@example.com>".to_owned()),
+            mail_from: Some("Prostor <tracker@example.com>".to_owned()),
             ..Change::default()
         },
         Some(&key),
@@ -419,7 +419,7 @@ async fn ntf_002_switch_gates_account_emails() {
     let key = key();
     let env = Some(EnvMail {
         url: "smtp://127.0.0.1:1025".to_owned(),
-        from: "taskmaster <dev@example.com>".to_owned(),
+        from: "prostor <dev@example.com>".to_owned(),
     });
 
     // Nothing stored: the environment is the source and email is on (D-026).
@@ -436,11 +436,11 @@ async fn ntf_002_switch_gates_account_emails() {
     };
     assert!(matches!(
         off.require(),
-        Err(taskmaster_service::Error::Conflict(_))
+        Err(prostor_service::Error::Conflict(_))
     ));
     assert!(matches!(
         users::send_test_message(pool, &admin, &off).await,
-        Err(taskmaster_service::Error::Conflict(_))
+        Err(prostor_service::Error::Conflict(_))
     ));
     users::send_test_message(
         pool,
@@ -478,7 +478,7 @@ async fn ntf_002_switch_gates_account_emails() {
         .await
         .unwrap_err();
     assert!(
-        matches!(&error, taskmaster_service::Error::Invalid(problems) if problems.iter().any(|p| p.path == "email_enabled")),
+        matches!(&error, prostor_service::Error::Invalid(problems) if problems.iter().any(|p| p.path == "email_enabled")),
         "{error:?}"
     );
     let view = mail::save_mail_settings(
@@ -571,10 +571,7 @@ async fn adm_051_recovery_email() {
     assert_eq!(emails.len(), 1, "{emails:?}");
     let report = &emails[0];
     assert_eq!(report.to, "chief@example.com");
-    assert_eq!(
-        report.subject,
-        "Administrator access recovered in taskmaster"
-    );
+    assert_eq!(report.subject, "Administrator access recovered in prostor");
     assert!(report.text.contains("ops"), "{}", report.text);
     assert!(
         report.text.contains("tracker.example.com"),

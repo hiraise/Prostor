@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   import { goto } from '$app/navigation';
 
   import { accountMessages as m, ForcedPasswordForm } from '#lib/features/account/index.ts';
@@ -17,7 +18,7 @@
   }
 </script>
 
-<svelte:head><title>{m.forcedTitle()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.forcedTitle()} · {brand()}</title></svelte:head>
 
 <PublicFrame title={m.forcedTitle()}>
   <ForcedPasswordForm ondone={done} />

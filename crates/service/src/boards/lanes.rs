@@ -2,26 +2,26 @@
 //! from, moving a card to another lane (a field value, a tag or the parent), parent lanes —
 //! new ones, their order, back to the backlog — and parents joining a sprint as lanes.
 
-use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::boards::lanes::{
+use prostor_domain::access::Access;
+use prostor_domain::boards::lanes::{
     self as domain, Attribute, Bounds, LaneKey, LaneMode, OtherLane, Source,
 };
-use taskmaster_domain::fields::FieldKind;
-use taskmaster_domain::issues::history::{Origin, Record};
-use taskmaster_domain::issues::rights;
-use taskmaster_domain::issues::values::Input;
-use taskmaster_domain::links::Side;
-use taskmaster_domain::live::Change;
-use taskmaster_domain::rank;
-use taskmaster_domain::validation::Problem;
-use taskmaster_domain::{BoardId, FieldId, IssueId, ProjectId, SprintId};
-use taskmaster_store::PgPool;
-use taskmaster_store::boards::cards as store_cards;
-use taskmaster_store::boards::view::{DateOf, LaneScope, LaneSource};
-use taskmaster_store::boards::{self as store, Sprint};
-use taskmaster_store::fields::{self as store_fields, Field};
-use taskmaster_store::issues::Issue;
+use prostor_domain::fields::FieldKind;
+use prostor_domain::issues::history::{Origin, Record};
+use prostor_domain::issues::rights;
+use prostor_domain::issues::values::Input;
+use prostor_domain::links::Side;
+use prostor_domain::live::Change;
+use prostor_domain::rank;
+use prostor_domain::validation::Problem;
+use prostor_domain::{BoardId, FieldId, IssueId, ProjectId, SprintId};
+use prostor_store::PgPool;
+use prostor_store::boards::cards as store_cards;
+use prostor_store::boards::view::{DateOf, LaneScope, LaneSource};
+use prostor_store::boards::{self as store, Sprint};
+use prostor_store::fields::{self as store_fields, Field};
+use prostor_store::issues::Issue;
+use sqlx::PgConnection;
 use time::OffsetDateTime;
 
 use super::cards::{place, sprint_of};
@@ -242,7 +242,7 @@ pub(super) async fn check_change(
     let ids: Vec<i64> = keys.iter().filter_map(|k| k.id()).collect();
     match source {
         Source::Values if !ids.is_empty() => {
-            let found = taskmaster_store::value_sets::get_values(&mut *conn, &ids).await?;
+            let found = prostor_store::value_sets::get_values(&mut *conn, &ids).await?;
             let all_of_set = ids.iter().all(|id| {
                 found
                     .iter()
@@ -264,7 +264,7 @@ pub(super) async fn check_change(
             ));
         }
         Source::Tags => {
-            let found = taskmaster_store::tags::get_many(&mut *conn, &ids).await?;
+            let found = prostor_store::tags::get_many(&mut *conn, &ids).await?;
             let usable = ids.iter().all(|id| {
                 found
                     .iter()
@@ -289,7 +289,7 @@ pub(super) async fn check_change(
             ));
         }
         Some(id) => {
-            if taskmaster_store::value_sets::get_values(&mut *conn, &[id])
+            if prostor_store::value_sets::get_values(&mut *conn, &[id])
                 .await?
                 .is_empty()
             {
@@ -388,13 +388,13 @@ pub(super) async fn set_lane(
     if source == Source::Tags {
         let mut removed = Vec::new();
         for tag in leaving {
-            if taskmaster_store::tags::remove(conn, issue.id, tag).await? {
+            if prostor_store::tags::remove(conn, issue.id, tag).await? {
                 removed.push(tag);
             }
         }
         let mut added = Vec::new();
         if let Some(tag) = coming
-            && taskmaster_store::tags::add(conn, issue.id, tag).await?
+            && prostor_store::tags::add(conn, issue.id, tag).await?
         {
             added.push(tag);
         }
@@ -481,7 +481,7 @@ async fn set_parent(
     issue: &Issue,
     parent: Option<IssueId>,
 ) -> Result<()> {
-    let current = taskmaster_store::links::parent_link(&mut *conn, issue.id).await?;
+    let current = prostor_store::links::parent_link(&mut *conn, issue.id).await?;
     if current.as_ref().map(|l| l.source_id) == parent {
         return Ok(());
     }
@@ -489,7 +489,7 @@ async fn set_parent(
         crate::issue_links::remove_locked(conn, batch, actor, origin, issue, &link).await?;
     }
     if let Some(parent) = parent {
-        let link_type = taskmaster_store::links::subtask_type(&mut *conn)
+        let link_type = prostor_store::links::subtask_type(&mut *conn)
             .await?
             .ok_or_else(|| internal("the subtask link type is missing"))?;
         crate::issue_links::add_locked(
@@ -521,7 +521,7 @@ pub(super) async fn is_lane(
         return Ok(false);
     }
     let field = setup.field.as_ref().filter(|_| !setup.ids.is_empty());
-    Ok(taskmaster_store::boards::view::is_parent_lane(
+    Ok(prostor_store::boards::view::is_parent_lane(
         &mut *conn,
         issue,
         field.map(|f| (f.id, &setup.ids[..])),

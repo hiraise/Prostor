@@ -493,7 +493,7 @@ impl Model {
             issue_project,
             issue_number,
             vocabulary,
-            ranks: taskmaster_domain::rank::sequence(sprint_size(u32::MAX) as usize),
+            ranks: prostor_domain::rank::sequence(sprint_size(u32::MAX) as usize),
             chains: HashMap::new(),
             next_set: 1,
             next_value: 1,

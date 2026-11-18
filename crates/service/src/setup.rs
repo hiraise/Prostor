@@ -2,20 +2,20 @@
 //! from its log, creates the administrator, chooses the language, address and time zone, and is
 //! signed in. Also creates the disabled guest account (ACC-001). Runs once.
 
-use serde_json::{Value, json};
-use taskmaster_domain::Actor;
-use taskmaster_domain::access::role::PredefinedRole;
-use taskmaster_domain::accounts::{Email, FullName, Username, check_new_password};
-use taskmaster_domain::auth::codes;
-use taskmaster_domain::settings::{
+use prostor_domain::Actor;
+use prostor_domain::access::role::PredefinedRole;
+use prostor_domain::accounts::{Email, FullName, Username, check_new_password};
+use prostor_domain::auth::codes;
+use prostor_domain::settings::{
     self, BASE_URL, Change, DEFAULT_TIME_ZONE, Language, SYSTEM_LANGUAGE, SettingError,
 };
-use taskmaster_domain::validation::{Problem, Problems, Rejection};
-use taskmaster_store::access::{self as assignments, Holder};
-use taskmaster_store::instance::{self, SetupState};
-use taskmaster_store::sessions::Origin;
-use taskmaster_store::users::{self, Builtin, NewUser};
-use taskmaster_store::{PgPool, audit, groups, roles};
+use prostor_domain::validation::{Problem, Problems, Rejection};
+use prostor_store::access::{self as assignments, Holder};
+use prostor_store::instance::{self, SetupState};
+use prostor_store::sessions::Origin;
+use prostor_store::users::{self, Builtin, NewUser};
+use prostor_store::{PgPool, audit, groups, roles};
+use serde_json::{Value, json};
 use time::OffsetDateTime;
 
 use crate::auth::{SignedIn, start_session};
@@ -41,7 +41,7 @@ pub struct Setup {
 }
 
 /// Makes sure a pending setup has a code and returns the state: the code to print in the log, or
-/// that the setup is complete. `configured` comes from `TASKMASTER_SETUP_CODE`.
+/// that the setup is complete. `configured` comes from `PROSTOR_SETUP_CODE`.
 pub async fn prepare(pool: &PgPool, configured: Option<&str>) -> Result<SetupState> {
     let generated = secrets::setup_code()?;
     Ok(instance::prepare_setup(pool, &generated, configured).await?)

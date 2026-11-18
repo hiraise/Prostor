@@ -1,10 +1,10 @@
 //! Change history of issues (HIST): append-only records written with each change. Shapes of
-//! `removed` and `added`: `taskmaster_domain::issues::history`.
+//! `removed` and `added`: `prostor_domain::issues::history`.
 
+use prostor_domain::issues::history::{Origin, Record};
+use prostor_domain::{CommentId, FieldId, IssueId, UserId};
 use serde_json::Value as Json;
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::issues::history::{Origin, Record};
-use taskmaster_domain::{CommentId, FieldId, IssueId, UserId};
 use time::OffsetDateTime;
 
 /// Who made a set of changes and how.

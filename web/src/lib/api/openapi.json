@@ -1,8 +1,8 @@
 {
   "openapi": "3.1.0",
   "info": {
-    "title": "TaskMaster API",
-    "description": "The API of TaskMaster, used by its web app, scripts and integrations. Conventions: snake_case JSON, one error format, cursor pagination.",
+    "title": "Prostor API",
+    "description": "The API of Prostor, used by its web app, scripts and integrations. Conventions: snake_case JSON, one error format, cursor pagination.",
     "version": "0.1.0"
   },
   "servers": [
@@ -17050,7 +17050,7 @@
           "upload_ceiling": {
             "type": "integer",
             "format": "int64",
-            "description": "The deployment's `TASKMASTER_UPLOAD_CEILING_BYTES`: the upload setting may not exceed it.",
+            "description": "The deployment's `PROSTOR_UPLOAD_CEILING_BYTES`: the upload setting may not exceed it.",
             "minimum": 0
           }
         }
@@ -22610,7 +22610,7 @@
       },
       "Language": {
         "type": "string",
-        "description": "Languages taskmaster speaks.",
+        "description": "Languages prostor speaks.",
         "enum": [
           "en",
           "ru"
@@ -28203,7 +28203,7 @@
               "string",
               "null"
             ],
-            "description": "The address people open taskmaster at, used in links in emails."
+            "description": "The address people open prostor at, used in links in emails."
           },
           "code": {
             "type": "string",
@@ -29441,7 +29441,7 @@
       "session": {
         "type": "apiKey",
         "in": "cookie",
-        "name": "taskmaster_session",
+        "name": "prostor_session",
         "description": "Set by signing in (`POST /session`); used by the web app"
       },
       "token": {

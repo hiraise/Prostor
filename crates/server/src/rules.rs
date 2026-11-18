@@ -6,12 +6,12 @@ use std::collections::BTreeMap;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::response::Response;
-use taskmaster_api::error::{ErrorBody, FieldError};
-use taskmaster_api::rules::{NeedView, RuleView, RulesPatch, RulesView};
-use taskmaster_domain::auth::Scope;
-use taskmaster_domain::rules::{Need, Rule};
-use taskmaster_domain::settings::{Language, SYSTEM_LANGUAGE};
-use taskmaster_service::rules::tab::{self, RuleItem, RulesView as TabView};
+use prostor_api::error::{ErrorBody, FieldError};
+use prostor_api::rules::{NeedView, RuleView, RulesPatch, RulesView};
+use prostor_domain::auth::Scope;
+use prostor_domain::rules::{Need, Rule};
+use prostor_domain::settings::{Language, SYSTEM_LANGUAGE};
+use prostor_service::rules::tab::{self, RuleItem, RulesView as TabView};
 
 use crate::AppState;
 use crate::access::Viewer;

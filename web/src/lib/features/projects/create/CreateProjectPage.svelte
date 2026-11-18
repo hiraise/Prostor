@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // Creating a project (PRJ-017…PRJ-019): a template, the name, the key (suggested from the name
   // until the person types their own), the number of the first issue and a description. The
   // server checks the name and the key while they are typed (PRJ-018), so problems show before
@@ -138,7 +139,7 @@
   }
 </script>
 
-<svelte:head><title>{m.newProject()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.newProject()} · {brand()}</title></svelte:head>
 
 {#if !canCreateProjects()}
   <ForbiddenState {home} />

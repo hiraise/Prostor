@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // The board page (BRD-068): the header with the switcher, the sticky toolbar with the sprint
   // controls (BRD-083) and the header filter (BRD-081), the columns with their cards, the footer
   // (BRD-084) and the settings panel (BRD-086). A board created a moment ago opens with its
@@ -240,7 +241,7 @@
   const zoom = $derived(narrow.current ? zoomed.value : null);
 
   // The backlog panel (BRD-089): open or closed is kept in this browser per board.
-  const backlogKey = (id: number) => `taskmaster.board-backlog.${String(id)}`;
+  const backlogKey = (id: number) => `prostor.board-backlog.${String(id)}`;
   let backlogOpen = $state(untrack(() => readStored(backlogKey(board.id)) === 'open'));
   const backlog = $derived(new BacklogState(board.id));
   $effect(() => {
@@ -363,7 +364,7 @@
   />
 {/snippet}
 
-<svelte:head><title>{board.name} · TaskMaster</title></svelte:head>
+<svelte:head><title>{board.name} · {brand()}</title></svelte:head>
 
 <div class="page">
   {#if model.gone}

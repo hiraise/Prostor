@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // One role (ACC-034, ACC-044, ACC-046, ACC-050, ACC-052, ACC-054, ACC-057): its details, its
   // permissions and who holds it. Predefined roles and viewers without `system.write` get a
   // read-only view; custom roles can be renamed, edited and deleted.
@@ -46,7 +47,7 @@
   );
 </script>
 
-<svelte:head><title>{title} · TaskMaster</title></svelte:head>
+<svelte:head><title>{title} · {brand()}</title></svelte:head>
 
 {#if !allowed}
   <ForbiddenState {home} />

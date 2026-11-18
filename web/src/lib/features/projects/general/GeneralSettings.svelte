@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // A project's general settings (PRJ-037…PRJ-039): the owner and creation date, the logo
   // (PRJ-007), then the name, the key with its former keys (PRJ-005), the description (Markdown in
   // the basic profile, with its preview, PRJ-006) and the default audience of new issues and
@@ -196,7 +197,7 @@
   }
 </script>
 
-<svelte:head><title>{m.title()} · {project.name} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.title()} · {project.name} · {brand()}</title></svelte:head>
 
 <PageHeader title={m.title()} />
 

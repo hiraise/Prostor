@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // The project's built-in rules (AUT-023): one row per rule of the registry — its name, a switch
   // that PATCHes the rule with the project's version, and what the rule still lacks as a gray note
   // linking to the «Fields» tab. A `conflict` reloads the tab and asks to repeat; without the
@@ -80,7 +81,7 @@
   }
 </script>
 
-<svelte:head><title>{m.title()} · {project.name} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.title()} · {project.name} · {brand()}</title></svelte:head>
 
 <PageHeader title={m.title()} />
 <p class="lead">{m.lead()}</p>

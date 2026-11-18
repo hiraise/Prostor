@@ -1,15 +1,14 @@
 //! `/issues` and `/tags`: issues and drafts, their fields, audience, moves, stars, votes, tags and
-//! activity stream (ISS, HIST). Rules and flows live in `taskmaster_service::issues`.
+//! activity stream (ISS, HIST). Rules and flows live in `prostor_service::issues`.
 
 use axum::body::Body;
 use axum::extract::{Path, State};
 use axum::http::StatusCode;
 use axum::http::header::{self, HeaderName, HeaderValue};
 use axum::response::{IntoResponse, Response};
-use serde_json::Value as Json;
-use taskmaster_api::error::ErrorBody;
-use taskmaster_api::fields::{FieldRef, IssueImpact};
-use taskmaster_api::issues::{
+use prostor_api::error::ErrorBody;
+use prostor_api::fields::{FieldRef, IssueImpact};
+use prostor_api::issues::{
     ActivityDirection, ActivityItem, ActivityPage, ActivityQuery, Audience, AudienceCandidates,
     CandidateQuery, ChangeValues, CloneDraftsAnswer, CloneDraftsRequest, CloneOfRef, CommentItem,
     ExportFormat, ExportRequest, FieldOptions, FieldOptionsQuery, FieldValueChange,
@@ -19,29 +18,30 @@ use taskmaster_api::issues::{
     MoveIssue, MoveOutcome, MovePreview, MovePreviewQuery, MoveResult, NewIssue, NewTag,
     OptionValue, Tag, TagPatch, TagQuery, TagRef, TagSharing,
 };
-use taskmaster_api::links::{LoggedLink as ApiLoggedLink, SubtaskCount};
-use taskmaster_api::page::{Page, PageQuery};
-use taskmaster_domain::access::Access;
-use taskmaster_domain::auth::{Credential, Principal, Scope};
-use taskmaster_domain::fields::FieldKind;
-use taskmaster_domain::issues::history::{
+use prostor_api::links::{LoggedLink as ApiLoggedLink, SubtaskCount};
+use prostor_api::page::{Page, PageQuery};
+use prostor_domain::access::Access;
+use prostor_domain::auth::{Credential, Principal, Scope};
+use prostor_domain::fields::FieldKind;
+use prostor_domain::issues::history::{
     ChangeKind, LoggedLink, Origin, clone_of as clone_source, logged, read_ref,
 };
-use taskmaster_domain::issues::moves::Outcome;
-use taskmaster_domain::issues::values::{Input, Value};
-use taskmaster_domain::{FieldId, IssueId, TagId};
-use taskmaster_service::files::Signer;
-use taskmaster_service::issue_links::{NewLinks, side_name};
-use taskmaster_service::issues::activity::{self, ActivityPage as ServiceActivity, Item};
-use taskmaster_service::issues::export::{self, Ask};
-use taskmaster_service::issues::{
+use prostor_domain::issues::moves::Outcome;
+use prostor_domain::issues::values::{Input, Value};
+use prostor_domain::{FieldId, IssueId, TagId};
+use prostor_service::files::Signer;
+use prostor_service::issue_links::{NewLinks, side_name};
+use prostor_service::issues::activity::{self, ActivityPage as ServiceActivity, Item};
+use prostor_service::issues::export::{self, Ask};
+use prostor_service::issues::{
     self, AudienceInput, Described, FieldChange, FieldInput, IssueChange, IssueView,
 };
-use taskmaster_service::people::Names;
-use taskmaster_service::search::SearchInput;
-use taskmaster_service::tags;
-use taskmaster_store::issue_history::Direction;
-use taskmaster_store::tags::Tag as StoredTag;
+use prostor_service::people::Names;
+use prostor_service::search::SearchInput;
+use prostor_service::tags;
+use prostor_store::issue_history::Direction;
+use prostor_store::tags::Tag as StoredTag;
+use serde_json::Value as Json;
 
 use crate::AppState;
 use crate::access::Viewer;
@@ -74,7 +74,7 @@ fn input(value: FieldValueInput) -> Input {
     }
 }
 
-pub(crate) fn audience_input(a: taskmaster_api::issues::AudienceInput) -> AudienceInput {
+pub(crate) fn audience_input(a: prostor_api::issues::AudienceInput) -> AudienceInput {
     AudienceInput {
         users: a.users,
         groups: a.groups,
@@ -123,7 +123,7 @@ async fn tag_shown(state: &AppState, viewer: &Access, row: StoredTag) -> Result<
     tags_shown(state, viewer, std::slice::from_ref(&row))
         .await?
         .pop()
-        .ok_or_else(|| taskmaster_service::Error::Internal("the tag is missing".to_owned()).into())
+        .ok_or_else(|| prostor_service::Error::Internal("the tag is missing".to_owned()).into())
 }
 
 fn issue_field(names: &Names, viewer: &Access, d: &Described, f: &issues::FieldView) -> IssueField {
@@ -254,14 +254,14 @@ pub(crate) fn issue(
 }
 
 /// A stand-in for an account that is not loaded; never expected, but answers stay well-formed.
-pub(crate) fn placeholder(id: i64) -> taskmaster_api::accounts::UserRef {
-    taskmaster_api::accounts::UserRef {
+pub(crate) fn placeholder(id: i64) -> prostor_api::accounts::UserRef {
+    prostor_api::accounts::UserRef {
         id,
         username: "deleted".to_owned(),
         full_name: "Deleted user".to_owned(),
         avatar_color: 0,
         avatar_url: None,
-        kind: taskmaster_api::accounts::UserRefKind::Deleted,
+        kind: prostor_api::accounts::UserRefKind::Deleted,
         pseudonym: None,
         disabled: true,
     }
@@ -405,9 +405,9 @@ pub async fn export(
     let ask = match request.query {
         Some(query) => {
             if !request.ids.is_empty() {
-                return Err(taskmaster_service::Error::field(
+                return Err(prostor_service::Error::field(
                     "ids",
-                    taskmaster_domain::validation::Problem::Invalid,
+                    prostor_domain::validation::Problem::Invalid,
                     "export issues or a query, not both",
                 )
                 .into());
@@ -424,9 +424,9 @@ pub async fn export(
         }
         None => {
             if request.ids.is_empty() {
-                return Err(taskmaster_service::Error::field(
+                return Err(prostor_service::Error::field(
                     "ids",
-                    taskmaster_domain::validation::Problem::Invalid,
+                    prostor_domain::validation::Problem::Invalid,
                     "export issues or a query, not neither",
                 )
                 .into());
@@ -438,7 +438,7 @@ pub async fn export(
         Ask::Ids(_) => String::new(),
         Ask::Query(input) => input.text.clone(),
     };
-    let out = taskmaster_service::issues::export::collect(&state.db, &viewer.access, ask)
+    let out = prostor_service::issues::export::collect(&state.db, &viewer.access, ask)
         .await
         .map_err(|e| run_error(&text, e))?;
     let (content_type, bytes) = match request.format {
@@ -507,7 +507,7 @@ pub async fn field_options(
         Some(limit) if (1..=max).contains(&i64::from(limit)) => i64::from(limit),
         Some(_) => {
             return Err(ApiError::invalid(vec![
-                taskmaster_api::error::FieldError::new(
+                prostor_api::error::FieldError::new(
                     "limit",
                     "out_of_range",
                     format!("limit must be between 1 and {max}"),
@@ -542,7 +542,7 @@ pub async fn field_options(
     ))
 }
 
-pub(crate) fn held_value(v: &taskmaster_store::value_sets::Value) -> HeldValue {
+pub(crate) fn held_value(v: &prostor_store::value_sets::Value) -> HeldValue {
     HeldValue {
         id: v.id,
         name: v.name.clone(),
@@ -553,7 +553,7 @@ pub(crate) fn held_value(v: &taskmaster_store::value_sets::Value) -> HeldValue {
     }
 }
 
-fn option_value(v: &taskmaster_store::value_sets::Value) -> OptionValue {
+fn option_value(v: &prostor_store::value_sets::Value) -> OptionValue {
     OptionValue {
         id: v.id,
         name: v.name.clone(),
@@ -686,7 +686,7 @@ pub async fn clone(
     Path(id): Path<IssueId>,
 ) -> Result<Response, ApiError> {
     require_scope(&viewer.principal, Scope::TrackerWrite)?;
-    let done = taskmaster_service::rules::clone::clone_issue(
+    let done = prostor_service::rules::clone::clone_issue(
         &state.db,
         &viewer.access,
         origin(&viewer.principal),
@@ -725,7 +725,7 @@ pub async fn clone_drafts(
 ) -> Result<Response, ApiError> {
     require_scope(&viewer.principal, Scope::TrackerWrite)?;
     let done =
-        taskmaster_service::rules::clone::clone_drafts(&state.db, &viewer.access, &request.issues)
+        prostor_service::rules::clone::clone_drafts(&state.db, &viewer.access, &request.issues)
             .await?;
     let names = state.names();
     let signer = state.signer();
@@ -971,21 +971,21 @@ enum Lookups<'a> {
 }
 
 impl Lookups<'_> {
-    fn user(&self, id: i64) -> Option<&taskmaster_store::users::User> {
+    fn user(&self, id: i64) -> Option<&prostor_store::users::User> {
         match self {
             Lookups::Issue(d) => d.user(id),
             Lookups::History(h) => h.users.iter().find(|u| u.id == id),
         }
     }
 
-    fn group(&self, id: i64) -> Option<&taskmaster_store::groups::Group> {
+    fn group(&self, id: i64) -> Option<&prostor_store::groups::Group> {
         match self {
             Lookups::Issue(d) => d.group(id),
             Lookups::History(h) => h.groups.iter().find(|g| g.id == id),
         }
     }
 
-    fn value(&self, id: i64) -> Option<&taskmaster_store::value_sets::Value> {
+    fn value(&self, id: i64) -> Option<&prostor_store::value_sets::Value> {
         match self {
             Lookups::Issue(d) => d.value(id),
             Lookups::History(h) => h.values.iter().find(|v| v.id == id),
@@ -1319,7 +1319,7 @@ fn history_item(
     names: &Names,
     viewer: &Access,
     page: &ServiceActivity,
-    entry: &taskmaster_store::issue_history::Entry,
+    entry: &prostor_store::issue_history::Entry,
     after_comment: Option<i64>,
 ) -> Option<HistoryItem> {
     let look = Lookups::History(page);
@@ -1588,7 +1588,7 @@ fn activity_query(query: &ActivityQuery) -> Result<activity::Query, ApiError> {
         Some(limit) if (1..=100).contains(&limit) => i64::from(limit),
         Some(_) => {
             return Err(ApiError::invalid(vec![
-                taskmaster_api::error::FieldError::new(
+                prostor_api::error::FieldError::new(
                     "limit",
                     "out_of_range",
                     "limit must be between 1 and 100",
@@ -1600,7 +1600,7 @@ fn activity_query(query: &ActivityQuery) -> Result<activity::Query, ApiError> {
     let changes = query.changes.unwrap_or(true);
     if !comments && !changes {
         return Err(ApiError::invalid(vec![
-            taskmaster_api::error::FieldError::new(
+            prostor_api::error::FieldError::new(
                 "changes",
                 "required",
                 "show comments, changes or both",
@@ -1688,7 +1688,7 @@ pub async fn mention_candidates(
         Some(limit) if (1..=20).contains(&limit) => i64::from(limit),
         Some(_) => {
             return Err(ApiError::invalid(vec![
-                taskmaster_api::error::FieldError::new(
+                prostor_api::error::FieldError::new(
                     "limit",
                     "out_of_range",
                     "limit must be between 1 and 20",
@@ -1696,7 +1696,7 @@ pub async fn mention_candidates(
             ]));
         }
     };
-    let found = taskmaster_service::people::mention_candidates(
+    let found = prostor_service::people::mention_candidates(
         &state.db,
         &viewer.access,
         id,

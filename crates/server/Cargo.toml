@@ -1,29 +1,29 @@
 [package]
-name = "taskmaster-server"
-description = "taskmaster server: HTTP API and the embedded web app"
+name = "prostor-server"
+description = "prostor server: HTTP API and the embedded web app"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 publish.workspace = true
 
 [[bin]]
-name = "taskmaster"
+name = "prostor"
 path = "src/main.rs"
 
 [dependencies]
-taskmaster-api.workspace = true
-taskmaster-domain.workspace = true
-taskmaster-files.workspace = true
-taskmaster-markup.workspace = true
-taskmaster-service.workspace = true
-taskmaster-store.workspace = true
+prostor-api.workspace = true
+prostor-domain.workspace = true
+prostor-files.workspace = true
+prostor-markup.workspace = true
+prostor-service.workspace = true
+prostor-store.workspace = true
 axum.workspace = true
 tokio.workspace = true
 tokio-util.workspace = true
 tower-http.workspace = true
 serde.workspace = true
 serde_json.workspace = true
-taskmaster-query.workspace = true
+prostor-query.workspace = true
 sqlx.workspace = true
 utoipa.workspace = true
 utoipa-axum.workspace = true
@@ -40,7 +40,7 @@ tower.workspace = true
 futures-util = { workspace = true, features = ["sink"] }
 
 [dev-dependencies]
-taskmaster-testkit.workspace = true
+prostor-testkit.workspace = true
 tempfile.workspace = true
 tower.workspace = true
 http-body-util.workspace = true

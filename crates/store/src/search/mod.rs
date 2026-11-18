@@ -9,9 +9,9 @@ pub mod compile;
 pub mod order;
 mod positions;
 
+use prostor_domain::IssueId;
+use prostor_domain::search::{Filter, SortSpec};
 use sqlx::{PgConnection, Postgres, QueryBuilder, Row};
-use taskmaster_domain::IssueId;
-use taskmaster_domain::search::{Filter, SortSpec};
 
 pub use order::SortValue;
 
@@ -144,7 +144,7 @@ pub async fn count(
 /// BRD-028).
 pub async fn holds_each(
     conn: &mut PgConnection,
-    issue: taskmaster_domain::IssueId,
+    issue: prostor_domain::IssueId,
     conditions: &[&Filter],
     vis: &Visibility,
 ) -> Result<Vec<bool>, sqlx::Error> {

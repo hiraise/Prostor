@@ -1,4 +1,4 @@
-//! A taskmaster node inside the benchmark's process, called as a client calls the server: whole
+//! A prostor node inside the benchmark's process, called as a client calls the server: whole
 //! requests through the router, from authentication to the compressed JSON answer (D-035).
 //!
 //! Requests skip TCP and HTTP parsing, which the server's own work dwarfs. The client asks for gzip
@@ -12,17 +12,17 @@ use std::time::Duration;
 use anyhow::{Context, bail};
 use http::{Method, Request, StatusCode, header};
 use http_body_util::BodyExt;
+use prostor_server::startup::{self, Services};
+use prostor_server::web::NoAssets;
+use prostor_server::{AppState, router};
+use prostor_store::PgConnectOptions;
+use prostor_store::jobs::{Handlers, RunnerConfig};
 use serde_json::Value;
-use taskmaster_server::startup::{self, Services};
-use taskmaster_server::web::NoAssets;
-use taskmaster_server::{AppState, router};
-use taskmaster_store::PgConnectOptions;
-use taskmaster_store::jobs::{Handlers, RunnerConfig};
 use tokio_util::sync::CancellationToken;
 use tower::{Layer as _, ServiceExt as _};
 use tower_http::decompression::{Decompression, DecompressionLayer};
 
-pub const HOST: &str = "bench.taskmaster.test";
+pub const HOST: &str = "bench.prostor.test";
 /// Requests one client sends at once: the issue page's four.
 pub const REQUESTS_AT_ONCE: usize = 4;
 
@@ -42,10 +42,10 @@ impl Node {
     /// schema is current, the settings and caches load, the job runner starts without handlers,
     /// so nothing queued runs.
     pub async fn start(options: &PgConnectOptions, clients: usize) -> anyhow::Result<Self> {
-        let pool = taskmaster_store::pool(options, u32::try_from(clients * REQUESTS_AT_ONCE)? + 2);
+        let pool = prostor_store::pool(options, u32::try_from(clients * REQUESTS_AT_ONCE)? + 2);
         let files = tempfile::tempdir()?;
         let state = AppState::new(Arc::new(NoAssets), pool).with_files(
-            taskmaster_files::FileStore::new(files.path()),
+            prostor_files::FileStore::new(files.path()),
             1 << 20,
             None,
         );
@@ -59,9 +59,9 @@ impl Node {
         // A real node's kinds: the ones the scenarios enqueue (the bulk job of step 2.1).
         let mut handlers = Handlers::new();
         let jobs_pool = state.db.clone();
-        handlers.add::<taskmaster_service::commands::bulk::BulkWork, _, _>(move |context, job| {
+        handlers.add::<prostor_service::commands::bulk::BulkWork, _, _>(move |context, job| {
             let pool = jobs_pool.clone();
-            async move { taskmaster_service::commands::bulk::run(&pool, &context, job).await }
+            async move { prostor_service::commands::bulk::run(&pool, &context, job).await }
         });
         let services = startup::start(&state, options, handlers, runner, &stop)
             .await

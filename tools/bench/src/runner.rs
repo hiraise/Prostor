@@ -10,8 +10,8 @@
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
+use prostor_store::PgConnectOptions;
 use sqlx::{Connection, PgConnection};
-use taskmaster_store::PgConnectOptions;
 
 use crate::breakdown::{self, Statement, Totals};
 use crate::catalog::Catalog;
@@ -109,7 +109,7 @@ pub async fn measure(
     }
     let variants = scenario.variants();
     // The server's pool: its statement timeout and connection settings.
-    let pool = taskmaster_store::pool(options, u32::try_from(clients)?);
+    let pool = prostor_store::pool(options, u32::try_from(clients)?);
     let iterations = scenario.iterations(run);
     let per_client = iterations.div_ceil(clients);
     let (seed, warmup) = (run.seed, run.warmup);

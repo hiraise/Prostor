@@ -612,8 +612,8 @@ export const tooManyAliases = msg({
 // ---- Fields of the instance (FLD-015…FLD-025, FLD-070) ----
 
 export const fieldsIntro = msg({
-  en: 'Fields of the whole TaskMaster. Each project chooses which of them it uses and sets them up its own way; new projects start with the order shown here.',
-  ru: 'Поля всего TaskMaster. Каждый проект выбирает, какие из них использовать, и настраивает их по-своему; новые проекты начинают с этого порядка.',
+  en: 'Fields of the whole Prostor. Each project chooses which of them it uses and sets them up its own way; new projects start with the order shown here.',
+  ru: 'Поля всего Простора. Каждый проект выбирает, какие из них использовать, и настраивает их по-своему; новые проекты начинают с этого порядка.',
 });
 export const onlyUnused = msg({ en: 'Show only unused', ru: 'Только неиспользуемые' });
 export const usedInCount = msg<{ count: number }>({

@@ -12,17 +12,17 @@ pub mod resolve;
 
 use std::collections::BTreeMap;
 
-use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::issues::history::Origin;
-use taskmaster_domain::links::Side;
-use taskmaster_domain::search::dates::Clock;
-use taskmaster_domain::{
+use prostor_domain::access::Access;
+use prostor_domain::issues::history::Origin;
+use prostor_domain::links::Side;
+use prostor_domain::search::dates::Clock;
+use prostor_domain::{
     BoardId, FieldId, GroupId, IssueId, LinkTypeId, ProjectId, SetId, SprintId, TagId, UserId,
 };
-use taskmaster_query::Span;
-use taskmaster_query::command::{CommandCode, Mode};
-use taskmaster_store::PgPool;
+use prostor_query::Span;
+use prostor_query::command::{CommandCode, Mode};
+use prostor_store::PgPool;
+use sqlx::PgConnection;
 
 use crate::Result;
 use crate::issues::FieldChange;
@@ -201,7 +201,7 @@ pub async fn plan(pool: &PgPool, actor: &Access, input: &ApplyInput) -> Result<P
 /// row naming both users; the named account's rights answer every permission check, while
 /// history and notifications keep the acting user (`Access::reattributed`).
 pub(crate) async fn acting_as(pool: &PgPool, actor: &Access, input: &ApplyInput) -> Result<Access> {
-    use taskmaster_domain::access::permission::Permission;
+    use prostor_domain::access::permission::Permission;
     let Some(named) = input.run_as else {
         return Ok(actor.clone());
     };
@@ -210,9 +210,9 @@ pub(crate) async fn acting_as(pool: &PgPool, actor: &Access, input: &ApplyInput)
     }
     actor.require(Permission::SystemWrite)?;
     let mut conn = pool.acquire().await?;
-    taskmaster_store::audit::record(
+    prostor_store::audit::record(
         &mut conn,
-        taskmaster_domain::Actor::User(actor.user()),
+        prostor_domain::Actor::User(actor.user()),
         "commands.run_as",
         &format!("user:{named}"),
         serde_json::json!({
@@ -296,7 +296,7 @@ pub async fn apply(
     // command. The acting user, not `run_as` (§4.6).
     if issues.iter().any(|outcome| outcome.ok) {
         let mut conn = pool.acquire().await?;
-        taskmaster_store::command_history::record(&mut conn, actor.user(), input.text.trim())
+        prostor_store::command_history::record(&mut conn, actor.user(), input.text.trim())
             .await
             .map_err(crate::Error::from)?;
     }
@@ -310,14 +310,14 @@ fn check(input: &ApplyInput) -> Result<()> {
     if input.issues.is_empty() {
         return Err(crate::Error::field(
             "issues",
-            taskmaster_domain::validation::Problem::Required,
+            prostor_domain::validation::Problem::Required,
             "name the issues to apply to",
         ));
     }
     if input.issues.len() > ISSUES_MAX {
         return Err(crate::Error::field(
             "issues",
-            taskmaster_domain::validation::Problem::OutOfRange,
+            prostor_domain::validation::Problem::OutOfRange,
             format!("at most {ISSUES_MAX} issues in one command"),
         ));
     }

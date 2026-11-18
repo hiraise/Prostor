@@ -5,11 +5,11 @@
 use axum::extract::State;
 use axum::http::StatusCode;
 use axum::response::Response;
-use taskmaster_api::admin::{MailSettings, MailSettingsChange, MailSource, MailTestSend};
-use taskmaster_api::error::ErrorBody;
-use taskmaster_domain::auth::Scope;
-use taskmaster_domain::settings::{BASE_URL, SYSTEM_LANGUAGE};
-use taskmaster_service::mail::{self, MailSettingsChange as Change};
+use prostor_api::admin::{MailSettings, MailSettingsChange, MailSource, MailTestSend};
+use prostor_api::error::ErrorBody;
+use prostor_domain::auth::Scope;
+use prostor_domain::settings::{BASE_URL, SYSTEM_LANGUAGE};
+use prostor_service::mail::{self, MailSettingsChange as Change};
 
 use crate::AppState;
 use crate::access::Viewer;
@@ -112,7 +112,7 @@ pub async fn test(
     let outgoing = state.settings.mail();
     let Some(mailer) = outgoing.transport.clone() else {
         return Err(ApiError::new(
-            taskmaster_api::error::ErrorCode::Conflict,
+            prostor_api::error::ErrorCode::Conflict,
             "no mail transport: configure the server and the sender first",
         ));
     };

@@ -6,7 +6,7 @@ import { readStored, writeStored } from '#lib/storage.ts';
 export const ZOOMS = ['column', 'all'] as const;
 export type Zoom = (typeof ZOOMS)[number];
 
-const key = (board: number) => `taskmaster.board-zoom.${String(board)}`;
+const key = (board: number) => `prostor.board-zoom.${String(board)}`;
 
 export class BoardZoom {
   value = $state<Zoom>('column');

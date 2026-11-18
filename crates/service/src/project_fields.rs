@@ -2,20 +2,20 @@
 //! project, the project's order, forking a shared value set, detaching. Needs `project.update`
 //! in the project; the project must not be archived.
 
-use serde_json::json;
-use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::permission::Permission;
-use taskmaster_domain::fields::{
+use prostor_domain::access::Access;
+use prostor_domain::access::permission::Permission;
+use prostor_domain::fields::{
     FieldKind, FieldType, PROJECT_FIELDS_MAX, check_empty_label, empty_label, required,
 };
-use taskmaster_domain::validation::{Problem, Problems};
-use taskmaster_domain::{FieldId, ProjectId, SetId, rank};
-use taskmaster_store::fields::{self, Attached, AttachedChange, Attachment, Field};
-use taskmaster_store::projects::{self, Project};
-use taskmaster_store::users::User;
-use taskmaster_store::value_sets::{self, Value, ValueSet};
-use taskmaster_store::{PgPool, audit, issue_values, teams};
+use prostor_domain::validation::{Problem, Problems};
+use prostor_domain::{FieldId, ProjectId, SetId, rank};
+use prostor_store::fields::{self, Attached, AttachedChange, Attachment, Field};
+use prostor_store::projects::{self, Project};
+use prostor_store::users::User;
+use prostor_store::value_sets::{self, Value, ValueSet};
+use prostor_store::{PgPool, audit, issue_values, teams};
+use serde_json::json;
+use sqlx::PgConnection;
 
 use crate::fields::{NewFieldInput, SetSource, check_default_values, load_defaults, pick};
 use crate::issues::jobs::FieldWork;

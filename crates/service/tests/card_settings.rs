@@ -2,32 +2,32 @@
 //! FLD-062; plan step 1.8 C2) on a real database.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-use taskmaster_domain::access::Access;
-use taskmaster_domain::boards::health::{Finding, Slot};
-use taskmaster_domain::boards::lanes::{LaneMode, OtherLane};
-use taskmaster_domain::boards::{ColorMode, Mode, Preset};
-use taskmaster_domain::issues::history::Origin;
-use taskmaster_domain::issues::values::Input;
-use taskmaster_domain::projects::Template;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::sharing::Audience;
-use taskmaster_domain::validation::Problem;
-use taskmaster_domain::{BoardId, FieldId, IssueId, ProjectId};
-use taskmaster_service::boards::card_setup::CardsChange;
-use taskmaster_service::boards::drafts::{self, Cell};
-use taskmaster_service::boards::lanes::LanesChange;
-use taskmaster_service::boards::{
+use prostor_domain::access::Access;
+use prostor_domain::boards::health::{Finding, Slot};
+use prostor_domain::boards::lanes::{LaneMode, OtherLane};
+use prostor_domain::boards::{ColorMode, Mode, Preset};
+use prostor_domain::issues::history::Origin;
+use prostor_domain::issues::values::Input;
+use prostor_domain::projects::Template;
+use prostor_domain::settings::Language;
+use prostor_domain::sharing::Audience;
+use prostor_domain::validation::Problem;
+use prostor_domain::{BoardId, FieldId, IssueId, ProjectId};
+use prostor_service::boards::card_setup::CardsChange;
+use prostor_service::boards::drafts::{self, Cell};
+use prostor_service::boards::lanes::LanesChange;
+use prostor_service::boards::{
     self as boards, BoardChange, BoardRow, NewBoard, Sharing, columns, health, view,
 };
-use taskmaster_service::issues::{self, FieldChange, NewIssue};
-use taskmaster_service::projects::{self, NewProjectInput};
-use taskmaster_service::setup::{self, Setup};
-use taskmaster_service::users::{self, NewAccount};
-use taskmaster_service::{Error, Passwords, access, fields, roles};
-use taskmaster_store::PgPool;
-use taskmaster_store::access::Holder;
-use taskmaster_store::sessions::Origin as SessionOrigin;
-use taskmaster_testkit::TestDb;
+use prostor_service::issues::{self, FieldChange, NewIssue};
+use prostor_service::projects::{self, NewProjectInput};
+use prostor_service::setup::{self, Setup};
+use prostor_service::users::{self, NewAccount};
+use prostor_service::{Error, Passwords, access, fields, roles};
+use prostor_store::PgPool;
+use prostor_store::access::Holder;
+use prostor_store::sessions::Origin as SessionOrigin;
+use prostor_testkit::TestDb;
 use time::OffsetDateTime;
 use time::macros::datetime;
 

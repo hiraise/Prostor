@@ -3,13 +3,13 @@
 //! only through [`super::write`], which speaks of the rule in history; the messages go to the
 //! actor through [`Ctx::say`].
 
+use prostor_domain::fields::FieldKind;
+use prostor_domain::issues::rights;
+use prostor_domain::issues::values::Value;
+use prostor_domain::rules::{ASSIGNEE, COMPONENT, FieldRef, Rule};
+use prostor_store::issues;
+use prostor_store::{groups, users, value_sets};
 use sqlx::PgConnection;
-use taskmaster_domain::fields::FieldKind;
-use taskmaster_domain::issues::rights;
-use taskmaster_domain::issues::values::Value;
-use taskmaster_domain::rules::{ASSIGNEE, COMPONENT, FieldRef, Rule};
-use taskmaster_store::issues;
-use taskmaster_store::{groups, users, value_sets};
 
 use crate::Error;
 use crate::issues::values::{self, ProjectField, ProjectFields};
@@ -193,7 +193,7 @@ pub async fn component_owner(
 fn find_field<'a>(
     fields: &'a ProjectFields,
     needle: &FieldRef,
-    language: taskmaster_domain::settings::Language,
+    language: prostor_domain::settings::Language,
 ) -> Option<&'a ProjectField> {
     super::find_field(fields, needle, language)
 }

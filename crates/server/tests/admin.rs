@@ -4,11 +4,11 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
 use axum::http::{Method, StatusCode};
+use prostor_domain::Actor;
+use prostor_server::throttle::Throttle;
+use prostor_store::jobs::{Enqueue, JobKind};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use taskmaster_domain::Actor;
-use taskmaster_server::throttle::Throttle;
-use taskmaster_store::jobs::{Enqueue, JobKind};
 
 mod common;
 
@@ -122,7 +122,7 @@ impl World {
 
     async fn enqueue<J: JobKind>(&self, job: &J, options: Enqueue) -> i64 {
         let mut conn = self.node.state.db.acquire().await.unwrap();
-        taskmaster_store::jobs::enqueue(&mut conn, job, options)
+        prostor_store::jobs::enqueue(&mut conn, job, options)
             .await
             .unwrap()
             .id

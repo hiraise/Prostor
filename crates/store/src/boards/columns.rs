@@ -1,7 +1,7 @@
 //! Board columns (BRD-042…BRD-046): one field value each, a rank, WIP limits.
 
+use prostor_domain::{BoardId, ColumnId, ValueId};
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::{BoardId, ColumnId, ValueId};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Column {

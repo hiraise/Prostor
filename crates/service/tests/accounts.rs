@@ -1,21 +1,21 @@
 //! Accounts on a real database: setup, sign-in, sessions, passwords, tokens and recovery.
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
+use prostor_domain::access::permission::Permission;
+use prostor_domain::auth::{Credential, Scope, SessionPolicy};
+use prostor_domain::settings::Language;
+use prostor_domain::validation::Problem;
+use prostor_service::auth::{self, SignIn, SignedIn};
+use prostor_service::mail::Letters;
+use prostor_service::recovery::{self, Target};
+use prostor_service::setup::{self, Setup};
+use prostor_service::tokens::{self, NewTokenInput};
+use prostor_service::{Error, Passwords, account};
+use prostor_store::instance::SetupState;
+use prostor_store::sessions::Origin;
+use prostor_store::{PgPool, audit, sessions, users};
+use prostor_testkit::TestDb;
 use serde_json::json;
-use taskmaster_domain::access::permission::Permission;
-use taskmaster_domain::auth::{Credential, Scope, SessionPolicy};
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::validation::Problem;
-use taskmaster_service::auth::{self, SignIn, SignedIn};
-use taskmaster_service::mail::Letters;
-use taskmaster_service::recovery::{self, Target};
-use taskmaster_service::setup::{self, Setup};
-use taskmaster_service::tokens::{self, NewTokenInput};
-use taskmaster_service::{Error, Passwords, account};
-use taskmaster_store::instance::SetupState;
-use taskmaster_store::sessions::Origin;
-use taskmaster_store::{PgPool, audit, sessions, users};
-use taskmaster_testkit::TestDb;
 use time::macros::datetime;
 use time::{Duration, OffsetDateTime};
 
@@ -106,7 +106,7 @@ async fn adm_047_setup_creates_the_administrator_and_the_guest_and_signs_in() {
     assert_eq!(signed_in.user.username, "admin");
     assert_eq!(signed_in.user.email.as_deref(), Some("Anna@Example.com"));
     // ACC-001: the administrator holds the system administrator role globally.
-    let access = taskmaster_service::access::load(pool, signed_in.user.id)
+    let access = prostor_service::access::load(pool, signed_in.user.id)
         .await
         .unwrap();
     assert!(access.has(Permission::SystemWrite) && access.has(Permission::ProjectDelete));
@@ -133,7 +133,7 @@ async fn adm_047_setup_creates_the_administrator_and_the_guest_and_signs_in() {
     assert_eq!(guest.roles, 0);
 
     let settings: Vec<(String, serde_json::Value)> =
-        taskmaster_store::settings::load(pool).await.unwrap();
+        prostor_store::settings::load(pool).await.unwrap();
     let mut settings = settings;
     settings.sort_by(|a, b| a.0.cmp(&b.0));
     assert_eq!(
@@ -579,7 +579,7 @@ async fn auth_073_recovery_creates_a_new_administrator() {
     .unwrap();
     assert!(created.created);
     assert!(
-        taskmaster_service::access::load(pool, created.user.id)
+        prostor_service::access::load(pool, created.user.id)
             .await
             .unwrap()
             .has(Permission::SystemWrite)

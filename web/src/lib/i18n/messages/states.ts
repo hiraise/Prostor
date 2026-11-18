@@ -14,8 +14,8 @@ export const forbiddenTitle = msg({
   ru: 'Это могут открыть только администраторы',
 });
 export const forbiddenText = msg({
-  en: 'If you need access, ask an administrator of your TaskMaster.',
-  ru: 'Если вам нужен доступ, обратитесь к администратору TaskMaster.',
+  en: 'If you need access, ask an administrator of your Prostor.',
+  ru: 'Если вам нужен доступ, обратитесь к администратору Простора.',
 });
 
 export const loadFailedTitle = msg({

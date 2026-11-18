@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // The signed-in person's account (UI-010): the picture and the profile (ACC-017, AUTH-014),
   // their groups and roles (ACC-018), the password (AUTH-009) and API tokens (AUTH-029).
   // Preferences and notifications have their own sections; the security page with sessions comes
@@ -30,7 +31,7 @@
   const user = $derived(account.current && 'tier' in account.current ? account.current : null);
 </script>
 
-<svelte:head><title>{m.accountTitle()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.accountTitle()} · {brand()}</title></svelte:head>
 
 <PageHeader title={m.accountTitle()} />
 <div class="page">

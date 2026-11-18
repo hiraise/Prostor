@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   import { goto } from '$app/navigation';
 
   import { accountMessages as m, SetupForm } from '#lib/features/account/index.ts';
@@ -14,7 +15,7 @@
   }
 </script>
 
-<svelte:head><title>{m.setupTitle()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.setupTitle()} · {brand()}</title></svelte:head>
 
 <PublicFrame title={m.setupTitle()} width="wide">
   <SetupForm ondone={done} />

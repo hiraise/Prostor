@@ -7,13 +7,13 @@ use std::time::Duration;
 use axum::body::Body;
 use axum::http::{Method, Request, StatusCode, header};
 use http_body_util::BodyExt;
+use prostor_server::startup::{self, Services};
+use prostor_server::throttle::Throttle;
+use prostor_server::web::NoAssets;
+use prostor_server::{AppState, router};
+use prostor_store::jobs::{Handlers, RunnerConfig};
+use prostor_testkit::TestDb;
 use serde_json::{Value, json};
-use taskmaster_server::startup::{self, Services};
-use taskmaster_server::throttle::Throttle;
-use taskmaster_server::web::NoAssets;
-use taskmaster_server::{AppState, router};
-use taskmaster_store::jobs::{Handlers, RunnerConfig};
-use taskmaster_testkit::TestDb;
 use tokio_util::sync::CancellationToken;
 use tower::ServiceExt;
 
@@ -25,8 +25,8 @@ pub const CODE: &str = "HTTP-TEST-2345";
 pub const SECRET_KEY: &str = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 
 /// The test instance's secret-settings key.
-pub fn secret_key() -> Option<taskmaster_domain::secret::Key> {
-    taskmaster_domain::secret::Key::from_base64(SECRET_KEY).ok()
+pub fn secret_key() -> Option<prostor_domain::secret::Key> {
+    prostor_domain::secret::Key::from_base64(SECRET_KEY).ok()
 }
 pub const HOST: &str = "tracker.example.com";
 
@@ -52,9 +52,9 @@ impl Node {
     pub async fn start_mailing() -> Self {
         Self::start_with(
             Throttle::default(),
-            Some(taskmaster_service::mail::EnvMail {
+            Some(prostor_service::mail::EnvMail {
                 url: "smtp://127.0.0.1:1".to_owned(),
-                from: "TaskMaster <t@example.com>".to_owned(),
+                from: "Prostor <t@example.com>".to_owned(),
             }),
         )
         .await
@@ -62,30 +62,25 @@ impl Node {
 
     pub async fn start_with(
         throttle: Throttle,
-        env_mail: Option<taskmaster_service::mail::EnvMail>,
+        env_mail: Option<prostor_service::mail::EnvMail>,
     ) -> Self {
-        Self::start_full(
-            throttle,
-            env_mail,
-            taskmaster_server::live::Gateway::default(),
-        )
-        .await
+        Self::start_full(throttle, env_mail, prostor_server::live::Gateway::default()).await
     }
 
     /// A node whose live gateway has other limits.
-    pub async fn start_live(config: taskmaster_server::live::Config) -> Self {
+    pub async fn start_live(config: prostor_server::live::Config) -> Self {
         Self::start_full(
             Throttle::default(),
             None,
-            taskmaster_server::live::Gateway::with_config(config),
+            prostor_server::live::Gateway::with_config(config),
         )
         .await
     }
 
     async fn start_full(
         throttle: Throttle,
-        env_mail: Option<taskmaster_service::mail::EnvMail>,
-        live: taskmaster_server::live::Gateway,
+        env_mail: Option<prostor_service::mail::EnvMail>,
+        live: prostor_server::live::Gateway,
     ) -> Self {
         let db = TestDb::new().await;
         let files = tempfile::tempdir().unwrap();
@@ -95,7 +90,7 @@ impl Node {
             .with_secret_mail(env_mail, secret_key())
             .with_live(live)
             .with_files(
-                taskmaster_files::FileStore::new(files.path()),
+                prostor_files::FileStore::new(files.path()),
                 UPLOAD_CEILING,
                 None,
             );
@@ -140,7 +135,7 @@ impl Node {
             request = request.header(header::ORIGIN, format!("https://{HOST}"));
         }
         if let Some(cookie) = cookie {
-            request = request.header(header::COOKIE, format!("taskmaster_session={cookie}"));
+            request = request.header(header::COOKIE, format!("prostor_session={cookie}"));
         }
         for (name, value) in headers {
             request = request.header(name, *value);
@@ -223,7 +218,7 @@ impl Node {
                 request = request.header(header::AUTHORIZATION, value);
             }
             Some(cookie) => {
-                request = request.header(header::COOKIE, format!("taskmaster_session={cookie}"));
+                request = request.header(header::COOKIE, format!("prostor_session={cookie}"));
             }
             None => {}
         }
@@ -287,7 +282,7 @@ impl Answer {
         self.set_cookie()
             .split(';')
             .next()?
-            .strip_prefix("taskmaster_session=")
+            .strip_prefix("prostor_session=")
             .filter(|value| !value.is_empty())
             .map(str::to_owned)
     }

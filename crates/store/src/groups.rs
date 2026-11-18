@@ -1,9 +1,9 @@
 //! Groups and their members (ACC-021…ACC-032). Members of the built-in groups are implicit
-//! (`taskmaster_domain::access::group::BuiltinGroup`): queries add them instead of storing a row per
+//! (`prostor_domain::access::group::BuiltinGroup`): queries add them instead of storing a row per
 //! account.
 
+use prostor_domain::{GroupId, ProjectId, UserId};
 use sqlx::{PgConnection, PgExecutor};
-use taskmaster_domain::{GroupId, ProjectId, UserId};
 use time::OffsetDateTime;
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -218,7 +218,7 @@ fn mac(instance_secret: &[u8], link: &Link<'_>) -> Hmac<Sha256> {
     // HMAC accepts keys of any length.
     let mut mac = <Hmac<Sha256> as KeyInit>::new_from_slice(instance_secret)
         .unwrap_or_else(|_| unreachable_key());
-    mac.update(b"taskmaster file link v1\0");
+    mac.update(b"prostor file link v1\0");
     mac.update(&link.attachment.to_be_bytes());
     mac.update(&(link.attachment_secret.len() as u64).to_be_bytes());
     mac.update(link.attachment_secret);

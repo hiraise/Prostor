@@ -2,15 +2,15 @@
 //! the project's toggles and what each still lacks, and the toggle itself. Needs are computed on
 //! read, in the instance language; the optimistic version is the project's, as in every tab.
 
+use prostor_domain::ProjectId;
+use prostor_domain::access::Access;
+use prostor_domain::access::permission::Permission;
+use prostor_domain::rules::needs as needs_of;
+use prostor_domain::rules::{Need, ProjectSnapshot, Rule, SnapshotField, SnapshotValue};
+use prostor_domain::settings::Language;
+use prostor_store::PgPool;
+use prostor_store::{projects, rules as store_rules, value_sets};
 use sqlx::PgConnection;
-use taskmaster_domain::ProjectId;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::permission::Permission;
-use taskmaster_domain::rules::needs as needs_of;
-use taskmaster_domain::rules::{Need, ProjectSnapshot, Rule, SnapshotField, SnapshotValue};
-use taskmaster_domain::settings::Language;
-use taskmaster_store::PgPool;
-use taskmaster_store::{projects, rules as store_rules, value_sets};
 
 use crate::Error;
 use crate::issues::values;

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // The user directory (ACC-002): accounts by name, found by name, username or email and filtered
   // by state, each with what sets it apart, its groups and its projects (a few on phones, each
   // opening the project); a row opens the profile. People who manage accounts
@@ -253,7 +254,7 @@
   }
 </script>
 
-<svelte:head><title>{admin.users()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{admin.users()} · {brand()}</title></svelte:head>
 
 {#if !canSeeDirectory()}
   <ForbiddenState />

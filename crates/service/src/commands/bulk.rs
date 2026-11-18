@@ -4,14 +4,14 @@
 //! cancelable between issues. The synchronous half (explicit IDs, at most
 //! [`super::ISSUES_MAX`]) is [`super::apply`].
 
+use prostor_domain::access::Access;
+use prostor_domain::issues::history::Origin;
+use prostor_domain::validation::Problem;
+use prostor_domain::{IssueId, ProjectId, UserId};
+use prostor_store::jobs::{Enqueue, Enqueued, JobContext, JobError, JobKind};
+use prostor_store::{PgPool, issues as store_issues, jobs};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
-use taskmaster_domain::access::Access;
-use taskmaster_domain::issues::history::Origin;
-use taskmaster_domain::validation::Problem;
-use taskmaster_domain::{IssueId, ProjectId, UserId};
-use taskmaster_store::jobs::{Enqueue, Enqueued, JobContext, JobError, JobKind};
-use taskmaster_store::{PgPool, issues as store_issues, jobs};
 
 use super::ApplyInput;
 use crate::access;
@@ -72,7 +72,7 @@ pub async fn enqueue(pool: &PgPool, actor: &Access, work: BulkWork) -> Result<En
         &mut conn,
         &work,
         Enqueue {
-            initiator: taskmaster_domain::Actor::User(actor.user()),
+            initiator: prostor_domain::Actor::User(actor.user()),
             ..Enqueue::default()
         },
     )
@@ -230,7 +230,7 @@ pub async fn run(pool: &PgPool, ctx: &JobContext, work: BulkWork) -> Result<(), 
                 failed += 1;
                 if failures.len() < FAILURES_MAX {
                     let problem = outcome.problem.unwrap_or(super::IssueProblem {
-                        code: taskmaster_query::command::CommandCode::CmdWrongKind,
+                        code: prostor_query::command::CommandCode::CmdWrongKind,
                         detail: String::new(),
                     });
                     failures.push(json!({
@@ -256,7 +256,7 @@ pub async fn run(pool: &PgPool, ctx: &JobContext, work: BulkWork) -> Result<(), 
     // `run_as` (§4.6).
     if failed < done {
         let mut conn = pool.acquire().await.map_err(retry)?;
-        taskmaster_store::command_history::record(&mut conn, work.actor, work.text.trim())
+        prostor_store::command_history::record(&mut conn, work.actor, work.text.trim())
             .await
             .map_err(retry)?;
     }

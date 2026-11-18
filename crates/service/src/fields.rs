@@ -1,21 +1,21 @@
 //! Custom fields of the instance (FLD-015…FLD-027): the list, creating, base properties and the
 //! settings new attachments start with, the instance order, deleting. Design: decisions.md D-028.
 
-use serde_json::json;
-use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::access::permission::Permission;
-use taskmaster_domain::fields::{
+use prostor_domain::access::Access;
+use prostor_domain::access::permission::Permission;
+use prostor_domain::fields::{
     FieldKind, FieldType, aliases, check_defaults, check_empty_label, empty_label, field_name,
     may_edit_base, may_see_fields,
 };
-use taskmaster_domain::validation::{Problem, Problems};
-use taskmaster_domain::{FieldId, ProjectId, SetId, rank};
-use taskmaster_store::fields::{self, Field, FieldChange, NewField};
-use taskmaster_store::projects::{self, Project};
-use taskmaster_store::users::{self, User};
-use taskmaster_store::value_sets::{self, Value, ValueSet};
-use taskmaster_store::{PgPool, audit, issue_values, unique_violation};
+use prostor_domain::validation::{Problem, Problems};
+use prostor_domain::{FieldId, ProjectId, SetId, rank};
+use prostor_store::fields::{self, Field, FieldChange, NewField};
+use prostor_store::projects::{self, Project};
+use prostor_store::users::{self, User};
+use prostor_store::value_sets::{self, Value, ValueSet};
+use prostor_store::{PgPool, audit, issue_values, unique_violation};
+use serde_json::json;
+use sqlx::PgConnection;
 
 use crate::issues::jobs::FieldWork;
 use crate::projects::can_see;
@@ -317,7 +317,7 @@ pub(crate) async fn insert(
         }
         (Some(kind), SetSource::New { name: set_name }) => {
             let base = match set_name.as_deref().map(str::trim).filter(|n| !n.is_empty()) {
-                Some(raw) => taskmaster_domain::fields::set_name(raw)
+                Some(raw) => prostor_domain::fields::set_name(raw)
                     .map_err(|r| Error::rejected("set.name", r))?,
                 None => name.clone(),
             };
@@ -550,7 +550,7 @@ pub async fn delete(pool: &PgPool, actor: &Access, id: FieldId) -> Result<()> {
     let mut sets: Vec<SetId> = attachments.iter().filter_map(|a| a.set_id).collect();
     sets.extend(field.set_id);
     let used_in: Vec<ProjectId> = attachments.iter().map(|a| a.project_id).collect();
-    taskmaster_store::boards::remove_field(&mut tx, id).await?;
+    prostor_store::boards::remove_field(&mut tx, id).await?;
     fields::delete(&mut tx, id).await?;
     value_sets::delete_unused(&mut tx, &sets).await?;
     projects::touch(&mut tx, &used_in).await?;
@@ -602,8 +602,8 @@ fn target(id: FieldId) -> String {
     format!("field:{id}")
 }
 
-fn actor_of(access: &Access) -> taskmaster_domain::Actor {
-    taskmaster_domain::Actor::User(access.user())
+fn actor_of(access: &Access) -> prostor_domain::Actor {
+    prostor_domain::Actor::User(access.user())
 }
 
 /// The fields of the projects the viewer reads issues in, or of `project` alone (QRY-078), with
@@ -614,7 +614,7 @@ pub async fn of_readable(
     viewer: &Access,
     project: Option<ProjectId>,
 ) -> Result<Vec<(Field, i64)>> {
-    use taskmaster_domain::access::Projects;
+    use prostor_domain::access::Projects;
     let mut conn = pool.acquire().await?;
     if let Some(id) = project {
         let found = projects::get(&mut *conn, id).await?;

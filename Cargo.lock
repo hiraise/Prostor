@@ -1794,6 +1794,211 @@ dependencies = [
 ]
 
 [[package]]
+name = "prostor-api"
+version = "0.1.0"
+dependencies = [
+ "base64 0.23.1",
+ "serde",
+ "serde_json",
+ "time",
+ "utoipa",
+]
+
+[[package]]
+name = "prostor-bench"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "base64 0.23.1",
+ "futures-util",
+ "http",
+ "http-body-util",
+ "prostor-domain",
+ "prostor-files",
+ "prostor-markup",
+ "prostor-server",
+ "prostor-service",
+ "prostor-store",
+ "prostor-testkit",
+ "rlimit",
+ "serde_json",
+ "sha2 0.11.1",
+ "sqlx",
+ "tempfile",
+ "time",
+ "tokio",
+ "tokio-tungstenite",
+ "tokio-util",
+ "tower",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+]
+
+[[package]]
+name = "prostor-domain"
+version = "0.1.0"
+dependencies = [
+ "aes-gcm",
+ "base64 0.23.1",
+ "getrandom 0.4.3",
+ "hmac",
+ "jiff",
+ "prostor-query",
+ "serde",
+ "serde_json",
+ "sha2 0.11.1",
+ "thiserror",
+ "time",
+ "url",
+]
+
+[[package]]
+name = "prostor-files"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "futures-util",
+ "sha2 0.11.1",
+ "tempfile",
+ "thiserror",
+ "time",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
+name = "prostor-markup"
+version = "0.1.0"
+dependencies = [
+ "ammonia",
+ "comrak",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "prostor-query"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "prostor-query-wasm"
+version = "0.1.0"
+dependencies = [
+ "prostor-query",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "prostor-server"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "futures-util",
+ "http-body-util",
+ "mime_guess",
+ "prostor-api",
+ "prostor-domain",
+ "prostor-files",
+ "prostor-markup",
+ "prostor-query",
+ "prostor-service",
+ "prostor-store",
+ "prostor-testkit",
+ "rust-embed",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tempfile",
+ "thiserror",
+ "time",
+ "tokio",
+ "tokio-tungstenite",
+ "tokio-util",
+ "tower",
+ "tower-http",
+ "tracing",
+ "tracing-subscriber",
+ "url",
+ "utoipa",
+ "utoipa-axum",
+ "uuid",
+]
+
+[[package]]
+name = "prostor-service"
+version = "0.1.0"
+dependencies = [
+ "argon2",
+ "axum",
+ "base64 0.23.1",
+ "bytes",
+ "futures-util",
+ "getrandom 0.4.3",
+ "http",
+ "http-body-util",
+ "hyper-rustls",
+ "hyper-util",
+ "image",
+ "jiff",
+ "lettre",
+ "prostor-domain",
+ "prostor-files",
+ "prostor-markup",
+ "prostor-query",
+ "prostor-store",
+ "prostor-testkit",
+ "rust_xlsxwriter",
+ "rustls",
+ "serde",
+ "serde_json",
+ "sha2 0.11.1",
+ "sqlx",
+ "tempfile",
+ "thiserror",
+ "time",
+ "tokio",
+ "tracing",
+ "url",
+]
+
+[[package]]
+name = "prostor-store"
+version = "0.1.0"
+dependencies = [
+ "prostor-domain",
+ "prostor-query",
+ "prostor-testkit",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "thiserror",
+ "time",
+ "tokio",
+ "tokio-util",
+ "tracing",
+ "uuid",
+]
+
+[[package]]
+name = "prostor-testkit"
+version = "0.1.0"
+dependencies = [
+ "prostor-store",
+ "sqlx",
+ "tokio",
+ "uuid",
+]
+
+[[package]]
 name = "pxfm"
 version = "0.1.30"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2515,211 +2720,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn 3.0.9",
-]
-
-[[package]]
-name = "taskmaster-api"
-version = "0.1.0"
-dependencies = [
- "base64 0.23.1",
- "serde",
- "serde_json",
- "time",
- "utoipa",
-]
-
-[[package]]
-name = "taskmaster-bench"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "base64 0.23.1",
- "futures-util",
- "http",
- "http-body-util",
- "rlimit",
- "serde_json",
- "sha2 0.11.1",
- "sqlx",
- "taskmaster-domain",
- "taskmaster-files",
- "taskmaster-markup",
- "taskmaster-server",
- "taskmaster-service",
- "taskmaster-store",
- "taskmaster-testkit",
- "tempfile",
- "time",
- "tokio",
- "tokio-tungstenite",
- "tokio-util",
- "tower",
- "tower-http",
- "tracing",
- "tracing-subscriber",
- "url",
-]
-
-[[package]]
-name = "taskmaster-domain"
-version = "0.1.0"
-dependencies = [
- "aes-gcm",
- "base64 0.23.1",
- "getrandom 0.4.3",
- "hmac",
- "jiff",
- "serde",
- "serde_json",
- "sha2 0.11.1",
- "taskmaster-query",
- "thiserror",
- "time",
- "url",
-]
-
-[[package]]
-name = "taskmaster-files"
-version = "0.1.0"
-dependencies = [
- "bytes",
- "futures-util",
- "sha2 0.11.1",
- "tempfile",
- "thiserror",
- "time",
- "tokio",
- "uuid",
-]
-
-[[package]]
-name = "taskmaster-markup"
-version = "0.1.0"
-dependencies = [
- "ammonia",
- "comrak",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "taskmaster-query"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "taskmaster-query-wasm"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
- "taskmaster-query",
-]
-
-[[package]]
-name = "taskmaster-server"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "futures-util",
- "http-body-util",
- "mime_guess",
- "rust-embed",
- "serde",
- "serde_json",
- "sqlx",
- "taskmaster-api",
- "taskmaster-domain",
- "taskmaster-files",
- "taskmaster-markup",
- "taskmaster-query",
- "taskmaster-service",
- "taskmaster-store",
- "taskmaster-testkit",
- "tempfile",
- "thiserror",
- "time",
- "tokio",
- "tokio-tungstenite",
- "tokio-util",
- "tower",
- "tower-http",
- "tracing",
- "tracing-subscriber",
- "url",
- "utoipa",
- "utoipa-axum",
- "uuid",
-]
-
-[[package]]
-name = "taskmaster-service"
-version = "0.1.0"
-dependencies = [
- "argon2",
- "axum",
- "base64 0.23.1",
- "bytes",
- "futures-util",
- "getrandom 0.4.3",
- "http",
- "http-body-util",
- "hyper-rustls",
- "hyper-util",
- "image",
- "jiff",
- "lettre",
- "rust_xlsxwriter",
- "rustls",
- "serde",
- "serde_json",
- "sha2 0.11.1",
- "sqlx",
- "taskmaster-domain",
- "taskmaster-files",
- "taskmaster-markup",
- "taskmaster-query",
- "taskmaster-store",
- "taskmaster-testkit",
- "tempfile",
- "thiserror",
- "time",
- "tokio",
- "tracing",
- "url",
-]
-
-[[package]]
-name = "taskmaster-store"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
- "sqlx",
- "taskmaster-domain",
- "taskmaster-query",
- "taskmaster-testkit",
- "thiserror",
- "time",
- "tokio",
- "tokio-util",
- "tracing",
- "uuid",
-]
-
-[[package]]
-name = "taskmaster-testkit"
-version = "0.1.0"
-dependencies = [
- "sqlx",
- "taskmaster-store",
- "tokio",
- "uuid",
 ]
 
 [[package]]

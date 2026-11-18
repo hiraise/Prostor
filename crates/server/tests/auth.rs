@@ -5,8 +5,8 @@
 use std::time::Duration;
 
 use axum::http::{Method, StatusCode, header};
+use prostor_server::throttle::{Limits, Throttle};
 use serde_json::{Value, json};
-use taskmaster_server::throttle::{Limits, Throttle};
 
 mod common;
 

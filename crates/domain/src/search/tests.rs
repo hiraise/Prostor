@@ -1,7 +1,7 @@
 //! The resolver on a small catalog: two projects with different state sets, a private field, two
 //! fields named "Size", a field named like an attribute, people, a group, a tag, link sides.
 
-use taskmaster_query::{Direction, ProblemCode, parse};
+use prostor_query::{Direction, ProblemCode, parse};
 use time::macros::{date, datetime};
 
 use super::catalog::{
@@ -244,14 +244,14 @@ fn ctx() -> Ctx {
     }
 }
 
-fn run_with(text: &str, mut ctx: Ctx) -> Result<Resolved, Vec<taskmaster_query::Problem>> {
+fn run_with(text: &str, mut ctx: Ctx) -> Result<Resolved, Vec<prostor_query::Problem>> {
     let cat = catalog();
     let q = parse(text);
     ctx.scope = scope(&q, &cat.projects, None).projects;
     resolve(&q, &cat, &ctx)
 }
 
-fn run(text: &str) -> Result<Resolved, Vec<taskmaster_query::Problem>> {
+fn run(text: &str) -> Result<Resolved, Vec<prostor_query::Problem>> {
     run_with(text, ctx())
 }
 

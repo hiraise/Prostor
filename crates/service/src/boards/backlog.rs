@@ -2,18 +2,16 @@
 //! board, with a manual order — its priority — kept on the search, so every board using that
 //! search shares it.
 
+use prostor_domain::access::Access;
+use prostor_domain::rank;
+use prostor_domain::search::saved;
+use prostor_domain::settings::Language;
+use prostor_domain::sharing::{Audience, Shared};
+use prostor_domain::validation::Problem;
+use prostor_domain::{BoardId, IssueId, ProjectId, UserId};
+use prostor_store::PgPool;
+use prostor_store::saved_searches::{self as store_searches, NewSavedSearch, SavedSearchId, ranks};
 use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::rank;
-use taskmaster_domain::search::saved;
-use taskmaster_domain::settings::Language;
-use taskmaster_domain::sharing::{Audience, Shared};
-use taskmaster_domain::validation::Problem;
-use taskmaster_domain::{BoardId, IssueId, ProjectId, UserId};
-use taskmaster_store::PgPool;
-use taskmaster_store::saved_searches::{
-    self as store_searches, NewSavedSearch, SavedSearchId, ranks,
-};
 use time::OffsetDateTime;
 
 use super::load;
@@ -159,7 +157,7 @@ pub async fn order(
 ) -> Result<()> {
     let mut tx = pool.begin().await?;
     let search = lock_ordered(&mut tx, viewer, board_id).await?;
-    let found = taskmaster_store::issues::get(&mut *tx, issue).await?;
+    let found = prostor_store::issues::get(&mut *tx, issue).await?;
     crate::issues::checked(&mut tx, viewer, found).await?;
     if after == Some(issue) || before == Some(issue) {
         return Err(Error::field(
@@ -239,7 +237,7 @@ pub async fn discard(pool: &PgPool, viewer: &Access, board_id: BoardId) -> Resul
     ranks::discard(&mut tx, search).await?;
     let mut batch = Batch::new();
     for board in ranks::boards_of(&mut *tx, search).await? {
-        batch.board(board, taskmaster_domain::live::Change::Updated);
+        batch.board(board, prostor_domain::live::Change::Updated);
     }
     batch.publish(&mut tx).await?;
     tx.commit().await?;

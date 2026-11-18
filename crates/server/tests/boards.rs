@@ -5,8 +5,8 @@
 mod common;
 
 use axum::http::{Method, StatusCode};
+use prostor_server::throttle::Throttle;
 use serde_json::json;
-use taskmaster_server::throttle::Throttle;
 
 use common::*;
 

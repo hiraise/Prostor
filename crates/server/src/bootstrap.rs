@@ -3,11 +3,11 @@
 use axum::extract::State;
 use axum::http::{HeaderValue, StatusCode, header};
 use axum::response::Response;
-use taskmaster_api::bootstrap::{Bootstrap, DateFormat as Format, Limits, WorkSchedule};
-use taskmaster_api::error::ErrorBody;
-use taskmaster_api::preferences::HomePage;
-use taskmaster_domain::settings::{BASE_URL, DEFAULT_DATE_FORMAT, DEFAULT_HOME, UPLOAD_MAX_BYTES};
-use taskmaster_domain::settings::{DateFormat as DomainFormat, Home};
+use prostor_api::bootstrap::{Bootstrap, DateFormat as Format, Limits, WorkSchedule};
+use prostor_api::error::ErrorBody;
+use prostor_api::preferences::HomePage;
+use prostor_domain::settings::{BASE_URL, DEFAULT_DATE_FORMAT, DEFAULT_HOME, UPLOAD_MAX_BYTES};
+use prostor_domain::settings::{DateFormat as DomainFormat, Home};
 
 use crate::AppState;
 use crate::error::{ApiError, json};
@@ -49,7 +49,7 @@ pub async fn get(State(state): State<AppState>) -> Result<Response, ApiError> {
         },
         work_schedule: {
             // Fixed until the schedule settings (TIME-001…TIME-003, P2).
-            let schedule = taskmaster_domain::duration::Schedule::default();
+            let schedule = prostor_domain::duration::Schedule::default();
             WorkSchedule {
                 day_minutes: schedule.day,
                 week_days: schedule.week_days,

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // One field of the instance (FLD-016…FLD-025): its name and aliases, shared by every project
   // using it; what projects start with when they add it (FLD-019) and whether new projects get it
   // (FLD-020); its values; the projects using it; and deleting it with the impact shown (FLD-023).
@@ -152,7 +153,7 @@
 </script>
 
 <svelte:head>
-  <title>{field?.name ?? m.fieldsTitle()} · TaskMaster</title>
+  <title>{field?.name ?? m.fieldsTitle()} · {brand()}</title>
 </svelte:head>
 
 {#if !canSeeFields()}

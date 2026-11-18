@@ -2,18 +2,18 @@
 //! rules of `domain::sharing` (D-038). Putting a tag on an issue or taking it off needs use
 //! rights and the right to update the issue. Deleting a tag takes it off every issue.
 
+use prostor_domain::access::Access;
+use prostor_domain::issues::history::{Origin, Record};
+use prostor_domain::issues::rights;
+use prostor_domain::issues::{self as domain, TAGS_PER_ISSUE_MAX, TAGS_PER_OWNER_MAX};
+use prostor_domain::sharing::{Audience, Shared};
+use prostor_domain::validation::{Problem, Problems};
+use prostor_domain::{Actor, IssueId, TagId, UserId};
+use prostor_store::issues::Issue;
+use prostor_store::tags::{self, Listing, Tag};
+use prostor_store::{PgPool, audit, groups, unique_violation, users};
 use serde_json::json;
 use sqlx::PgConnection;
-use taskmaster_domain::access::Access;
-use taskmaster_domain::issues::history::{Origin, Record};
-use taskmaster_domain::issues::rights;
-use taskmaster_domain::issues::{self as domain, TAGS_PER_ISSUE_MAX, TAGS_PER_OWNER_MAX};
-use taskmaster_domain::sharing::{Audience, Shared};
-use taskmaster_domain::validation::{Problem, Problems};
-use taskmaster_domain::{Actor, IssueId, TagId, UserId};
-use taskmaster_store::issues::Issue;
-use taskmaster_store::tags::{self, Listing, Tag};
-use taskmaster_store::{PgPool, audit, groups, unique_violation, users};
 
 use crate::issues::{self, One};
 use crate::live::Batch;

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { brand } from '#lib/i18n/messages/brand.ts';
   // The boards list (BRD-001, BRD-002; a project's boards, PRJ-016): boards the person sees, their
   // favorites first, then by name; each row has the name, the owner, the projects and a visible
   // star, so nothing depends on hover (D-019). A search by name; «Показать ещё» loads the next page.
@@ -121,7 +122,7 @@
   }
 </script>
 
-<svelte:head><title>{m.boards()} · TaskMaster</title></svelte:head>
+<svelte:head><title>{m.boards()} · {brand()}</title></svelte:head>
 
 <PageHeader title={m.boards()}>
   {#snippet actions()}

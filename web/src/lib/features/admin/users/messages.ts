@@ -427,8 +427,8 @@ export const builtinGroupsConflict = msg({
   ru: 'Во встроенные группы учётные записи входят сами.',
 });
 export const lastAdministrator = msg({
-  en: 'This would leave nobody able to administer TaskMaster. Make someone else a system administrator first.',
-  ru: 'Тогда в TaskMaster не останется ни одного системного администратора. Сначала назначьте администратором кого-то ещё.',
+  en: 'This would leave nobody able to administer Prostor. Make someone else a system administrator first.',
+  ru: 'Тогда в Просторе не останется ни одного системного администратора. Сначала назначьте администратором кого-то ещё.',
 });
 
 // ---- Profile (ACC-009, ACC-015, UI-010) ----
@@ -467,7 +467,7 @@ export const invitedNotice = msg({
 });
 export const guestNotice = msg({
   en: 'This account stands for visitors who are not signed in.',
-  ru: 'Эта учётная запись представляет посетителей, которые не вошли в TaskMaster.',
+  ru: 'Эта учётная запись представляет посетителей, которые не вошли в Простор.',
 });
 export const basicTierNote = msg({
   en: 'You can see only the name of this person.',

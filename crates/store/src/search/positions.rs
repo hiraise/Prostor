@@ -7,10 +7,10 @@
 
 use std::collections::BTreeMap;
 
+use prostor_domain::fields::FieldKind;
+use prostor_domain::search::{FieldRef, Filter, SortBy, SortSpec};
+use prostor_query::Direction;
 use sqlx::{PgConnection, Postgres, QueryBuilder, Row};
-use taskmaster_domain::fields::FieldKind;
-use taskmaster_domain::search::{FieldRef, Filter, SortBy, SortSpec};
-use taskmaster_query::Direction;
 
 use super::order::SortValue;
 use super::{Hit, compile};

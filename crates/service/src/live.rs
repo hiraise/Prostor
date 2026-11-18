@@ -6,11 +6,11 @@
 
 use std::collections::BTreeMap;
 
+use prostor_domain::live::{Change, EntityKind, Guard, LINK_VERSION, NewEvent, Patch};
+use prostor_domain::{AttachmentId, BoardId, CommentId, IssueId, LinkId, ProjectId, SprintId};
+use prostor_store::boards as store_boards;
+use prostor_store::live::{self as store, LinkFacts};
 use sqlx::PgConnection;
-use taskmaster_domain::live::{Change, EntityKind, Guard, LINK_VERSION, NewEvent, Patch};
-use taskmaster_domain::{AttachmentId, BoardId, CommentId, IssueId, LinkId, ProjectId, SprintId};
-use taskmaster_store::boards as store_boards;
-use taskmaster_store::live::{self as store, LinkFacts};
 
 use crate::Result;
 
@@ -396,8 +396,7 @@ impl Batch {
                 continue;
             };
             let boards =
-                taskmaster_store::saved_searches::ranks::boards_of(&mut *conn, order.search)
-                    .await?;
+                prostor_store::saved_searches::ranks::boards_of(&mut *conn, order.search).await?;
             if boards.is_empty() {
                 continue;
             }
