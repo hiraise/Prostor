@@ -35,6 +35,13 @@ jobs:
           --health-interval 5s
           --health-timeout 3s
           --health-retries 20
+      # The mail sink of `make dev` (compose.dev.yaml): the mail and notification
+      # tests send letters to smtp://127.0.0.1:1025.
+      mailpit:
+        image: axllent/mailpit:v1.31.6
+        ports:
+          - 1025:1025
+          - 8025:8025
     steps:
       - uses: actions/checkout@v4
       - run: rustup toolchain install # the pinned toolchain, components and the wasm target (rust-toolchain.toml)
@@ -44,7 +51,7 @@ jobs:
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-nextest
-      - run: cargo nextest run --locked
+      - run: cargo nextest run --locked --no-fail-fast # every failure in one look, not one per run
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
