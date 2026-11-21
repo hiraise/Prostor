@@ -314,10 +314,12 @@ fn in_range(value: u32, min: u32, max: u32) -> Result<u32, String> {
 }
 
 /// Accepts names of the IANA time zone database, in any letter case; stores the database's
-/// spelling.
+/// spelling. The bundled copy (`tzdb-bundle-always`), not the host's zoneinfo: system copies
+/// differ — Ubuntu's has no `backward` aliases like `Europe/Kiev` (the first CI run caught
+/// that), macOS's does — and the deployment image ships no tzdata at all.
 fn validate_time_zone(name: String) -> Result<String, String> {
     let name = name.trim();
-    let zone = jiff::tz::db()
+    let zone = jiff::tz::TimeZoneDatabase::bundled()
         .get(name)
         .map_err(|_| format!("{name:?} is not a time zone of the IANA database"))?;
     Ok(zone.iana_name().unwrap_or(name).to_owned())
