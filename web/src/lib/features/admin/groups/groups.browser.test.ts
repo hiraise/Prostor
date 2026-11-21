@@ -280,7 +280,7 @@ describe('GroupsPage', () => {
     expect(screen.getByRole('link', { name: 'QA' }).element().getAttribute('href')).toMatch(
       /\/admin\/groups\/4$/,
     );
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 
@@ -361,7 +361,7 @@ describe('GroupsPage', () => {
     await screen.getByRole('checkbox', { name: 'Select “QA”' }).click();
     const selection = screen.getByRole('group', { name: 'Selected groups' });
     await expect.element(selection.getByText('Selected: 2')).toBeVisible();
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await selection.getByRole('button', { name: 'Delete groups' }).click();
 
     const dialog = page.getByRole('dialog', { name: 'Delete 2 groups?' });
@@ -453,7 +453,7 @@ describe('GroupsPage', () => {
     await expect
       .element(screen.getByRole('checkbox', { name: 'Select “Developers”' }))
       .toBeVisible();
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 });
@@ -515,7 +515,7 @@ describe('GroupPage', () => {
     await expect
       .element(settings.getByLabelText(label('Description')))
       .toHaveValue('Their description');
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 
@@ -629,7 +629,7 @@ describe('GroupPage', () => {
     expect(calls.filter((call) => call.path === '/groups/3/members/remove').at(-1)?.body).toEqual({
       users: [2],
     });
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
   });
 
   it('ACC-060: assigns a role globally with its permissions shown, then revokes it', async () => {
@@ -719,7 +719,7 @@ describe('GroupPage', () => {
       calls.some((call) => call.method === 'DELETE' && call.path === '/role-assignments/70'),
     ).toBe(true);
     await expect.element(region.getByText('No roles yet')).toBeVisible();
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 
@@ -818,7 +818,7 @@ describe('GroupPage', () => {
     await expect
       .element(region.getByRole('button', { name: 'Revoke “Release manager”' }))
       .toBeVisible();
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
   });
 
   it('ACC-033: a project team holds roles only in its project and changes nowhere here', async () => {

@@ -47,7 +47,7 @@ describe('FileButton', () => {
     expect(onfiles.mock.calls[0]?.[0]).toEqual([a, b]);
     // Emptied, so choosing the same file again is reported again.
     expect(input.value).toBe('');
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 

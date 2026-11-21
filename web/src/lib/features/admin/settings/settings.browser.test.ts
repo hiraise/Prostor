@@ -344,11 +344,11 @@ describe('SettingsPage', () => {
     server(ADMIN, settings());
 
     const screen = await render(SettingsPage, { settings: null });
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
 
     await screen.getByRole('tab', { name: 'Localization' }).click();
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 

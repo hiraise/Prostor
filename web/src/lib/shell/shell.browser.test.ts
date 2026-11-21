@@ -134,11 +134,11 @@ describe('AppShell', () => {
     expect(page.getByRole('navigation').elements()).toHaveLength(0);
 
     const menu = screen.getByRole('button', { name: 'Main navigation' });
-    expect(smallTargets(screen.container)).toEqual([]);
+    expect(await smallTargets(screen.container)).toEqual([]);
     await menu.click();
     const drawer = page.getByRole('dialog', { name: 'Main navigation' });
     await expect.element(drawer).toBeVisible();
-    expect(smallTargets(drawer.element())).toEqual([]);
+    expect(await smallTargets(drawer.element())).toEqual([]);
 
     // Choosing a section closes the drawer.
     drawer
@@ -198,7 +198,7 @@ describe('AccountMenu', () => {
     expect(button.element().textContent.replace(/\s+/g, ' ').trim()).toBe(
       isPhone() ? 'AA' : 'AA Account: Anna Admin',
     );
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await button.click();
     await expect.element(page.getByRole('menuitem', { name: 'Account' })).toBeVisible();
     await expectAccessible(document.body);

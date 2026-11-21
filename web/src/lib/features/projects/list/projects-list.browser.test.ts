@@ -199,7 +199,7 @@ describe('ProjectsPage', () => {
       .element(screen.getByRole('button', { name: 'Add “Web” to favorites' }))
       .toHaveAttribute('aria-pressed', 'false');
     await expect.element(screen.getByRole('link', { name: 'Create project' })).toBeVisible();
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 
@@ -285,7 +285,7 @@ describe('ProjectsPage', () => {
         .elements()
         .map((item) => item.textContent.trim()),
     ).toEqual(['Open project', 'Project settings', 'Archive project', 'Delete project']);
-    expect(smallTargets(screen.container, isPhone() ? 44 : 28)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 28)).toEqual([]);
     await web.getByRole('menuitem', { name: 'Project settings' }).click();
     expect(onnavigate).toHaveBeenCalledWith(
       expect.stringMatching(/\/projects\/WEB\/settings\/general$/),
@@ -413,7 +413,7 @@ describe('ProjectsPage', () => {
     // No star and no menu for archived projects; restore only where the person may.
     expect(archived.getByRole('button', { name: /favorites/ }).query()).toBeNull();
     expect(archived.getByRole('button', { name: 'Restore “Legacy”' }).query()).toBeNull();
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
 
     await archived.getByRole('button', { name: 'Restore “Web”' }).click();
@@ -461,7 +461,7 @@ describe('ProjectsPage', () => {
     // They cannot be opened any more.
     expect(list.getByRole('link').query()).toBeNull();
     expect(list.getByRole('button').elements()).toHaveLength(1);
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
 
     await list.getByRole('button', { name: 'Delete again: Broken' }).click();
@@ -514,7 +514,7 @@ describe('ProjectsPage', () => {
       .element(empty.getByRole('heading', { level: 2, name: 'No projects yet' }))
       .toBeVisible();
     expect(empty.getByRole('link', { name: 'Create project' }).elements()).toHaveLength(2);
-    expect(smallTargets(empty.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(empty.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(empty.container);
   });
 });

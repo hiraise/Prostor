@@ -503,7 +503,7 @@ describe('The dialog itself (CMD-027)', () => {
       await expect.element(screen.getByText('Tag')).toBeVisible();
     }
     await expectAccessible();
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
   });
 });
 

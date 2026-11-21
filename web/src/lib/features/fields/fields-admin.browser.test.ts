@@ -123,7 +123,7 @@ describe('FieldsPage', () => {
     await expect
       .element(screen.getByRole('link', { name: 'Severity' }))
       .toHaveAccessibleDescription(/Used in 1 project$/);
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
 
     await screen.getByRole('button', { name: 'Actions for “Severity”' }).click();
@@ -334,7 +334,7 @@ describe('FieldPage', () => {
     await expect
       .element(screen.getByRole('link', { name: 'Open the set “Severities”' }))
       .toHaveAttribute('href', '/admin/value-sets/12');
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 
@@ -427,7 +427,7 @@ describe('FieldPage', () => {
     await expect.element(screen.getByText('columns, estimation')).toBeVisible();
     await expect.element(screen.getByText('lanes, card color, fields on cards')).toBeVisible();
     await expect.element(screen.getByText('1 more board, which you do not view.')).toBeVisible();
-    if (isPhone()) expect(smallTargets(screen.container)).toEqual([]);
+    if (isPhone()) expect(await smallTargets(screen.container)).toEqual([]);
 
     await screen.getByRole('button', { name: 'Delete field' }).click();
     const dialog = page.getByRole('dialog', { name: 'Delete “Priority”?' });
@@ -482,6 +482,6 @@ describe('FieldPage', () => {
         ),
       )
       .toBeVisible();
-    if (isPhone()) expect(smallTargets(dialog.element())).toEqual([]);
+    if (isPhone()) expect(await smallTargets(dialog.element())).toEqual([]);
   });
 });

@@ -266,7 +266,7 @@ function server(access: AccessMap, routes: Record<string, FakeRoute>): ReturnTyp
 }
 
 /** Buttons and links smaller than a touch target. */
-function tooSmall(root: Element): string[] {
+async function tooSmall(root: Element): Promise<string[]> {
   return smallTargets(root, isPhone() ? 44 : 28);
 }
 
@@ -331,7 +331,7 @@ describe('PeoplePage', () => {
     // Global roles change on their holder's page only.
     expect(global.getByRole('button').query()).toBeNull();
 
-    expect(tooSmall(screen.container)).toEqual([]);
+    expect(await tooSmall(screen.container)).toEqual([]);
     await expectAccessible(screen.container);
   });
 
@@ -443,7 +443,7 @@ describe('PeoplePage', () => {
     expect(
       calls.some((call) => call.method === 'DELETE' && call.path === '/role-assignments/100'),
     ).toBe(true);
-    expect(tooSmall(screen.container)).toEqual([]);
+    expect(await tooSmall(screen.container)).toEqual([]);
   });
 
   it('PRJ-048, PRJ-056: adds people and groups to the team; a refusal names the missing permissions', async () => {

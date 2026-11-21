@@ -216,10 +216,10 @@ async function bulkAction(name: string): Promise<void> {
  * Buttons and links smaller than a touch target. A person's name in a directory row is an inline
  * link whose target is the whole row, so on a desktop it is left out.
  */
-function tooSmall(root: Element, names: string[] = []): string[] {
+async function tooSmall(root: Element, names: string[] = []): Promise<string[]> {
   return isPhone()
     ? smallTargets(root, 44)
-    : smallTargets(root, 32).filter((name) => !names.includes(name));
+    : smallTargets(root, 32).then((small) => small.filter((name) => !names.includes(name)));
 }
 
 function toastTexts(): string[] {
@@ -282,7 +282,7 @@ describe('UsersPage', () => {
     await expect.element(screen.getByRole('button', { name: 'Create account' })).toBeVisible();
     await expect.element(screen.getByRole('button', { name: 'Invite people' })).toBeVisible();
     const names = everyone.map((account) => account.full_name);
-    expect(tooSmall(screen.container, names)).toEqual([]);
+    expect(await tooSmall(screen.container, names)).toEqual([]);
     await expectAccessible(screen.container);
 
     await screen.getByLabelText('Show', { exact: true }).selectOptions('disabled');
@@ -346,7 +346,7 @@ describe('UsersPage', () => {
     expect(
       screen.getByRole('list', { name: 'Groups of Yuri Teams' }).getByText('Web team').query(),
     ).toBeNull();
-    expect(tooSmall(screen.container, ['Yuri Teams'])).toEqual([]);
+    expect(await tooSmall(screen.container, ['Yuri Teams'])).toEqual([]);
     await expectAccessible(screen.container);
   });
 
@@ -473,7 +473,7 @@ describe('UsersPage', () => {
     await screen.getByLabelText('Select Olga One').click();
     await screen.getByLabelText('Select Rita Three').click();
     await expect.element(screen.getByText('2 selected')).toBeVisible();
-    expect(tooSmall(screen.container, ['Olga One', 'Pavel Two', 'Rita Three'])).toEqual([]);
+    expect(await tooSmall(screen.container, ['Olga One', 'Pavel Two', 'Rita Three'])).toEqual([]);
     await bulkAction('Disable');
     const dialog = page.getByRole('dialog', { name: 'Disable 2 accounts?' });
     await dialog.getByLabelText('Status shown').selectOptions('left');
@@ -643,7 +643,7 @@ describe('CreateAccountDialog', () => {
     await expect.element(dialog.getByText('Another account has this email.')).toBeVisible();
     await expect.element(dialog.getByLabelText(label('Email'))).toHaveFocus();
     await expectAccessible(dialog.element());
-    expect(smallTargets(dialog.element(), isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(dialog.element(), isPhone() ? 44 : 32)).toEqual([]);
 
     await dialog.getByLabelText(label('Username')).fill('dina');
     await dialog.getByLabelText(label('Email')).fill('dina@example.com');
@@ -720,7 +720,7 @@ describe('UserProfilePage', () => {
     expect(screen.getByRole('button', { name: 'Add to group' }).elements()).toHaveLength(0);
     expect(screen.getByRole('button', { name: 'Actions' }).elements()).toHaveLength(0);
     expect(calls.some((call) => call.path === '/users/702/roles')).toBe(true);
-    expect(tooSmall(screen.container)).toEqual([]);
+    expect(await tooSmall(screen.container)).toEqual([]);
     await expectAccessible(screen.container);
   });
 
@@ -795,7 +795,7 @@ describe('UserProfilePage', () => {
       .element(page.getByRole('menuitem', { name: 'New password asked for' }))
       .toHaveAttribute('aria-disabled', 'true');
     expect(calls.some((call) => call.path === '/users/801/password-change')).toBe(true);
-    expect(tooSmall(screen.container)).toEqual([]);
+    expect(await tooSmall(screen.container)).toEqual([]);
   });
 
   it('ACC-026: adds a person to a group and removes them from one', async () => {
@@ -962,7 +962,7 @@ describe('UserProfilePage', () => {
       .not.toBeInTheDocument();
     expect(calls.some((call) => call.method === 'DELETE')).toBe(true);
     expect(toastTexts()).toEqual(expect.arrayContaining(['Role assigned', 'Role revoked']));
-    expect(tooSmall(screen.container)).toEqual([]);
+    expect(await tooSmall(screen.container)).toEqual([]);
   });
 
   it('ACC-059, ACC-061, ACC-033: assigns a role in chosen projects; roles through a team say so', async () => {
@@ -1059,7 +1059,7 @@ describe('UserProfilePage', () => {
     await expect
       .element(section.getByRole('button', { name: 'Revoke “Release managers”' }))
       .toBeVisible();
-    expect(tooSmall(screen.container)).toEqual([]);
+    expect(await tooSmall(screen.container)).toEqual([]);
   });
 
   it('ACC-006: deleting from the profile says where links lead now', async () => {

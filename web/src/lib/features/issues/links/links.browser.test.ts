@@ -235,7 +235,7 @@ describe('LNK-010: the links panel', () => {
       .toHaveAttribute('href', `/issues?q=${encodeURIComponent('child of: WEB-12')}`);
 
     await expectAccessible(panel.element());
-    if (isPhone()) expect(smallTargets(panel.element())).toEqual([]);
+    if (isPhone()) expect(await smallTargets(panel.element())).toEqual([]);
 
     const toggle = panel.getByRole('button', { name: 'Links 4' });
     await toggle.click();

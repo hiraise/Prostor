@@ -79,7 +79,7 @@ describe('the value set editor', () => {
     await expect.element(screen.getByText('Used in: Alpha.')).toBeVisible();
     await expect.element(screen.getByText('Default set of 1 field')).toBeVisible();
     expect(valueNames('Priorities')).toEqual(['High', 'Low']);
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
 
     await valueAction('High', 'Add value after it');
@@ -346,7 +346,7 @@ describe('the value set editor', () => {
     ).toEqual(['Don’t replace — clear the field', 'High', 'Normal']);
     await expect.element(dialog.getByText('Issues are updated in the background.')).toBeVisible();
     await expectAccessible(dialog.element());
-    if (isPhone()) expect(smallTargets(dialog.element())).toEqual([]);
+    if (isPhone()) expect(await smallTargets(dialog.element())).toEqual([]);
 
     await select.selectOptions('Normal');
     await dialog.getByRole('button', { name: 'Delete value' }).click();
@@ -411,7 +411,7 @@ describe('the value set editor', () => {
         .map((item) => item.textContent.trim()),
     ).toEqual(['Alpha team', 'Backend']);
     await expect.element(screen.getByRole('button', { name: 'Add value' })).not.toBeInTheDocument();
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
 
     await screen.getByRole('button', { name: 'Add people' }).click();
@@ -468,7 +468,7 @@ describe('the value sets pages', () => {
     await expect
       .element(screen.getByRole('link', { name: 'Priorities' }))
       .toHaveAttribute('href', '/admin/value-sets/10');
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
 
     await screen.getByLabelText('Type').first().selectOptions('state');

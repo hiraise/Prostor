@@ -161,7 +161,7 @@ describe('IssuePage', () => {
     const panel = screen.getByRole('complementary', { name: 'Fields' });
     expect(panel.getByText('Steps to reproduce').query()).toBeNull();
 
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 

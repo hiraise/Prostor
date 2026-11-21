@@ -151,7 +151,7 @@ describe('MarkdownEditor', () => {
       .element(screen.getByRole('button', { name: 'Bold' }))
       .toHaveAttribute('aria-keyshortcuts', 'Control+B Meta+B');
 
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 
@@ -451,7 +451,7 @@ describe('MarkdownEditor', () => {
       issue: null,
       uploads: [31],
     });
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 

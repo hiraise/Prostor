@@ -141,7 +141,7 @@ describe('AUT-023: правила — вкладка', () => {
       });
     });
 
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 

@@ -148,7 +148,7 @@ describe('CNT-020: the attachments section', () => {
       .element(list.getByRole('img', { name: 'Visible to Anna Admin and the reporter' }))
       .toBeInTheDocument();
     await expectAccessible(section.element());
-    if (isPhone()) expect(smallTargets(section.element())).toEqual([]);
+    if (isPhone()) expect(await smallTargets(section.element())).toEqual([]);
 
     const toggle = section.getByRole('button', { name: 'Files 4' });
     await expect.element(toggle).toHaveAttribute('aria-expanded', 'true');

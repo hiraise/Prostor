@@ -210,7 +210,7 @@ describe('JobsPage', () => {
     await screen.getByRole('searchbox', { name: 'Filter jobs' }).fill('-mail');
     await expect.element(screen.getByText('Project deletion')).toBeVisible();
     expect(screen.getByText('Email').query()).toBeNull();
-    if (isPhone()) expect(smallTargets(screen.container)).toEqual([]);
+    if (isPhone()) expect(await smallTargets(screen.container)).toEqual([]);
   });
 
   it('ADM-031: cancelling asks, then refreshes the list; retry of a failed job queues a fresh one', async () => {
@@ -286,7 +286,7 @@ describe('JobsPage', () => {
     await expect.element(screen.getByLabelText('Завершено')).toBeVisible();
     await expect.element(screen.getByText('Запустил')).toBeVisible();
     await expect.element(screen.getByText('Сам сервер')).toBeVisible();
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 });

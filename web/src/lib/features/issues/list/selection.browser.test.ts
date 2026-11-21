@@ -376,7 +376,7 @@ describe('The list’s selection', () => {
     if (isPhone()) {
       const sheet = document.querySelector('.sheet');
       if (sheet === null) throw new Error('the bottom sheet did not render');
-      expect(smallTargets(sheet)).toEqual([]);
+      expect(await smallTargets(sheet)).toEqual([]);
     }
   });
 });

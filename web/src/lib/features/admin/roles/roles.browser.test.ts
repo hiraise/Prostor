@@ -306,7 +306,7 @@ describe('RolesPage', () => {
     await expect
       .element(customRow.getByText('Predefined', { exact: true }))
       .not.toBeInTheDocument();
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
 
     await screen.getByLabelText('With permission').selectOptions('project.delete');
@@ -417,7 +417,7 @@ describe('creating and editing a role', () => {
       method: 'DELETE',
       path: `/roles/${String(created.id)}/permissions/project.basic`,
     });
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 
@@ -646,7 +646,7 @@ describe('RolePage', () => {
     const team = screen.getByRole('link', { name: /Release team/ });
     await expect.element(team).toHaveAttribute('href', '/admin/groups/5');
     await expect.element(team.getByText('Project 3', { exact: false })).toBeVisible();
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
 
     await screen.getByRole('button', { name: 'Delete role' }).click();
     const dialog = page.getByRole('dialog', { name: 'Delete role “Release manager”?' });

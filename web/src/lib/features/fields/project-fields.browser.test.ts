@@ -146,7 +146,7 @@ describe('ProjectFieldsPage', () => {
     const dueRow = screen.getByRole('listitem').filter({ hasText: 'Due date' });
     await expect.element(dueRow.getByText('Required', { exact: true })).toBeVisible();
     await expect.element(screen.getByText(/several state fields/)).not.toBeInTheDocument();
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
 
     await menuAction('Assignee', 'Move up');
@@ -409,7 +409,7 @@ describe('ProjectFieldsPage', () => {
       )
       .toBeVisible();
     await expect.element(dialog.getByRole('button', { name: 'Убрать поле' })).toBeEnabled();
-    if (isPhone()) expect(smallTargets(dialog.element())).toEqual([]);
+    if (isPhone()) expect(await smallTargets(dialog.element())).toEqual([]);
   });
 
   it('FLD-009: warns when a project has several state fields', async () => {

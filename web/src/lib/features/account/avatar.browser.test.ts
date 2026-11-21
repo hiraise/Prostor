@@ -138,7 +138,7 @@ describe('AvatarForm', () => {
     expect(getSession()?.user.avatar_url).toBe(PICTURE);
     await expect.element(screen.getByRole('button', { name: 'Remove photo' })).toBeVisible();
     expect(toasts.items.at(-1)?.message).toBe('Photo updated.');
-    expect(smallTargets(screen.container, isPhone() ? 44 : 28)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 28)).toEqual([]);
     await expectAccessible(screen.container);
   });
 

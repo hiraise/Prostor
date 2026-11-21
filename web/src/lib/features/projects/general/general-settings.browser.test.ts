@@ -188,7 +188,7 @@ describe('GeneralSettings', () => {
     await expect.element(screen.getByLabelText(label('Name'))).toHaveValue('Website');
     await expect.element(screen.getByRole('button', { name: 'Save changes' })).toBeDisabled();
     expect(projectRow(1)?.former_keys).toEqual(['SITE', 'WEB']);
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 
@@ -367,7 +367,7 @@ describe('GeneralSettings', () => {
     expect(screen.getByRole('button', { name: 'Choose group or team' }).query()).toBeNull();
     expect(screen.getByRole('button', { name: 'Archive project' }).query()).toBeNull();
     await expect.element(screen.getByRole('button', { name: 'Delete project' })).toBeVisible();
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
 
     await screen.getByRole('button', { name: 'Restore project' }).click();
@@ -429,7 +429,7 @@ describe('GeneralSettings', () => {
     await expect
       .element(dialog.getByText(/^В проекте 3\u00a0задачи\. Все задачи и статьи/))
       .toBeVisible();
-    if (isPhone()) expect(smallTargets(dialog.element())).toEqual([]);
+    if (isPhone()) expect(await smallTargets(dialog.element())).toEqual([]);
     await dialog.getByRole('button', { name: 'Отмена' }).click();
 
     fails = true;
@@ -476,7 +476,7 @@ describe('SettingsNav', () => {
     await expect
       .element(nav.getByRole('link', { name: 'General' }))
       .toHaveAttribute('aria-current', 'page');
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 

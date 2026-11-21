@@ -109,7 +109,7 @@ describe('ProfileForm', () => {
     await vi.waitFor(() => {
       expect(calls.some((call) => call.path === '/users/1/email-verification')).toBe(true);
     });
-    expect(smallTargets(screen.container, isPhone() ? 44 : 28)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 28)).toEqual([]);
     await expectAccessible(screen.container);
   });
 
@@ -234,7 +234,7 @@ describe('MyAccess', () => {
     await vi.waitFor(() => {
       expect(roles.getByRole('link', { name: 'Web' }).elements()).toHaveLength(2);
     });
-    if (isPhone()) expect(smallTargets(screen.container)).toEqual([]);
+    if (isPhone()) expect(await smallTargets(screen.container)).toEqual([]);
     await expectAccessible(screen.container);
   });
 });
@@ -278,7 +278,7 @@ describe('ResetPasswordForm', () => {
       expect(ondone).toHaveBeenCalledWith(SESSION);
     });
     expect(calls.at(-1)?.body).toEqual({ token: 'SECRET', new_password: 'brand new pass' });
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 
@@ -362,7 +362,7 @@ describe('ForcedPasswordForm', () => {
       expect(ondone).toHaveBeenCalledOnce();
     });
     expect(getSession()?.password_change_required).toBe(false);
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 });

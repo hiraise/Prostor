@@ -89,7 +89,7 @@ describe('SignInForm', () => {
       password: 'correct horse',
       remember: true,
     });
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 
@@ -170,7 +170,7 @@ describe('SetupForm', () => {
       base_url: location.origin,
       time_zone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 });
@@ -253,7 +253,7 @@ describe('TokenList', () => {
     await confirm.getByRole('button', { name: 'Delete token' }).click();
     await expect.element(screen.getByText('CI', { exact: true })).not.toBeInTheDocument();
     expect(calls.some((call) => call.method === 'DELETE')).toBe(true);
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 

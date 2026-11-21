@@ -127,7 +127,7 @@ describe('ISS-018: edit mode', () => {
     await expect.element(form).toBeVisible();
     await expect.element(summaryBox()).toHaveValue('Login button does nothing');
     await expectAccessible(form.element());
-    if (isPhone()) expect(smallTargets(form.element())).toEqual([]);
+    if (isPhone()) expect(await smallTargets(form.element())).toEqual([]);
 
     await userEvent.clear(summaryBox());
     await userEvent.type(summaryBox(), 'Login button works');
@@ -355,7 +355,7 @@ describe('ISS-034, ISS-035: tags', () => {
     expect(
       list.getByRole('link', { name: 'Issues tagged triage' }).element().getAttribute('href'),
     ).toMatch(/\/issues\?tag=31$/);
-    if (isPhone()) expect(smallTargets(list.element())).toEqual([]);
+    if (isPhone()) expect(await smallTargets(list.element())).toEqual([]);
     await list.getByRole('button', { name: 'Remove tag triage' }).click();
     await expect
       .element(list.getByRole('link', { name: 'Issues tagged triage' }))

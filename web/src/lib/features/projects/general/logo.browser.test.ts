@@ -123,7 +123,7 @@ describe('LogoForm', () => {
     expect(projectRow(1)?.logo_url).toBe(PICTURE);
     expect(toasts.items.at(-1)?.message).toBe('Logo updated.');
     await expect.element(screen.getByRole('button', { name: 'Restore the default' })).toBeVisible();
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 

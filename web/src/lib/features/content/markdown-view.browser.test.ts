@@ -282,7 +282,7 @@ describe('MarkdownView', () => {
     await copies.first().click();
     expect(writeText).toHaveBeenCalledWith('fn main() {}');
     expect(toasts.items.map((toast) => toast.message)).toContain('Code copied');
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 

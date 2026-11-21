@@ -74,7 +74,7 @@ describe('toasts', () => {
       .element(page.getByTestId('announcer-assertive'))
       .toMatchTextContent(/^Someone changed this/);
     await expect.element(page.getByText('Request ID: req-7')).toBeVisible();
-    if (isPhone()) expect(smallTargets(page.getByRole('region').element())).toEqual([]);
+    if (isPhone()) expect(await smallTargets(page.getByRole('region').element())).toEqual([]);
 
     await page.getByRole('button', { name: 'Try again' }).click();
     expect(retry).toHaveBeenCalledOnce();

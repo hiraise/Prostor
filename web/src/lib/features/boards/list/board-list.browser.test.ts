@@ -131,7 +131,7 @@ describe('BRD-001: the entry and the list', () => {
     // Three projects by name, the rest as a count.
     await expect.element(list.getByText(/Web, Mobile, Docs\s+\+2/)).toBeVisible();
     await expect.element(screen.getByRole('button', { name: 'Create board' })).toBeVisible();
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 

@@ -141,7 +141,7 @@ describe('CreateProjectPage', () => {
     // Clearing it brings the suggestion back.
     await key.fill('');
     await expect.element(key).toHaveValue('MA');
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 

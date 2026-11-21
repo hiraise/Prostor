@@ -102,7 +102,7 @@ describe('LinkTypesPage', () => {
       expect(getComputedStyle(card).borderTopStyle).toBe('solid');
       expect(getComputedStyle(card).borderBottomStyle).toBe('solid');
     }
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 
@@ -262,7 +262,7 @@ describe('LinkTypesPage', () => {
       .element(dialog.getByText(/restore it there to bring its links back/))
       .toBeVisible();
     await expectAccessible(dialog.element());
-    if (isPhone()) expect(smallTargets(dialog.element())).toEqual([]);
+    if (isPhone()) expect(await smallTargets(dialog.element())).toEqual([]);
     await dialog.getByRole('button', { name: 'Delete type' }).click();
     await expect.element(dialog).not.toBeInTheDocument();
     expect(writes(calls).at(-1)).toMatchObject({ method: 'DELETE', path: '/link-types/2' });

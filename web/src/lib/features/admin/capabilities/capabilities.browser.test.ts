@@ -168,7 +168,7 @@ describe('CapabilitiesPage', () => {
     expect(put?.body).toEqual({ groups: [1, 2] });
     await expect.element(screen.getByRole('checkbox', { name: 'Designers' })).toBeChecked();
     expect(toasts.items.at(-1)?.message).toBe('Capability saved');
-    if (isPhone()) expect(smallTargets(screen.container)).toEqual([]);
+    if (isPhone()) expect(await smallTargets(screen.container)).toEqual([]);
   });
 
   it('ADM-023: emptying the list of a switchable capability asks before switching it off for everybody', async () => {
@@ -278,7 +278,7 @@ describe('CapabilitiesPage', () => {
       )
       .toBeVisible();
     await expect.element(screen.getByRole('checkbox', { name: 'Все' })).toBeVisible();
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 });

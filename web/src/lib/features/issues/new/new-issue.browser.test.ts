@@ -197,7 +197,7 @@ describe('ISS-005: a new issue', () => {
 
     const form = page.getByRole('form', { name: 'New issue form' });
     await expectAccessible(form.element());
-    if (isPhone()) expect(smallTargets(form.element())).toEqual([]);
+    if (isPhone()) expect(await smallTargets(form.element())).toEqual([]);
 
     await page.getByRole('button', { name: 'Visible to everyone who sees the project' }).click();
     const visibility = page.getByRole('dialog', { name: 'Visibility' });

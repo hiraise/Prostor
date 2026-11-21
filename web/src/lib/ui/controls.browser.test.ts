@@ -34,7 +34,7 @@ describe('Button', () => {
     await screen.getByRole('button', { name: 'Create' }).click();
 
     expect(onclick).toHaveBeenCalledOnce();
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
     await expectAccessible(screen.container);
   });
 
@@ -74,7 +74,7 @@ describe('IconButton', () => {
     await userEvent.keyboard('{Escape}');
     expect(visibleTooltip()).toBeNull();
     await expect.element(button).toHaveFocus();
-    expect(smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
+    expect(await smallTargets(screen.container, isPhone() ? 44 : 32)).toEqual([]);
   });
 
   it('shows the tooltip on hover with a mouse, not on touch', async () => {

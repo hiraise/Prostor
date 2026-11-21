@@ -68,7 +68,7 @@ describe('Dialog', () => {
     if (isPhone()) {
       expect(Math.round(box.bottom)).toBe(window.innerHeight);
       expect(Math.round(box.width)).toBe(window.innerWidth);
-      expect(smallTargets(page.getByRole('dialog').element())).toEqual([]);
+      expect(await smallTargets(page.getByRole('dialog').element())).toEqual([]);
     } else {
       expect(box.top).toBeGreaterThan(0);
       expect(Math.round(box.left + box.width / 2)).toBe(Math.round(window.innerWidth / 2));
@@ -188,7 +188,7 @@ describe('Menu', () => {
     const box = menu.element().getBoundingClientRect();
     expect(box.right).toBeLessThanOrEqual(window.innerWidth);
     expect(box.bottom).toBeLessThanOrEqual(window.innerHeight);
-    if (isPhone()) expect(smallTargets(menu.element())).toEqual([]);
+    if (isPhone()) expect(await smallTargets(menu.element())).toEqual([]);
     await expectAccessible(menu.element());
 
     await screen.getByRole('button', { name: 'Before' }).click();
@@ -242,7 +242,7 @@ describe('Popover', () => {
     const box = popover.element().getBoundingClientRect();
     if (isPhone()) {
       expect(Math.round(box.bottom)).toBe(window.innerHeight);
-      expect(smallTargets(popover.element())).toEqual([]);
+      expect(await smallTargets(popover.element())).toEqual([]);
     } else {
       const anchor = trigger.element().getBoundingClientRect();
       expect(box.top).toBeGreaterThanOrEqual(anchor.bottom);

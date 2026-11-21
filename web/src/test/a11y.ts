@@ -2,15 +2,21 @@
 import axe from 'axe-core';
 import { expect } from 'vitest';
 
-export async function expectAccessible(context: Element = document.body): Promise<void> {
-  // Colors are measured on the final frame: a dialog fading in has too little contrast for a
-  // moment. Endless animations (spinners) are not waited for.
+/** Waits out finite animations (a dialog fading or scaling in measures differently for a
+ *  moment — its panels open from `scale(0.98)`). Endless animations (spinners) are not
+ *  waited for. */
+async function settled(context: Element): Promise<void> {
   await Promise.all(
     context
       .getAnimations({ subtree: true })
       .filter((animation) => animation.effect?.getComputedTiming().endTime !== Infinity)
       .map((animation) => animation.finished.catch(() => undefined)),
   );
+}
+
+export async function expectAccessible(context: Element = document.body): Promise<void> {
+  // Colors, too, are measured on the final frame.
+  await settled(context);
   const result = await axe.run(context, {
     runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'] },
   });
@@ -26,8 +32,11 @@ export function isPhone(): boolean {
   return matchMedia('(pointer: coarse)').matches;
 }
 
-/** Every visible button and link in `root` is at least `min` CSS pixels in both directions. */
-export function smallTargets(root: Element, min = 44): string[] {
+/** Every visible button and link in `root` is at least `min` CSS pixels in both directions,
+ *  measured after opening animations finish: a slow machine still scaling a dialog in would
+ *  read a 44 px target as 43.1 px. */
+export async function smallTargets(root: Element, min = 44): Promise<string[]> {
+  await settled(root);
   return [...root.querySelectorAll<HTMLElement>('button, a[href], [role="menuitem"]')]
     .filter((element) => element.checkVisibility())
     .filter((element) => {

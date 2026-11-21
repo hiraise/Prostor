@@ -58,7 +58,7 @@ describe('BRD-068: the board', () => {
     );
     expect(card.getByRole('button', { name: 'Actions of WEB-101' }).elements()).toHaveLength(0);
     // The ID link covers its whole card, so its own text box may be small.
-    const small = smallTargets(screen.container, isPhone() ? 44 : 24);
+    const small = await smallTargets(screen.container, isPhone() ? 44 : 24);
     expect(small.filter((name) => !name.startsWith('WEB-'))).toEqual([]);
     await expectAccessible(screen.container);
   });
