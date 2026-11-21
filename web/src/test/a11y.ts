@@ -34,7 +34,9 @@ export function isPhone(): boolean {
 
 /** Every visible button and link in `root` is at least `min` CSS pixels in both directions,
  *  measured after opening animations finish: a slow machine still scaling a dialog in would
- *  read a 44 px target as 43.1 px. */
+ *  read a 44 px target as 43.1 px. Each hit names its rendered box, its CSS box and the
+ *  transform between them — a short render box with a full CSS box means a transform;
+ *  a short CSS box means the sizes themselves. */
 export async function smallTargets(root: Element, min = 44): Promise<string[]> {
   await settled(root);
   return [...root.querySelectorAll<HTMLElement>('button, a[href], [role="menuitem"]')]
@@ -43,5 +45,11 @@ export async function smallTargets(root: Element, min = 44): Promise<string[]> {
       const box = element.getBoundingClientRect();
       return box.width < min - 0.5 || box.height < min - 0.5;
     })
-    .map((element) => element.getAttribute('aria-label') ?? element.textContent.trim());
+    .map((element) => {
+      const name = element.getAttribute('aria-label') ?? element.textContent.trim();
+      const box = element.getBoundingClientRect();
+      const style = getComputedStyle(element);
+      const transform = style.transform === 'none' ? '' : `, transform ${style.transform}`;
+      return `${name}: ${box.width.toFixed(1)}x${box.height.toFixed(1)} rendered, ${style.width}/${style.height} css${transform}`;
+    });
 }
