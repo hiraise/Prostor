@@ -64,7 +64,8 @@ jobs:
       - name: Export the digest
         run: |
           mkdir -p /tmp/digests
-          touch "/tmp/digests/${{ steps.build.outputs.digest }}"
+          digest="${{ steps.build.outputs.digest }}"
+          touch "/tmp/digests/${digest#sha256:}" # colons are not allowed in artifact paths
       - uses: actions/upload-artifact@v4
         with:
           name: digests-${{ matrix.slug }}
@@ -91,7 +92,7 @@ jobs:
       - working-directory: /tmp/digests
         run: |
           version="${GITHUB_REF_NAME#v}"
-          docker buildx imagetools create -t "$IMAGE:$version" -t "$IMAGE:latest" $(printf "$IMAGE@%s " *)
+          docker buildx imagetools create -t "$IMAGE:$version" -t "$IMAGE:latest" $(printf "$IMAGE@sha256:%s " *)
 
   release:
     needs: merge
