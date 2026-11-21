@@ -1,6 +1,6 @@
 // Feedback toasts (UI-038): short confirmations, errors with retry, undo for reversible actions.
-// `Toaster.svelte` shows them; every toast is also announced to screen readers. Errors stay until
-// dismissed; other toasts close after a while, and the timers pause while the pointer or keyboard
+// `Toaster.svelte` shows them; every toast is also announced to screen readers. Every toast closes
+// by itself — errors hold the screen longest — and the timers pause while the pointer or keyboard
 // focus is on the toasts (WCAG 2.2.1).
 import * as common from '#lib/i18n/messages/common.ts';
 import { errorText } from '#lib/i18n/messages/errors.ts';
@@ -50,6 +50,9 @@ interface Entry extends Toast {
 
 export const DEFAULT_DURATION = 5000;
 export const UNDO_DURATION = 8000;
+/** Errors hold the screen longer, so their reason and the retry stay readable (the owner,
+ * 2026-11-19: they used to stay until dismissed and piled up). */
+export const ERROR_DURATION = 10000;
 export const MAX_TOASTS = 4;
 
 class Toaster {
@@ -69,7 +72,7 @@ class Toaster {
       options.duration !== undefined
         ? options.duration
         : tone === 'error'
-          ? null
+          ? ERROR_DURATION
           : options.undo
             ? UNDO_DURATION
             : DEFAULT_DURATION;

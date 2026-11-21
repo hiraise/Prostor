@@ -95,7 +95,8 @@
   }
 
   input:focus-visible {
-    outline-offset: 0;
+    outline-width: 1px;
+    outline-offset: 1px;
     border-color: var(--color-focus);
   }
 

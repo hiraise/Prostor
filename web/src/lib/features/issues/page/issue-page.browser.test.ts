@@ -1,7 +1,7 @@
 // The issue page in read form on a desktop and on a phone (step 1.7a; ISS-001, ISS-003, ISS-016,
 // ISS-020, FLD-057, FLD-062, UI-005) and its keys (step 2.2 §7, ISS-047).
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { userEvent } from 'vitest/browser';
+import { page, userEvent } from 'vitest/browser';
 import { render } from 'vitest-browser-svelte';
 
 import type { AccessMap, Attachment, Comment, Issue, Session } from '#lib/api/schema.gen.ts';
@@ -63,6 +63,10 @@ function show(shown: Issue, access: AccessMap = READER, requested?: string) {
   return render(IssuePage, { issue: shown, requested });
 }
 
+async function openFieldsOnPhone(): Promise<void> {
+  if (isPhone()) await page.getByText('Fields', { exact: true }).click();
+}
+
 afterEach(() => {
   vi.unstubAllGlobals();
   navigation.goto.mockClear();
@@ -79,6 +83,41 @@ afterEach(() => {
 });
 
 describe('IssuePage', () => {
+  it('CNT-041: ticks a checklist box of the description and saves the text', async () => {
+    const html = (ticked: boolean): string =>
+      [
+        '<p>Plan:</p>',
+        '<ul>',
+        `<li data-sourcepos="2:1-2:11"><input type="checkbox"${ticked ? ' checked=""' : ''} disabled=""> write</li>`,
+        '</ul>',
+        '',
+      ].join('\n');
+    const shown = issue({ description: 'Plan:\n- [ ] write\n', description_html: html(false) });
+    const calls = fakeApi({
+      'PATCH /issues/501': ({ body }) => ({
+        body: {
+          issue: {
+            ...shown,
+            ...(body as object),
+            description_html: html((body as { description: string }).description.includes('- [x]')),
+            text_version: 3,
+          },
+          messages: [],
+        },
+      }),
+    });
+    // The save runs through the store's row of the issue (a refusal would put the box back).
+    store.entities.table('issue').upsert(shown, 'full');
+    const screen = await show(shown);
+    const box = screen.getByRole('checkbox', { name: 'write' });
+    await expect.element(box).toBeEnabled();
+    await box.click();
+    await expect.element(box).toBeChecked();
+    expect(calls.find((one) => one.method === 'PATCH')?.body).toMatchObject({
+      description: 'Plan:\n- [x] write\n',
+      text_version: 2,
+    });
+  });
   it('ISS-001, ISS-016: header, metadata strip, description and text fields', async () => {
     const screen = await show(issue());
 
@@ -118,6 +157,7 @@ describe('IssuePage', () => {
       .element(screen.getByRole('heading', { level: 2, name: 'Steps to reproduce' }))
       .toBeVisible();
     await expect.element(screen.getByText('Open the page')).toBeVisible();
+    await openFieldsOnPhone();
     const panel = screen.getByRole('complementary', { name: 'Fields' });
     expect(panel.getByText('Steps to reproduce').query()).toBeNull();
 
@@ -148,6 +188,7 @@ describe('IssuePage', () => {
 
   it('ISS-020: the panel shows the project first, then the fields in order', async () => {
     const screen = await show(issue(), LEAD);
+    await openFieldsOnPhone();
     const panel = screen.getByRole('complementary', { name: 'Fields' });
 
     const names = panel
@@ -172,6 +213,7 @@ describe('IssuePage', () => {
         can: { ...issue().can, update: false },
       }),
     );
+    await openFieldsOnPhone();
     const panel = screen.getByRole('complementary', { name: 'Fields' });
 
     await expect.element(panel.getByText('Unassigned')).toBeVisible();
@@ -190,6 +232,7 @@ describe('IssuePage', () => {
         ],
       }),
     );
+    await openFieldsOnPhone();
     const panel = screen.getByRole('complementary', { name: 'Fields' });
 
     await expect.element(panel.getByText('Required field')).toBeVisible();
@@ -203,11 +246,14 @@ describe('IssuePage', () => {
     setAccessForTests(READER);
     setPreferencesForTests({ issue_panel_side: 'start', issue_panel_width: 300 });
     const screen = await render(IssuePage, { issue: issue() });
+    await openFieldsOnPhone();
     const panel = screen.getByRole('complementary', { name: 'Fields' });
     const content = screen.getByRole('region', { name: 'Description' });
 
     const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
-    expect(panel.element().getBoundingClientRect().width).toBeCloseTo(30 * rem, 0);
+    const panelFrame = panel.element().parentElement;
+    if (!panelFrame) throw new Error('no field panel frame');
+    expect(panelFrame.getBoundingClientRect().width).toBeCloseTo(30 * rem, 0);
     expect(panel.element().getBoundingClientRect().right).toBeLessThan(
       content.element().getBoundingClientRect().left,
     );
@@ -222,10 +268,11 @@ describe('IssuePage', () => {
     expect(preferences.value('issue_panel_width')).toBe(400);
   });
 
-  it('ISS-020: on phones the fields are a section above the content', async () => {
+  it('ISS-020: on phones the fields open between the title and the content', async () => {
     if (!isPhone()) return;
     setAccessForTests(READER);
     const screen = await render(IssuePage, { issue: issue() });
+    await openFieldsOnPhone();
     const panel = screen.getByRole('complementary', { name: 'Fields' });
 
     // No heading of its own: the properties start at once.

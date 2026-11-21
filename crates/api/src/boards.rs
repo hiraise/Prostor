@@ -833,7 +833,7 @@ pub struct CardIssue {
     pub files: i64,
     /// Limited to an audience (ISS-042): the card shows a lock.
     pub restricted: bool,
-    /// The caller watches the issue (NTF-014): the card menu offers to watch or unwatch.
+    /// The caller watches the issue (NTF-014).
     pub starred: bool,
     /// The caller may change the issue: move its card, edit it on the card.
     pub can_update: bool,

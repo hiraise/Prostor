@@ -21,6 +21,7 @@
     description?: string;
     side?: 'center' | 'start' | 'end';
     size?: 'sm' | 'md' | 'lg' | 'xl';
+    class?: string;
     /** Escape, the backdrop and the close button close it; false while something must finish. */
     dismissible?: boolean;
     /**
@@ -41,6 +42,7 @@
     description,
     side = 'center',
     size = 'md',
+    class: className,
     dismissible = true,
     bare = false,
     children,
@@ -107,7 +109,7 @@
 
 <dialog
   bind:this={dialog}
-  class={['dialog', side, size]}
+  class={['dialog', side, size, className]}
   aria-labelledby="{id}-title"
   aria-describedby={description ? `${id}-description` : undefined}
   onclose={handleClose}
@@ -166,9 +168,9 @@
     width: min(48rem, calc(100vw - 2 * var(--space-4)));
   }
 
-  /* The board's issue popup: the two-column core needs the room. */
+  /* Issue forms and the board's popup: the two-column core needs the room. */
   .dialog.xl {
-    width: min(63.4rem, calc(100vw - 2 * var(--space-4)));
+    width: min(73.75rem, calc(100vw - 2 * var(--space-4)));
   }
 
   .dialog[open] {
@@ -212,6 +214,16 @@
     padding: var(--space-3) var(--space-5) var(--space-5);
     overflow: auto;
     overscroll-behavior: contain;
+  }
+
+  .dialog.new-issue .panel {
+    height: min(44rem, calc(100dvh - 2 * var(--space-8)));
+  }
+
+  .dialog.new-issue .body {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
   }
 
   footer {
@@ -306,6 +318,22 @@
       margin-top: var(--space-2);
       border-radius: var(--radius-full);
       background: var(--color-border-control);
+    }
+
+    .dialog.issue-popup.center {
+      height: 100dvh;
+      max-height: 100dvh;
+      border: 0;
+      border-radius: 0;
+    }
+
+    .dialog.issue-popup .panel {
+      height: 100%;
+      padding-top: var(--safe-top);
+    }
+
+    .dialog.issue-popup.center .panel::before {
+      display: none;
     }
 
     footer {

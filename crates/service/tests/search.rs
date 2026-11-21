@@ -2874,9 +2874,13 @@ async fn qry_057_context_and_permission_aware_suggestions() {
         .iter()
         .find(|s| s.text == "today")
         .unwrap();
+    // The value resolves in the caller's zone, which may already be past its midnight while
+    // UTC is not: take the expected date there, not from `now_utc`.
+    let moscow_now =
+        jiff::Timestamp::now().to_zoned(jiff::tz::TimeZone::get("Europe/Moscow").unwrap());
     assert_eq!(
         today.resolved.as_deref(),
-        Some(time::OffsetDateTime::now_utc().date().to_string().as_str())
+        Some(moscow_now.datetime().date().to_string().as_str())
     );
 }
 

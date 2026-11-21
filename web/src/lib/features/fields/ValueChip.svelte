@@ -1,13 +1,17 @@
 <script lang="ts">
   // A value as every screen shows it (FLD-044): its name on the tint of its color scheme, or plain
   // with an outline when it has no color. The name is always there, so color is never alone.
-  let { name, color = null }: { name: string; color?: number | null } = $props();
+  let {
+    name,
+    color = null,
+    size = 'md',
+  }: { name: string; color?: number | null; size?: 'sm' | 'md' } = $props();
 
   const scheme = $derived(color !== null && color >= 0 && color < 12 ? color : null);
 </script>
 
 <span
-  class={['chip', { plain: scheme === null }]}
+  class={['chip', size, { plain: scheme === null }]}
   style:--chip-bg={scheme === null ? undefined : `var(--value-${String(scheme)}-bg)`}
   style:--chip-fg={scheme === null ? undefined : `var(--value-${String(scheme)}-fg)`}>{name}</span
 >
@@ -25,6 +29,19 @@
     font-weight: var(--weight-medium);
     line-height: var(--leading-normal);
     overflow-wrap: anywhere;
+  }
+
+  .chip.sm {
+    display: inline-block;
+    width: fit-content;
+    height: var(--space-5);
+    padding: 0 var(--space-1_5);
+    overflow: hidden;
+    font-size: var(--text-xs);
+    line-height: calc(var(--space-5) - 2px);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow-wrap: normal;
   }
 
   .plain {

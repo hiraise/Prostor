@@ -4261,7 +4261,7 @@ export interface components {
             resolved_at: string | null;
             /** @description Limited to an audience (ISS-042): the card shows a lock. */
             restricted: boolean;
-            /** @description The caller watches the issue (NTF-014): the card menu offers to watch or unwatch. */
+            /** @description The caller watches the issue (NTF-014). */
             starred: boolean;
             summary: string;
             tags: components["schemas"]["TagRef"][];
@@ -4781,6 +4781,12 @@ export interface components {
         /** @description A field as a reference. */
         FieldRef: {
             builtin: components["schemas"]["BuiltinField"] | null;
+            /**
+             * @description The field's own setting; a project attachment may override it (the issue page's
+             *     `IssueField.required` is the attachment's truth).
+             */
+            can_be_empty: boolean;
+            empty_label: string;
             /** Format: int64 */
             id: number;
             kind: components["schemas"]["FieldKind"];

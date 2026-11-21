@@ -6,7 +6,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import type { Issue, IssueAnswer, Project } from '../src/lib/api/schema.gen.ts';
 import { ADMIN } from './accounts.ts';
-import { fieldButton, signIn } from './issues.ts';
+import { fieldButton, issueAction, openFields, signIn } from './issues.ts';
 
 const PICTURE = new URL('fixtures/avatar.png', import.meta.url).pathname;
 
@@ -107,7 +107,7 @@ test('HIST-001, CNT-001, CNT-005, CNT-017, CNT-020, CNT-022, CNT-054, LNK-005, L
   await expect(open).toBeHidden();
 
   // LNK-005, LNK-008: link the two issues, then remove the link (the link icon in the title row).
-  await page.getByRole('main').getByRole('button', { name: 'Link', exact: true }).first().click();
+  await issueAction(page, 'Link');
   const dialog = page.getByRole('dialog', { name: 'Link issues' });
   await dialog.getByRole('searchbox', { name: 'Find an issue' }).fill('Payment provider');
   await dialog.getByRole('checkbox', { name: new RegExp(other.readable_id ?? '') }).click();
@@ -147,6 +147,7 @@ test('HIST-001, CNT-001, CNT-005, CNT-017, CNT-020, CNT-022, CNT-054, LNK-005, L
   } finally {
     await elsewhere.dispose();
   }
+  await openFields(page);
   const panel = page.getByRole('complementary', { name: 'Fields' });
   await expect(fieldButton(panel, 'Priority')).toHaveText(/High/);
   // The comment box sits above the entries, so the new comment is appended or announced.

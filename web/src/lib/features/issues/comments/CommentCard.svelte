@@ -16,7 +16,7 @@
   import type { Audience, Comment, HistoryItem, Issue, Upload } from '#lib/api/schema.gen.ts';
   import { uploadFile } from '#lib/api/upload.ts';
   import { PersonName, personName } from '#lib/features/access/index.ts';
-  import { MarkdownEditor, MarkdownView } from '#lib/features/content/index.ts';
+  import { MarkdownEditor, MarkdownView, toggleTask } from '#lib/features/content/index.ts';
   import { refusalText } from '#lib/features/fields/index.ts';
   import * as common from '#lib/i18n/messages/common.ts';
   import { preferences } from '#lib/session/index.ts';
@@ -109,6 +109,22 @@
     editing = false;
     theirs = null;
     queueMicrotask(() => card?.focus());
+  }
+
+  /** Ticks or clears a checklist box of the comment (CNT-041); a failure puts the box back. */
+  async function toggle(line: number, checked: boolean): Promise<void> {
+    const text = toggleTask(comment.text, line, checked);
+    if (text === null) {
+      toasts.show({ message: m.commentChanged() });
+      throw new Error('The checklist item is gone');
+    }
+    try {
+      await updateComment(comment.id, text, comment.audience);
+    } catch (error) {
+      if (error instanceof ConflictError) toasts.show({ message: m.commentChanged() });
+      else showError(error);
+      throw error;
+    }
   }
 
   async function save(): Promise<void> {
@@ -390,7 +406,12 @@
       id="{id}-text"
       class={['text', { cut: collapse && !expanded, faded: collapse && !expanded && long }]}
     >
-      <MarkdownView html={comment.html} refs={comment.refs} headingLevel={3} />
+      <MarkdownView
+        html={comment.html}
+        refs={comment.refs}
+        headingLevel={3}
+        ontoggle={comment.can.update ? toggle : undefined}
+      />
     </div>
     {#if collapse && (long || expanded)}
       <button

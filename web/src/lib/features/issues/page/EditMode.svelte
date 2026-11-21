@@ -15,7 +15,6 @@
   import Button from '#lib/ui/Button.svelte';
   import Dialog from '#lib/ui/Dialog.svelte';
   import Notice from '#lib/ui/Notice.svelte';
-  import TextField from '#lib/ui/TextField.svelte';
   import { toasts } from '#lib/ui/toast.svelte.ts';
 
   import { saveTexts, type TextEdit, type Texts } from '../actions.ts';
@@ -29,11 +28,20 @@
 
   interface Props {
     issue: Issue;
+    summary?: string;
+    summaryError?: string | null;
+    summaryInput?: HTMLInputElement;
     /** Edit mode ends: saved or cancelled. */
     onclose: () => unknown;
   }
 
-  let { issue, onclose }: Props = $props();
+  let {
+    issue,
+    summary = $bindable(''),
+    summaryError = $bindable(null),
+    summaryInput,
+    onclose,
+  }: Props = $props();
 
   // Files dropped or pasted into the texts are attached to the issue at once (CNT-034).
   const pageFiles = issueFiles();
@@ -57,7 +65,6 @@
   }));
   let textVersion = $state(untrack(() => issue.text_version));
 
-  let summary = $state(start.summary);
   let description = $state(start.description);
   let audience = $state<Audience>(start.audience);
   let restricted = $state(isRestricted(start.audience));
@@ -65,9 +72,7 @@
 
   let busy = $state(false);
   let problem = $state<string | null>(null);
-  let summaryError = $state<string | null>(null);
   let audienceError = $state<string | null>(null);
-  let summaryInput = $state<HTMLInputElement>();
   let confirming = $state(false);
   /** The texts saved meanwhile, once a save met them. */
   let theirs = $state<Texts | null>(null);
@@ -82,6 +87,8 @@
 
   // The form replaces the button that opened it: focus goes to its first field.
   onMount(() => {
+    summary = start.summary;
+    summaryError = null;
     summaryInput?.focus();
   });
 
@@ -179,7 +186,13 @@
       cancel();
     }
   }
+
+  function summaryKeydown(event: KeyboardEvent): void {
+    if (event.target === summaryInput) keydown(event);
+  }
 </script>
+
+<svelte:window onkeydown={summaryKeydown} />
 
 <!-- Keys of the whole form: Ctrl/⌘+Enter and Esc wherever focus is inside it. -->
 <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
@@ -215,14 +228,6 @@
       {/if}
     </div>
   {/if}
-  <TextField
-    label={m.summary()}
-    bind:value={summary}
-    bind:input={summaryInput}
-    error={summaryError}
-    required
-    maxlength={255}
-  />
   <MarkdownEditor
     label={m.description()}
     bind:value={description}

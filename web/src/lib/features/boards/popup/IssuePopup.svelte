@@ -61,6 +61,7 @@
   title={issue ? `${issue.readable_id ?? ''} ${issue.summary}`.trim() : m.issuePopup()}
   hideTitle
   size="xl"
+  class="issue-popup"
   bare
   onclose={() => {
     if (target !== null) onclose();
@@ -97,6 +98,13 @@
   .popup {
     display: flex;
     flex-direction: column;
+    height: min(44rem, calc(100dvh - 8rem));
     min-height: 12rem;
+  }
+
+  @media (width < 48rem) {
+    .popup {
+      height: auto;
+    }
   }
 </style>

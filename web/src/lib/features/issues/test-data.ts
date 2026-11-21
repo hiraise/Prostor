@@ -41,7 +41,15 @@ export function field(
   rest: Partial<IssueField> = {},
 ): IssueField {
   return {
-    field: { id, name, kind, multi: false, builtin: null },
+    field: {
+      id,
+      name,
+      kind,
+      multi: false,
+      builtin: null,
+      can_be_empty: true,
+      empty_label: 'No value',
+    },
     empty_label: 'No value',
     private: false,
     required: false,
@@ -73,7 +81,15 @@ export const PRIORITY = field(11, 'Priority', 'enum', {
   ],
 });
 export const ASSIGNEE = field(12, 'Assignee', 'user', {
-  field: { id: 12, name: 'Assignee', kind: 'user', multi: false, builtin: 'assignee' },
+  field: {
+    id: 12,
+    name: 'Assignee',
+    kind: 'user',
+    multi: false,
+    builtin: 'assignee',
+    can_be_empty: true,
+    empty_label: 'Unassigned',
+  },
   users: [BORIS],
   empty_label: 'Unassigned',
 });

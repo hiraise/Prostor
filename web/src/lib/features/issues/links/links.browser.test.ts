@@ -167,9 +167,10 @@ async function fromMenu(item: string) {
   await page.getByRole('menuitem', { name: item }).click();
 }
 
-/** «Связать»: the link icon in the title row on every width. */
+/** «Связать»: the title icon on a desktop, «Ещё» on a phone. */
 async function openLinkDialog() {
-  await page.getByRole('button', { name: 'Link', exact: true }).click();
+  if (narrow()) await fromMenu('Link');
+  else await page.getByRole('button', { name: 'Link', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Link issues' });
   await expect.element(dialog).toBeVisible();
   return dialog;

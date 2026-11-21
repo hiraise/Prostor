@@ -6,16 +6,20 @@
   // settings (`?settings`). `/boards/{id}` shows the current sprint, `/boards/{id}/sprints/{s}` a
   // chosen one (BRD-017); `?q=` is the header filter, kept across boards (BRD-070). The backlog
   // panel (BRD-089…BRD-096) sits beside the columns, a sheet on phones; cards drag between them.
-  // «Новая» makes a card, a lane, a sprint or a board (BRD-076); cards open in the issue popup
-  // (BRD-079); a notice above the columns lists what is wrong with the settings (BRD-023).
+  // «Новая» opens the new-issue dialog on the first column's draft (BRD-076); cards open in the
+  // issue popup (BRD-079); a notice above the columns lists what is wrong with the settings
+  // (BRD-023).
   import Columns3 from '@lucide/svelte/icons/columns-3';
   import { onMount, untrack } from 'svelte';
   import { MediaQuery } from 'svelte/reactivity';
 
   import { goto } from '$app/navigation';
 
-  import type { Board, Issue, Sprint } from '#lib/api/schema.gen.ts';
+  import type { Board, Issue, QueryProblem, Sprint } from '#lib/api/schema.gen.ts';
   import { QueryBar } from '#lib/features/issues/index.ts';
+  import { newIssueDialog } from '#lib/features/issues/new/open.svelte.ts';
+  import { queryProblems } from '#lib/features/issues/list/search.svelte.ts';
+  import { problemAt, problems } from '#lib/features/issues/list/messages.ts';
   import * as common from '#lib/i18n/messages/common.ts';
   import { readStored, writeStored } from '#lib/storage.ts';
   import Button from '#lib/ui/Button.svelte';
@@ -23,7 +27,8 @@
   import EmptyState from '#lib/ui/EmptyState.svelte';
   import ErrorState from '#lib/ui/ErrorState.svelte';
   import NotFoundState from '#lib/ui/NotFoundState.svelte';
-  import { NARROW } from '#lib/theme/breakpoints.ts';
+  import Notice from '#lib/ui/Notice.svelte';
+  import { BOARD_OVERLAY, NARROW, PHONE_LANDSCAPE } from '#lib/theme/breakpoints.ts';
   import Spinner from '#lib/ui/Spinner.svelte';
   import { showError, toasts } from '#lib/ui/toast.svelte.ts';
 
@@ -40,7 +45,6 @@
   import QueryModeDialog from '../backlog/QueryModeDialog.svelte';
   import { BoardDrag, type DropTarget } from '../drag/drag.svelte.ts';
   import BoardSwitcher from '../list/BoardSwitcher.svelte';
-  import { openNewBoard } from '../list/open.svelte.ts';
   import * as m from '../messages.ts';
   import IssuePopup from '../popup/IssuePopup.svelte';
   import NewLaneDialog from '../popup/NewLaneDialog.svelte';
@@ -51,7 +55,7 @@
   import SprintMenu from '../sprints/SprintMenu.svelte';
   import SprintSchedule from '../sprints/SprintSchedule.svelte';
   import BoardFooter from './BoardFooter.svelte';
-  import { BoardState, cellKey } from './board-state.svelte.ts';
+  import { BoardState } from './board-state.svelte.ts';
   import BoardGrid from './BoardGrid.svelte';
   import BoardToolbar from './BoardToolbar.svelte';
   import HealthNotice from './HealthNotice.svelte';
@@ -110,7 +114,7 @@
     settingsOpen = true;
   }
 
-  /** «Новая» → «Карточку»: the create form in the first column, in «Прочее» with lanes. */
+  /** «Новая»: the new-issue dialog on the first column's draft, in «Прочее» with lanes. */
   function newCard(): void {
     const column = board.columns[0];
     if (!column) return;
@@ -118,30 +122,41 @@
       ? (model.lanes.find((one) => one.key === 'other') ?? model.lanes[0])?.key
       : null;
     if (lane === undefined) return;
-    model.composing = cellKey(column.id, lane);
+    void model.createInCell(column.id, lane);
   }
 
-  const createItems = $derived([
-    ...(model.canCreate && !noColumns ? [{ label: m.newCardItem(), onSelect: newCard }] : []),
-    ...(model.canCreateLane ? [{ label: m.newLaneItem(), onSelect: () => (laneOpen = true) }] : []),
-    ...(board.sprints_on && board.rights.edit
-      ? [{ label: m.newSprintItem(), onSelect: () => openSprint(null) }]
-      : []),
-    { label: m.createBoardItem(), onSelect: () => openNewBoard() },
-  ]);
+  const canNew = $derived(model.canCreate && !noColumns);
 
   // Loads once per board, sprint and filter; what the load reads and writes must not run it again.
+  // A refused filter names its problems in the bar (like the list); other failures toast.
+  let filterProblems = $state<QueryProblem[] | null>(null);
   $effect(() => {
     const shown = model;
     const wanted = chosen;
     const filter = query;
     untrack(() => {
       void shown.show(wanted, filter).then(() => {
-        if (filter !== '' && shown.error && shown.view) {
-          showError(new Error(m.filterFailed(), { cause: shown.error }));
+        const error = shown.error;
+        if (error && shown.view) {
+          const refused = queryProblems(error);
+          if (refused !== null) {
+            filterProblems = refused;
+            return;
+          }
+          showError(new Error(m.filterFailed(), { cause: error }));
+        } else {
+          filterProblems = null;
         }
       });
     });
+  });
+
+  // The new-issue form opened on a cell draft publishes in the shell, and a publish sends no
+  // board event: when the dialog closes, the view loads again and the card lands in its cell.
+  $effect(() => {
+    if (newIssueDialog.open || !model.awaitedDialog) return;
+    model.awaitedDialog = false;
+    untrack(() => void model.load());
   });
 
   // The filter changes the address in place: no new history entry, focus and scroll stay.
@@ -178,6 +193,13 @@
     headerFilter.set(text);
     // eslint-disable-next-line svelte/no-navigation-without-resolve -- boardAddress() resolves
     void goto(boardAddress(board.id, chosen, headerFilter.value), IN_PLACE);
+  }
+
+  /** One problem of a refused filter, as the list names it (QRY-058). */
+  function problemText(problem: QueryProblem): string {
+    const text = query.slice(problem.from, problem.to).trim();
+    const meaning = problems[problem.code]();
+    return text === '' ? meaning : problemAt({ text, problem: meaning });
   }
 
   function chooseSprint(one: Sprint | null): void {
@@ -235,10 +257,13 @@
   });
 
   const size = $derived(cardSize(model.profile?.card_size ?? 1));
-  // Phones show one column or an overview (BRD-088).
+  // A short touch landscape keeps the phone board even when its width crosses NARROW.
   const narrow = new MediaQuery(NARROW, false);
+  const landscape = new MediaQuery(PHONE_LANDSCAPE, false);
+  const overlay = new MediaQuery(BOARD_OVERLAY, false);
+  const phone = $derived(narrow.current || landscape.current);
   const zoomed = $derived(new BoardZoom(board.id));
-  const zoom = $derived(narrow.current ? zoomed.value : null);
+  const zoom = $derived(phone ? zoomed.value : null);
 
   // The backlog panel (BRD-089): open or closed is kept in this browser per board.
   const backlogKey = (id: number) => `prostor.board-backlog.${String(id)}`;
@@ -366,7 +391,7 @@
 
 <svelte:head><title>{board.name} · {brand()}</title></svelte:head>
 
-<div class="page">
+<div class={['page', { phone }]}>
   {#if model.gone}
     <NotFoundState home={boardHref.list()} />
   {:else}
@@ -384,6 +409,7 @@
       estimate={model.view.totals.estimate}
       {size}
       {zoom}
+      filterActive={query.trim() !== ''}
       onzoom={(one: Zoom) => {
         zoomed.set(one);
       }}
@@ -391,7 +417,7 @@
       onsettings={() => {
         settingsOpen = true;
       }}
-      create={createItems}
+      oncreate={canNew ? newCard : undefined}
       sorted={model.sorted}
       backlog={backlogOpen}
       onbacklog={toggleBacklog}
@@ -431,18 +457,28 @@
         <QueryBar
           q={query}
           label={m.headerFilter()}
-          problems={model.view?.notes ?? []}
+          problems={filterProblems ?? model.view?.notes ?? []}
+          describedby={filterProblems !== null ? 'board-filter-problems' : undefined}
           onsearch={search}
         />
       {/snippet}
     </BoardToolbar>
+    {#if filterProblems !== null}
+      <div class="filter-problems" id="board-filter-problems">
+        <Notice tone="danger">
+          <ul class="problems">
+            {#each filterProblems as problem, i (i)}<li>{problemText(problem)}</li>{/each}
+          </ul>
+        </Notice>
+      </div>
+    {/if}
     <HealthNotice
       {board}
       onopen={board.rights.edit ? openSettingsOn : undefined}
       skip={noColumns ? ['no_column_field', 'no_columns'] : []}
     />
     <div class="body">
-      {#if backlogOpen && !narrow.current}
+      {#if backlogOpen && !overlay.current}
         <aside class="side" aria-label={m.backlog()}>{@render backlogPanel()}</aside>
       {/if}
       <div class="main">
@@ -538,7 +574,7 @@
   }}
 />
 
-{#if narrow.current}
+{#if overlay.current}
   <Dialog
     open={backlogOpen}
     title={m.backlog()}
@@ -573,7 +609,7 @@
     align-items: center;
     gap: var(--space-2) var(--space-4);
     min-width: 0;
-    padding: var(--space-5) var(--space-6) var(--space-3);
+    padding: var(--space-3) var(--space-4) var(--space-2);
   }
 
   h1 {
@@ -583,6 +619,14 @@
     min-width: 0;
     max-width: 100%;
     font-size: var(--text-xl);
+  }
+
+  .page.phone .header {
+    padding: var(--space-2) var(--space-4) var(--space-1);
+  }
+
+  .page.phone h1 {
+    font-size: var(--text-lg);
   }
 
   .body {
@@ -620,9 +664,23 @@
     padding: var(--space-12);
   }
 
+  .filter-problems {
+    padding: var(--space-2) var(--space-6) 0;
+  }
+
+  .problems {
+    margin: 0;
+    padding: 0;
+    padding-inline-start: var(--space-5);
+  }
+
   @media (width < 48rem) {
     .header {
       padding: var(--space-4) var(--space-4) var(--space-2);
+    }
+
+    .filter-problems {
+      padding: var(--space-2) var(--space-4) 0;
     }
   }
 </style>

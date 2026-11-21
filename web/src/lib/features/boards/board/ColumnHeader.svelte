@@ -61,7 +61,8 @@
 <div class={['header', { collapsed, broken: warning !== null }]}>
   <div class="line">
     <h2 class="name">{name}</h2>
-    <span class="count">{m.cardCount({ count: count.count })}</span>
+    <span class="count" aria-hidden="true">{count.count}</span>
+    <span class="sr-only">{m.cardCount({ count: count.count })}</span>
     {#if count.estimate !== null}
       <span class="count estimate">{estimateText(board, count.estimate)}</span>
     {/if}
@@ -111,8 +112,20 @@
     flex-wrap: wrap;
     align-items: center;
     gap: var(--space-1) var(--space-2);
-    padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
-    border-top: 3px solid var(--color-border);
+    padding: var(--space-1_5) var(--space-2) var(--space-1_5) var(--space-3);
+    border-top: 1px solid var(--color-border);
+  }
+
+  /* An absolutely positioned sr-only span makes a phone Chrome zoom the board out when a
+     dialog opens; a zero-size inline block hides the words just as well. */
+  .line :global(.sr-only) {
+    position: static;
+    display: inline-block;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    clip-path: none;
+    white-space: normal;
   }
 
   .header.broken {

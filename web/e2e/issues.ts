@@ -11,6 +11,23 @@ export async function signIn(page: Page): Promise<void> {
   await expect(page).toHaveURL(/\/issues$/);
 }
 
+export async function openFields(page: Page): Promise<void> {
+  const details = page.locator('details.fields');
+  await expect(details).toBeVisible();
+  const panel = details.getByRole('complementary', { name: 'Fields' });
+  if (!(await panel.isVisible())) await details.locator('summary').click();
+}
+
+export async function issueAction(page: Page, name: string): Promise<void> {
+  const direct = page.getByRole('button', { name, exact: true });
+  if (await direct.isVisible()) {
+    await direct.click();
+    return;
+  }
+  await page.getByRole('button', { name: 'More', exact: true }).click();
+  await page.getByRole('menuitem', { name, exact: true }).click();
+}
+
 /** The value button of a field in the field panel; it is named by the value it shows. */
 export function fieldButton(panel: Locator, name: string): Locator {
   return panel

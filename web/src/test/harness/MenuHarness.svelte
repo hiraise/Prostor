@@ -5,7 +5,11 @@
   import IconButton from '#lib/ui/IconButton.svelte';
   import Menu, { type MenuEntry } from '#lib/ui/Menu.svelte';
 
-  let { onaction, late = false }: { onaction: (name: string) => void; late?: boolean } = $props();
+  let {
+    onaction,
+    late = false,
+    many = false,
+  }: { onaction: (name: string) => void; late?: boolean; many?: boolean } = $props();
   let size = $state('medium');
 
   const items: MenuEntry[] = $derived([
@@ -27,6 +31,15 @@
             },
           },
         ]
+      : []),
+    ...(many
+      ? Array.from({ length: 20 }, (_, index) => ({
+          type: 'action' as const,
+          label: `Extra ${String(index + 1)}`,
+          onSelect: () => {
+            onaction(`extra-${String(index + 1)}`);
+          },
+        }))
       : []),
     {
       type: 'action',

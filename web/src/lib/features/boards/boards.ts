@@ -333,16 +333,6 @@ export async function untag(issue: number, tag: number): Promise<void> {
   await api.delete('/issues/{id}/tags/{tag_id}', { path: { id: issue, tag_id: tag } });
 }
 
-/** Watches an issue (NTF-014): the card menu's marker. */
-export async function watchIssue(issue: number): Promise<void> {
-  await api.put('/issues/{id}/star', { path: { id: issue } });
-}
-
-/** Stops watching an issue (NTF-014). */
-export async function unwatchIssue(issue: number): Promise<void> {
-  await api.delete('/issues/{id}/star', { path: { id: issue } });
-}
-
 /** The boards and sprints holding an issue; for a draft also the boards it joins on its own. */
 export async function issueBoards(issue: number, signal?: AbortSignal): Promise<IssueBoard[]> {
   return (await api.get('/issues/{id}/boards', { path: { id: issue }, signal })).items;

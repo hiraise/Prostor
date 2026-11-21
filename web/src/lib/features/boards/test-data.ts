@@ -69,6 +69,8 @@ export const STATE: FieldRef = {
   kind: 'state',
   multi: false,
   builtin: 'state',
+  can_be_empty: false,
+  empty_label: '',
 };
 export const ASSIGNEE: FieldRef = {
   id: 6,
@@ -76,6 +78,8 @@ export const ASSIGNEE: FieldRef = {
   kind: 'user',
   multi: false,
   builtin: 'assignee',
+  can_be_empty: true,
+  empty_label: 'Unassigned',
 };
 export const PRIORITY: FieldRef = {
   id: 7,
@@ -83,6 +87,8 @@ export const PRIORITY: FieldRef = {
   kind: 'enum',
   multi: false,
   builtin: 'priority',
+  can_be_empty: false,
+  empty_label: '',
 };
 export const ESTIMATION: FieldRef = {
   id: 8,
@@ -90,6 +96,8 @@ export const ESTIMATION: FieldRef = {
   kind: 'duration',
   multi: false,
   builtin: 'estimation',
+  can_be_empty: true,
+  empty_label: 'No estimate',
 };
 
 export function value(id: number, name: string, extra: Partial<HeldValue> = {}): HeldValue {

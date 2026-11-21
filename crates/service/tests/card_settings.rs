@@ -232,6 +232,30 @@ fn invalid_at(e: Error, path: &str) -> Problem {
 }
 
 #[tokio::test]
+async fn brd_062_existing_kanban_estimation() {
+    let db = TestDb::new().await;
+    let pool = db.pool();
+    let admin = admin(pool).await;
+    let p = project(pool, &admin, "SCR", Template::Scrum).await;
+    let created = board(pool, &admin, Preset::Kanban, p).await;
+    let id = created.full.board.id;
+    let estimation = created.full.board.estimation_field_id.unwrap();
+    sqlx::query("update boards set estimation_field_id = null where id = $1")
+        .bind(id)
+        .execute(pool)
+        .await
+        .unwrap();
+
+    let existing = boards::get(pool, &admin, id).await.unwrap();
+    assert_eq!(existing.full.board.estimation_field_id, None);
+    assert_eq!(existing.estimation_field(), Some(estimation));
+    let shown = view::view(pool, &admin, id, None, None, None, None)
+        .await
+        .unwrap();
+    assert_eq!(shown.estimate, Some(0.0));
+}
+
+#[tokio::test]
 async fn brd_059_default_fields_and_changes() {
     let db = TestDb::new().await;
     let pool = db.pool();
@@ -507,12 +531,12 @@ async fn brd_062_sums() {
     assert_eq!(v.estimate, Some(8.0));
     let lanes: f64 = v.lanes.iter().filter_map(|l| l.estimate).sum();
     assert_eq!(lanes, 8.0);
-    // A board without an estimation sums nothing.
+    // A fresh kanban board sums the standard estimation; without cards the sum is zero.
     let plain = board(pool, &admin, Preset::Kanban, p).await;
     let v = view::view(pool, &admin, plain.full.board.id, None, None, None, None)
         .await
         .unwrap();
-    assert_eq!(v.estimate, None);
+    assert_eq!(v.estimate, Some(0.0));
 }
 
 #[tokio::test]

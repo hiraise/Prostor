@@ -300,6 +300,8 @@ export function fieldsServer(options: Options = {}) {
         kind: field.kind,
         multi: field.multi,
         builtin: field.builtin,
+        can_be_empty: field.can_be_empty,
+        empty_label: field.empty_label,
       },
       aliases: field.aliases,
       can_be_empty: item.can_be_empty,

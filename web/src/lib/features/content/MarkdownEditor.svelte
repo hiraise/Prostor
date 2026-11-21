@@ -2,9 +2,10 @@
   // The Markdown editor (CNT-029): a labelled text field with formatting buttons and shortcuts,
   // a switch between the text and its preview as the server renders it, and — for texts of an
   // issue in the full profile — a list of people to mention after `@` (CNT-054). Formatting is
-  // typed into the field as one step, so the browser's undo takes it back. With `upload`, pasted
-  // pictures and dropped files are uploaded and named in the text (CNT-034); the IDs of those
-  // uploads go to `uploads`, so the owner sends them with the text and the preview shows them.
+  // typed into the field as one step, so the browser's undo takes it back. With `upload`, pasted,
+  // dropped or picked files are uploaded and named in the text (CNT-034); the IDs of those uploads
+  // go to `uploads`, so the owner sends them with the text and the preview shows them. The compact
+  // variant puts the tabs and the picker into the toolbar.
   // After an opening fence — typed, or put by «Блок кода» — a list offers the languages code
   // blocks highlight (CNT-045); no choice keeps auto-detection.
   import BoldIcon from '@lucide/svelte/icons/bold';
@@ -75,6 +76,10 @@
     uploads?: number[];
     /** Files of the issue «Вложение» offers to name in the text (CNT-044). */
     attachments?: { id: number; name: string; kind: FileKind }[];
+    /** The label is visually quiet, the tabs sit in the toolbar and files have a picker button. */
+    compact?: boolean;
+    /** Fills the height left by a flex parent. */
+    grow?: boolean;
   }
 
   let {
@@ -94,6 +99,8 @@
     upload,
     uploads = $bindable([]),
     attachments = [],
+    compact = false,
+    grow = false,
   }: Props = $props();
 
   /** Typing pauses this long before the preview or the mention list asks the server. */
@@ -122,6 +129,7 @@
   const id = $props.id();
   let textarea: HTMLTextAreaElement | undefined = $state();
   let toolbar: HTMLElement | undefined = $state();
+  let picker: HTMLInputElement | undefined = $state();
   let mode = $state<'write' | 'preview'>('write');
   /** Whether formatting buttons are shown: a personal setting (UI-018). */
   const toolbarShown = $derived(preferences.value('editor_toolbar'));
@@ -260,6 +268,12 @@
     uploadErrors = [...uploadErrors, ...errors];
     if (errors.length > 0) announce(errors.join(' '), 'assertive');
     else if (running === 0) announce(m.uploaded({ count: done.length }));
+  }
+
+  function chooseUpload(event: Event): void {
+    const input = event.currentTarget as HTMLInputElement;
+    void uploadFiles([...(input.files ?? [])]);
+    input.value = '';
   }
 
   function paste(event: ClipboardEvent): void {
@@ -539,30 +553,34 @@
   const current = $derived(rendered?.key === previewKey ? rendered.result : null);
 </script>
 
-<div class="editor">
+{#snippet modes()}
+  <div class="tabs" role="tablist" aria-label={m.modes({ label })}>
+    {#each TABS as tab (tab)}
+      <button
+        type="button"
+        role="tab"
+        id="{id}-tab-{tab}"
+        class="tab"
+        aria-selected={mode === tab}
+        aria-controls="{id}-{tab}"
+        tabindex={mode === tab ? 0 : -1}
+        onclick={() => {
+          show(tab);
+        }}
+        onkeydown={tabKeydown}
+      >
+        {tab === 'write' ? m.write() : m.preview()}
+      </button>
+    {/each}
+  </div>
+{/snippet}
+
+<div class={['editor', { compact, grow }]}>
   <div class="head">
     <label for={id} id="{id}-label">
       {label}{#if required}<span class="required" aria-hidden="true"> *</span>{/if}
     </label>
-    <div class="tabs" role="tablist" aria-label={m.modes({ label })}>
-      {#each TABS as tab (tab)}
-        <button
-          type="button"
-          role="tab"
-          id="{id}-tab-{tab}"
-          class="tab"
-          aria-selected={mode === tab}
-          aria-controls="{id}-{tab}"
-          tabindex={mode === tab ? 0 : -1}
-          onclick={() => {
-            show(tab);
-          }}
-          onkeydown={tabKeydown}
-        >
-          {tab === 'write' ? m.write() : m.preview()}
-        </button>
-      {/each}
-    </div>
+    {#if !compact}{@render modes()}{/if}
   </div>
 
   <!-- Files dropped anywhere on the field are taken; the field itself is the keyboard's way. -->
@@ -622,6 +640,15 @@
             pressed={toolbarShown}
             onclick={toggleToolbar}
           />
+          {#if compact}{@render modes()}{/if}
+          {#if compact && takesFiles}
+            <IconButton
+              icon={PaperclipIcon}
+              size="md"
+              label={m.insertAttachment()}
+              onclick={() => picker?.click()}
+            />
+          {/if}
           {#if attachmentItems.length > 0 && profile === 'full'}
             <Menu label={m.attachmentList()} items={attachmentItems}>
               {#snippet trigger(props)}
@@ -745,6 +772,18 @@
     </div>
   </div>
 
+  {#if compact && takesFiles}
+    <input
+      bind:this={picker}
+      type="file"
+      multiple
+      hidden
+      tabindex="-1"
+      aria-hidden="true"
+      onchange={chooseUpload}
+    />
+  {/if}
+
   {#if running > 0}
     <!-- Announced through announce(); the line shows the same. -->
     <p class="upload-status"><Spinner />{m.uploading({ count: running })}</p>
@@ -766,6 +805,31 @@
     flex-direction: column;
     gap: var(--space-1);
     min-width: 0;
+  }
+
+  .editor.grow {
+    flex: 1;
+    min-height: 16rem;
+  }
+
+  .editor.grow .frame,
+  .editor.grow .panel {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .editor.grow textarea {
+    flex: 1;
+    min-height: 12rem;
+    resize: none;
+  }
+
+  .editor.grow .preview {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
   }
 
   .head {
@@ -962,6 +1026,37 @@
     display: flex;
     align-items: center;
     gap: var(--space-2);
+  }
+
+  .compact .head {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .compact .tabs {
+    flex: none;
+    margin-inline-start: auto;
+  }
+
+  .compact .tab {
+    min-width: 0;
+    min-height: var(--control-sm);
+    padding: 0 var(--space-2);
+  }
+
+  .compact .bar :global(.toolbar-toggle) {
+    margin-inline-start: 0;
+  }
+
+  .compact .hint {
+    padding: 0 var(--space-2) var(--space-2);
   }
 
   .hint {

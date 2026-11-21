@@ -50,6 +50,13 @@ describe('BRD-068: the board', () => {
     const link = screen.getByRole('link', { name: 'WEB-101' });
     expect(link.element().getAttribute('href')).toBe('/issues/WEB-101');
     await expect.element(screen.getByRole('link', { name: 'WEB-104 (resolved)' })).toBeVisible();
+    const card = screen.getByRole('article', { name: 'WEB-101' });
+    const summary = card.getByText('Login form', { exact: true }).element();
+    expect(summary.getBoundingClientRect().top).toBeCloseTo(
+      link.element().getBoundingClientRect().top,
+      0,
+    );
+    expect(card.getByRole('button', { name: 'Actions of WEB-101' }).elements()).toHaveLength(0);
     // The ID link covers its whole card, so its own text box may be small.
     const small = smallTargets(screen.container, isPhone() ? 44 : 24);
     expect(small.filter((name) => !name.startsWith('WEB-'))).toEqual([]);
@@ -123,7 +130,7 @@ describe('BRD-046: limits', () => {
     const screen = await render(BoardPage, { board: board() });
     const doing = screen.getByRole('region', { name: 'In Progress' });
     await expect.element(doing.getByText('Over the limit of 1')).toBeVisible();
-    await expect.element(doing.getByText('2 cards')).toBeVisible();
+    await expect.element(doing.getByText('2 cards')).toBeInTheDocument();
     // «Открыть списком»: the board projects and the column value.
     const list = doing.getByRole('link', { name: 'Open “In Progress” as a list' });
     expect(decodeURIComponent(list.element().getAttribute('href') ?? '')).toBe(

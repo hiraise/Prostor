@@ -242,6 +242,47 @@ describe('CNT-003: the audience of a comment', () => {
 });
 
 describe('CNT-004: editing a comment', () => {
+  it('CNT-041: ticks a checklist box of the rendered text and saves it', async () => {
+    const { screen, calls } = await show(
+      [
+        comment(1, 'Plan:\n- [ ] write\n', {
+          html: [
+            '<p>Plan:</p>',
+            '<ul>',
+            '<li data-sourcepos="2:1-2:11"><input type="checkbox" disabled=""> write</li>',
+            '</ul>',
+            '',
+          ].join('\n'),
+        }),
+      ],
+      {
+        'PATCH /comments/1': ({ body }) => {
+          const text = (body as { text: string }).text;
+          const ticked = text.includes('- [x]');
+          return {
+            body: comment(1, text, {
+              version: 2,
+              html: [
+                '<p>Plan:</p>',
+                '<ul>',
+                `<li data-sourcepos="2:1-2:11"><input type="checkbox"${ticked ? ' checked=""' : ''} disabled=""> write</li>`,
+                '</ul>',
+                '',
+              ].join('\n'),
+            }),
+          };
+        },
+      },
+    );
+    const card = screen.getByRole('article');
+    const box = card.getByRole('checkbox', { name: 'write' });
+    await expect.element(box).toBeEnabled();
+    await box.click();
+    await expect.element(box).toBeChecked();
+    expect(sent(calls, 'PATCH', '/comments/1')).toEqual([
+      { text: 'Plan:\n- [x] write\n', audience: { users: [], groups: [] }, version: 1 },
+    ]);
+  });
   it('from the menu or with F2; Esc cancels; saved on its version', async () => {
     const { screen, calls } = await show([comment(1, 'Typo hree')], {
       'PATCH /comments/1': ({ body }) => ({

@@ -162,6 +162,24 @@ describe('Menu', () => {
     );
   });
 
+  it('repositions the menu when late entries grow it', async () => {
+    const onaction = vi.fn();
+    const screen = await render(MenuHarness, { onaction });
+    const trigger = screen.getByRole('button', { name: 'Project actions' });
+    await trigger.click();
+    const menu = page.getByRole('menu');
+    await expect.element(menu).toBeVisible();
+
+    await screen.rerender({ onaction, many: true });
+    const last = page.getByRole('menuitem', { name: 'Extra 20' });
+    await expect.element(last).toBeVisible();
+    await expect
+      .poll(() => menu.element().getBoundingClientRect().bottom)
+      .toBeLessThanOrEqual(window.innerHeight);
+    await last.click();
+    expect(onaction).toHaveBeenCalledWith('extra-20');
+  });
+
   it('closes on a click outside and stays inside the screen', async () => {
     const screen = await render(MenuHarness, { onaction: vi.fn() });
     await screen.getByRole('button', { name: 'Project actions' }).click();

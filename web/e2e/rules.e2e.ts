@@ -16,7 +16,7 @@ import type {
 } from '../src/lib/api/schema.gen.ts';
 import { ADMIN } from './accounts.ts';
 import { cardsOf, mouseDrag, touchDrag } from './boards.ts';
-import { fieldButton, signIn } from './issues.ts';
+import { fieldButton, openFields, signIn } from './issues.ts';
 
 const TOM_PASSWORD = 'tom rules password';
 
@@ -111,15 +111,18 @@ test('AUT-023, AUT-094, AUT-079, AUT-063: the built-in rules of a project', asyn
 
   await page.goto(`/issues/${child.readable_id ?? ''}`);
   const panel = page.getByRole('complementary', { name: 'Fields' });
+  await openFields(page);
   await fieldButton(panel, 'State').click();
   await page
     .getByRole('dialog', { name: 'Change State' })
     .getByRole('radio', { name: 'Fixed' })
     .click();
+  await openFields(page);
   await expect(fieldButton(panel, 'State')).toHaveText(/Fixed/);
   await expect(toasts.getByText(`${parent.readable_id ?? ''} moved to “Fixed”`)).toBeVisible();
 
   await page.goto(`/issues/${parent.readable_id ?? ''}`);
+  await openFields(page);
   await expect(fieldButton(panel, 'State')).toHaveText(/Fixed/);
   // The state change and the resolution itself are both recorded as the rule's work.
   await expect(page.getByText('rule', { exact: true }).first()).toBeVisible();
@@ -134,11 +137,13 @@ test('AUT-023, AUT-094, AUT-079, AUT-063: the built-in rules of a project', asyn
   });
   expect(restricted.ok()).toBe(true);
   await page.goto(`/issues/${audienceIssue.readable_id ?? ''}`);
+  await openFields(page);
   await fieldButton(panel, 'Assignee').click();
   await page
     .getByRole('dialog', { name: 'Change Assignee' })
     .getByRole('radio', { name: new RegExp(tomName) })
     .click();
+  await openFields(page);
   await expect(fieldButton(panel, 'Assignee')).toHaveText(new RegExp(tomName));
   await expect(toasts.getByText(`The assignee ${tomName} cannot see this issue`)).toBeVisible();
 
@@ -204,6 +209,7 @@ test('AUT-071: duplicates — the state follows the link, the chain collapses, t
   // Rule 4: naming an original puts the duplicate's state to «Duplicate».
   await markDuplicate(page, middle, original);
   await page.goto(`/issues/${middle.readable_id ?? ''}`);
+  await openFields(page);
   await expect(fieldButton(panel, 'State')).toHaveText(/Duplicate/);
 
   // Rule 1: the new link is rewritten to the chain's root, which the toast names; the late
@@ -213,6 +219,7 @@ test('AUT-071: duplicates — the state follows the link, the chain collapses, t
     toasts.getByText(`Duplicates now point to ${original.readable_id ?? ''}`),
   ).toBeVisible();
   await page.goto(`/issues/${late.readable_id ?? ''}`);
+  await openFields(page);
   await expect(fieldButton(panel, 'State')).toHaveText(/Duplicate/);
   await expect(page.getByRole('list', { name: 'duplicate of' })).toContainText(
     original.readable_id ?? '',
@@ -224,6 +231,7 @@ test('AUT-071: duplicates — the state follows the link, the chain collapses, t
     .click();
   await expect(toasts.getByText('Link removed')).toBeVisible();
   await page.reload();
+  await openFields(page);
   await expect(fieldButton(panel, 'State')).toHaveText(/Reopened/);
 });
 

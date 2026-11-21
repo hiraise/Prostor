@@ -71,6 +71,19 @@ function sent(calls: FakeRequest[], method?: string) {
 
 const summaryBox = () => page.getByRole('textbox', { name: /^Summary/ });
 
+async function openFieldsOnPhone(): Promise<void> {
+  if (isPhone()) await page.getByText('Fields', { exact: true }).click();
+}
+
+async function chooseTitleAction(name: string): Promise<void> {
+  if (isPhone()) {
+    await page.getByRole('button', { name: 'More', exact: true }).click();
+    await page.getByRole('menuitem', { name, exact: true }).click();
+  } else {
+    await page.getByRole('button', { name, exact: true }).click();
+  }
+}
+
 beforeEach(() => {
   setAccessForTests(MEMBER);
   setPreferencesForTests({});
@@ -323,8 +336,8 @@ describe('ISS-034, ISS-035: tags', () => {
       },
     });
 
-    // The tag picker's trigger is the tag icon in the title row on every width.
-    await screen.getByRole('button', { name: 'Add tag' }).click();
+    // The tag icon sits in the title row on a desktop and in «Ещё» on a phone.
+    await chooseTitleAction('Add tag');
     const picker = page.getByRole('dialog', { name: 'Add tag' });
     await expect.element(picker.getByRole('checkbox', { name: 'triage' })).toBeVisible();
     // ISS-035: a tag shared only for viewing is not offered.
@@ -472,6 +485,7 @@ describe('ISS-020: moving to another project', () => {
     const { screen, calls } = await show(issue({ fields: [] }), routes(true));
 
     // The project value opens the dropdown of the projects that would take the issue.
+    await openFieldsOnPhone();
     await screen.getByRole('button', { name: 'Web' }).click();
     const picker = page.getByRole('dialog', { name: 'Choose another project' });
     // Only active projects other than the issue's own.
@@ -504,6 +518,7 @@ describe('ISS-020: moving to another project', () => {
     preview.body.changes = [];
     const { screen, calls } = await show(issue({ fields: [] }), clean);
 
+    await openFieldsOnPhone();
     await screen.getByRole('button', { name: 'Web' }).click();
     await page
       .getByRole('dialog', { name: 'Choose another project' })
@@ -526,6 +541,7 @@ describe('ISS-020: moving to another project', () => {
   it('warns when the viewer would lose the issue and then leaves for the projects', async () => {
     const { screen } = await show(issue({ fields: [] }), routes(false));
 
+    await openFieldsOnPhone();
     await screen.getByRole('button', { name: 'Web' }).click();
     await page
       .getByRole('dialog', { name: 'Choose another project' })

@@ -4,16 +4,36 @@ import { userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 
-import type { AccessMap, Board, BoardView } from '#lib/api/schema.gen.ts';
+import { goto } from '$app/navigation';
+
+import type { AccessMap, Board, BoardView, QueryProblem } from '#lib/api/schema.gen.ts';
+import { newIssueDialog } from '#lib/features/issues/new/open.svelte.ts';
 import { issue as fullIssue, issuePage } from '#lib/features/issues/test-data.ts';
 import { setAccessForTests, setSessionForTests } from '#lib/session/index.ts';
+import { toasts } from '#lib/ui/toast.svelte.ts';
 
-import { expectAccessible } from '../../../../test/a11y.ts';
+import { expectAccessible, isPhone } from '../../../../test/a11y.ts';
 import { fakeApi, failure, type FakeRequest, type FakeRoute } from '../../../../test/fake-api.ts';
 import BoardPage from '../board/BoardPage.svelte';
+import { headerFilter } from '../board/header-filter.svelte.ts';
 import { NO_LANES, SESSION, board, issue, view } from '../test-data.ts';
 
 vi.mock('$app/navigation', () => ({ goto: vi.fn(() => Promise.resolve()) }));
+
+/** A create that opens the new-issue form: the dialog on wide screens, its page on phones. */
+async function expectNewIssueOn(draft: number): Promise<void> {
+  if (isPhone()) {
+    await vi.waitFor(() => {
+      expect(vi.mocked(goto)).toHaveBeenCalledWith(`/issues/new?draft=${String(draft)}`);
+    });
+    return;
+  }
+  await vi.waitFor(() => {
+    expect(newIssueDialog.open).toBe(true);
+  });
+  expect(newIssueDialog.target).toEqual({ draft });
+  newIssueDialog.open = false;
+}
 
 /** Reads, updates and creates issues in project 1. */
 const CREATOR: AccessMap = {
@@ -42,21 +62,15 @@ function server(
 }
 
 const LOGIN = fullIssue({ id: 101, readable_id: 'WEB-101', summary: 'Login form' });
-const DRAFT = fullIssue({
-  id: 900,
-  readable_id: null,
-  number: null,
-  draft: true,
-  summary: '',
-  description: '',
-  description_html: '',
-  fields: [],
-});
 
 afterEach(() => {
   vi.unstubAllGlobals();
   setSessionForTests(null);
   setAccessForTests(null);
+  toasts.clear();
+  headerFilter.clear();
+  newIssueDialog.open = false;
+  vi.mocked(goto).mockClear();
 });
 
 describe('BRD-079: the issue popup', () => {
@@ -78,6 +92,25 @@ describe('BRD-079: the issue popup', () => {
     await expect
       .element(popup.getByRole('navigation', { name: 'Breadcrumbs' }))
       .not.toBeInTheDocument();
+    if (!isPhone()) {
+      const facts = popup.element().querySelectorAll('.facts > div');
+      const created = facts[0];
+      const updated = facts[1];
+      if (!created || !updated) throw new Error('the popup has no issue metadata');
+      expect(updated.getBoundingClientRect().top).toBeCloseTo(
+        created.getBoundingClientRect().top,
+        0,
+      );
+      const panel = popup.getByRole('complementary', { name: 'Fields' }).element();
+      const panelFrame = panel.parentElement;
+      const body = panel.closest('.body');
+      if (!panelFrame || !body) throw new Error('the popup has no field panel');
+      const bottom = body.getBoundingClientRect().bottom;
+      expect(panelFrame.getBoundingClientRect().bottom).toBeCloseTo(
+        bottom - parseFloat(getComputedStyle(body).paddingBottom),
+        0,
+      );
+    }
     await expectAccessible(popup.element());
     await userEvent.keyboard('{Escape}');
     await expect.element(popup).not.toBeInTheDocument();
@@ -124,96 +157,68 @@ describe('BRD-079: the issue popup', () => {
 });
 
 describe('BRD-080: the popup in edit mode', () => {
-  it('F2 on a card opens the popup with the edit form', async () => {
-    server({ 'GET /issues/101/page': { body: issuePage(LOGIN) } });
+  it('F2 opens the edit form and Save publishes the changed summary', async () => {
+    server({
+      'GET /issues/101/page': { body: issuePage(LOGIN) },
+      'PATCH /issues/101': ({ body }) => ({
+        body: {
+          issue: { ...LOGIN, ...(body as object), text_version: LOGIN.text_version + 1 },
+          messages: [],
+        },
+      }),
+    });
     const screen = await render(BoardPage, { board: board() });
     const link = screen.getByRole('link', { name: 'WEB-101' });
     await expect.element(link).toBeVisible();
     (link.element() as HTMLElement).focus();
     await userEvent.keyboard('{F2}');
     const popup = screen.getByRole('dialog', { name: 'WEB-101 Login form' });
-    await expect.element(popup.getByRole('textbox', { name: 'Summary' })).toHaveValue('Login form');
+    const editSummary = popup.getByRole('textbox', { name: 'Summary' });
+    await expect.element(editSummary).toHaveValue('Login form');
+    const summaryStyle = getComputedStyle(editSummary.element());
+    expect(summaryStyle.height).toBe('48px');
+    expect(summaryStyle.outlineStyle).toBe('none');
+    expect(summaryStyle.borderBottomWidth).toBe('1px');
+    expect(editSummary.element().closest('.title')).not.toBeNull();
+    expect(editSummary.element().closest('.content')).toBeNull();
+    expect(popup.element().querySelectorAll('.title h1')).toHaveLength(1);
+    if (!isPhone()) {
+      const main = popup.element().querySelector('.main');
+      if (!main) throw new Error('no popup main column');
+      const style = getComputedStyle(main);
+      expect(style.scrollbarGutter).toBe('stable');
+      expect(parseFloat(style.paddingInlineEnd)).toBeGreaterThan(0);
+    }
+    await popup.getByRole('textbox', { name: 'Summary' }).fill('Login form two');
+    await popup.getByRole('button', { name: 'Save' }).click();
+    await expect
+      .element(screen.getByRole('heading', { level: 1, name: 'Login form two' }))
+      .toBeVisible();
   });
 });
 
 describe('BRD-077: creating in a cell', () => {
-  it('«+» opens the cell form on its draft with the column locked; «Добавить» publishes', async () => {
-    let published = false;
+  it('«+» starts the cell draft and opens the new-issue form on it', async () => {
     const calls = server({
       'POST /boards/9/cell-draft': { status: 201, body: { issue: 900, created: true } },
-      'GET /issues/900': { body: DRAFT },
-      'PATCH /issues/900': (request) => ({
-        body: { issue: { ...DRAFT, ...(request.body as object), text_version: 3 }, messages: [] },
-      }),
-      'POST /issues/900/publish': () => {
-        published = true;
-        return {
-          body: {
-            issue: { ...DRAFT, draft: false, readable_id: 'WEB-900', summary: 'Export' },
-            messages: [],
-          },
-        };
-      },
     });
     const screen = await render(BoardPage, { board: board() });
     await screen.getByRole('button', { name: 'Add a card to “Open”' }).click();
-    const form = screen.getByRole('form', { name: 'New card' });
-    const summary = form.getByRole('textbox', { name: 'Summary' });
-    await expect.element(summary).toHaveFocus();
     expect(calls.find((one) => one.path === '/boards/9/cell-draft')?.body).toEqual({
       sprint: 7,
       column: 1,
     });
-    await expect
-      .element(form.getByRole('listitem'))
-      .toHaveTextContent('Set by the cell: State: Open');
-    await expectAccessible(form.element());
-
-    await expect.element(form.getByRole('button', { name: 'Add', exact: true })).toBeDisabled();
-    await summary.fill('Export');
-    await userEvent.keyboard('{Control>}{Enter}{/Control}');
-    await expect.element(form).not.toBeInTheDocument();
-    expect(published).toBe(true);
-    expect(
-      calls.find((one) => one.method === 'PATCH' && one.path === '/issues/900')?.body,
-    ).toMatchObject({ summary: 'Export' });
+    await expectNewIssueOn(900);
   });
 
-  it('a refusal for required fields opens the fields and says so', async () => {
-    server({
-      'POST /boards/9/cell-draft': { body: { issue: 900, created: false } },
-      'GET /issues/900': { body: DRAFT },
-      'PATCH /issues/900': { body: { issue: { ...DRAFT, summary: 'Export' }, messages: [] } },
-      'POST /issues/900/publish': failure(400, 'invalid_request', [
-        { path: 'fields.11', problem: 'required', message: 'required' },
-      ]),
-    });
+  it('a refused cell draft says so and opens nothing', async () => {
+    server({ 'POST /boards/9/cell-draft': failure(403, 'forbidden', []) });
     const screen = await render(BoardPage, { board: board() });
     await screen.getByRole('button', { name: 'Add a card to “Open”' }).click();
-    const form = screen.getByRole('form', { name: 'New card' });
-    await form.getByRole('textbox', { name: 'Summary' }).fill('Export');
-    await form.getByRole('button', { name: 'Add', exact: true }).click();
-    await expect.element(form.getByText('Fill in the required fields')).toBeVisible();
-    await expect
-      .element(form.getByRole('button', { name: 'Fields' }))
-      .toHaveAttribute('aria-expanded', 'true');
-  });
-
-  it('Esc closes an empty form and deletes its draft', async () => {
-    const calls = server({
-      'POST /boards/9/cell-draft': { status: 201, body: { issue: 900, created: true } },
-      'GET /issues/900': { body: DRAFT },
-      'DELETE /issues/900': { status: 204 },
-    });
-    const screen = await render(BoardPage, { board: board() });
-    await screen.getByRole('button', { name: 'Add a card to “Open”' }).click();
-    const form = screen.getByRole('form', { name: 'New card' });
-    await expect.element(form.getByRole('textbox', { name: 'Summary' })).toHaveFocus();
-    await userEvent.keyboard('{Escape}');
-    await expect.element(form).not.toBeInTheDocument();
     await vi.waitFor(() => {
-      expect(calls.some((one) => one.method === 'DELETE' && one.path === '/issues/900')).toBe(true);
+      expect(toasts.items.at(-1)?.message).toBe('Could not start a card here');
     });
+    expect(newIssueDialog.open).toBe(false);
   });
 
   it('people who may not create issues see no «+»', async () => {
@@ -230,24 +235,39 @@ describe('BRD-077: creating in a cell', () => {
   });
 });
 
-describe('BRD-076: the «Новая» menu', () => {
-  it('offers a card, a sprint and a board; «Карточку» opens the form of the first column', async () => {
-    server({
+describe('BRD-076: the «Новая» button', () => {
+  it('opens the new-issue form on the first column', async () => {
+    const calls = server({
       'POST /boards/9/cell-draft': { status: 201, body: { issue: 900, created: true } },
-      'GET /issues/900': { body: DRAFT },
     });
-    const sprintBoard = board({ sprints_on: true });
-    const screen = await render(BoardPage, { board: sprintBoard });
+    const screen = await render(BoardPage, { board: board() });
     await screen.getByRole('button', { name: 'New', exact: true }).click();
-    const items = screen.getByRole('menuitem');
-    await expect.element(items.first()).toBeVisible();
-    expect(items.elements().map((one) => one.textContent.trim())).toEqual([
-      'Card',
-      'Sprint',
-      'Board',
-    ]);
-    await screen.getByRole('menuitem', { name: 'Card' }).click();
-    await expect.element(screen.getByRole('form', { name: 'New card' })).toBeVisible();
+    expect(calls.find((one) => one.path === '/boards/9/cell-draft')?.body).toEqual({
+      sprint: 7,
+      column: 1,
+    });
+    await expectNewIssueOn(900);
+  });
+});
+
+describe('BRD-081: the header filter names its mistakes', () => {
+  it('a refused query lists its problems; the cards stay and no server error shows', async () => {
+    const problems: QueryProblem[] = [
+      { from: 0, to: 4, code: 'unknown_attribute', severity: 'error' },
+    ];
+    server({
+      'GET /boards/9/view': (request) =>
+        request.query.get('q')
+          ? { status: 400, body: { code: 'invalid_query', message: 'x', problems } }
+          : { body: view() },
+    });
+    const screen = await render(BoardPage, { board: board() });
+    await expect.element(screen.getByRole('link', { name: 'WEB-101' })).toBeVisible();
+    headerFilter.set('name: X');
+    await expect.element(screen.getByText('“name”: no such field')).toBeVisible();
+    await expect.element(screen.getByText(/something went wrong/i)).not.toBeInTheDocument();
+    // The view before the filter stays on screen.
+    await expect.element(screen.getByRole('link', { name: 'WEB-101' })).toBeVisible();
   });
 });
 

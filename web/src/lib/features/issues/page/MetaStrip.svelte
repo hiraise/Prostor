@@ -3,7 +3,8 @@
   // reporter and the last updater inline beside it — one line on a wide screen — and at the line's
   // end the person's own marks: votes (ISS-030) and the star with the watcher count (ISS-032,
   // NTF-015); in the board popup the corner controls the page passes in (`corner`: «Открыть
-  // страницей», the close button) join that end. The issue's visibility is the lock beside «Изменить».
+  // страницей», the close button) join that end. On the full page the visibility lock sits beside
+  // «Изменить»; in the popup its control joins this corner.
   // Votes and the star are toggles that show at once; one's own issue cannot be voted for, and the
   // button says why.
   import Star from '@lucide/svelte/icons/star';
@@ -25,7 +26,11 @@
   import { setStar, setVote } from '../actions.ts';
   import * as m from '../messages.ts';
 
-  let { issue, corner }: { issue: Issue; corner?: Snippet } = $props();
+  let {
+    issue,
+    corner,
+    embedded = false,
+  }: { issue: Issue; corner?: Snippet; embedded?: boolean } = $props();
 
   const id = $props.id();
   const readable = $derived(issue.readable_id);
@@ -41,7 +46,7 @@
   }
 </script>
 
-<div class="strip" role="group" aria-label={m.details()}>
+<div class={['strip', { embedded }]} role="group" aria-label={m.details()}>
   {#if readable}
     <p class="id">
       <span>{readable}</span>
@@ -64,7 +69,7 @@
       </dd>
     </div>
     {#if issue.updater}
-      <div>
+      <div class="updated">
         <dt>{m.updatedBy()}</dt>
         <dd>
           <PersonName person={issue.updater} />
@@ -147,6 +152,19 @@
     gap: var(--space-1);
   }
 
+  .strip.embedded .facts {
+    flex-wrap: nowrap;
+  }
+
+  .strip.embedded .facts > div {
+    flex-wrap: nowrap;
+    gap: var(--space-1_5);
+  }
+
+  .strip.embedded .tail {
+    align-self: center;
+  }
+
   dd {
     display: inline-flex;
     flex-wrap: wrap;
@@ -203,6 +221,12 @@
   .tail :global(.count) {
     min-width: 2rem;
     min-height: 2rem;
+  }
+
+  @media (width < 48rem) {
+    .strip.embedded .facts .updated {
+      display: none;
+    }
   }
 
   @media (pointer: coarse) {

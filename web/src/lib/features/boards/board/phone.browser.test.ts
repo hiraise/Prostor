@@ -87,6 +87,21 @@ describe.skipIf(!isPhone())('BRD-088: the board on a phone', () => {
     await expectAccessible(screen.container);
   });
 
+  it('keeps the header filter behind a labelled disclosure', async () => {
+    server();
+    const screen = await shown();
+    const toggle = screen.getByRole('button', { name: 'Card filter' });
+    await expect.element(toggle).toHaveAttribute('aria-expanded', 'false');
+    expect(screen.getByRole('combobox', { name: 'Search query' }).elements()).toHaveLength(0);
+
+    await toggle.click();
+    const query = screen.getByRole('combobox', { name: 'Search query' });
+    await expect.element(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect.element(query).toBeVisible();
+    await toggle.click();
+    await expect.element(query).not.toBeInTheDocument();
+  });
+
   it('shows all columns narrow with small cards; a header hides its cards; it is remembered', async () => {
     server();
     const screen = await shown();

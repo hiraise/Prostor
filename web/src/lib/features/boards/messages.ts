@@ -51,13 +51,6 @@ export const starFailed = msg({
   ru: 'Не удалось изменить избранное. Попробуйте ещё раз.',
 });
 
-export const watchCard = msg({ en: 'Watch', ru: 'Наблюдать' });
-export const unwatchCard = msg({ en: 'Stop watching', ru: 'Не наблюдать' });
-export const watchFailed = msg({
-  en: 'Could not change watching',
-  ru: 'Не удалось изменить наблюдение',
-});
-
 // The switcher.
 export const switchBoard = msg<{ name: string }>({
   en: ({ name }) => `Board “${name}”: switch board`,
@@ -243,14 +236,22 @@ export const files = msg<{ count: number }>({
     plural('ru', count, { one: '# файл', few: '# файла', many: '# файлов', other: '# файла' }),
 });
 export const filesLabel = msg({ en: 'Files', ru: 'Файлы' });
+export const emptyFields = msg<{ count: number }>({
+  en: ({ count }) => plural('en', count, { one: '# empty field', other: '# empty fields' }),
+  ru: ({ count }) =>
+    plural('ru', count, {
+      one: '# пустое поле',
+      few: '# пустых поля',
+      many: '# пустых полей',
+      other: '# пустых поля',
+    }),
+});
+export const hideEmptyFields = msg({ en: 'Hide empty fields', ru: 'Скрыть пустые поля' });
 export const restricted = msg({
   en: 'Visible to some people only',
   ru: 'Видна не всем',
 });
-export const estimate = msg<{ value: string }>({
-  en: ({ value }) => `Estimation: ${value}`,
-  ru: ({ value }) => `Оценка: ${value}`,
-});
+export const noEstimate = msg({ en: 'No estimate', ru: 'Нет оценки' });
 export const editField = msg<{ name: string; id: string }>({
   en: ({ name, id }) => `${name} of ${id}`,
   ru: ({ name, id }) => `${name} задачи ${id}`,
@@ -983,9 +984,6 @@ export const lanesFailed = msg({
 // Creating on the board (BRD-054, BRD-076, BRD-077), the issue popup (BRD-079) and the board's
 // health (BRD-023).
 export const newMenu = msg({ en: 'New', ru: 'Новая' });
-export const newCardItem = msg({ en: 'Card', ru: 'Карточку' });
-export const newLaneItem = msg({ en: 'Lane', ru: 'Дорожку' });
-export const newSprintItem = msg({ en: 'Sprint', ru: 'Спринт' });
 export const newLane = msg({ en: 'New lane', ru: 'Новая дорожка' });
 export const laneTitle = msg({ en: 'Title', ru: 'Название' });
 export const laneTitleHint = msg({
@@ -1004,36 +1002,9 @@ export const addInCell = msg<{ name: string }>({
   en: ({ name }) => `Add a card to “${name}”`,
   ru: ({ name }) => `Добавить карточку в «${name}»`,
 });
-export const cellForm = msg({ en: 'New card', ru: 'Новая карточка' });
 export const cellDraftFailed = msg({
   en: 'Could not start a card here',
   ru: 'Не удалось начать карточку здесь',
-});
-export const summaryLabel = msg({ en: 'Summary', ru: 'Название' });
-export const descriptionLabel = msg({ en: 'Description', ru: 'Описание' });
-export const moreFields = msg({ en: 'Fields', ru: 'Поля' });
-export const setByCell = msg({ en: 'Set by the cell', ru: 'Задано ячейкой' });
-export const lockedPlace = msg<{ name: string; value: string }>({
-  en: ({ name, value }) => `${name}: ${value}`,
-  ru: ({ name, value }) => `${name}: ${value}`,
-});
-export const subtaskOfLane = msg<{ name: string }>({
-  en: ({ name }) => `Subtask of “${name}”`,
-  ru: ({ name }) => `Подзадача «${name}»`,
-});
-export const addCardButton = msg({ en: 'Add', ru: 'Добавить' });
-export const addAndOpen = msg({ en: 'Add and open', ru: 'Добавить и открыть' });
-export const cardCreated = msg<{ id: string }>({
-  en: ({ id }) => `${id} added to the board`,
-  ru: ({ id }) => `${id} добавлена на доску`,
-});
-export const fillRequired = msg({
-  en: 'Fill in the required fields',
-  ru: 'Заполните обязательные поля',
-});
-export const draftKept = msg({
-  en: 'The draft stays in this cell',
-  ru: 'Черновик остался в этой ячейке',
 });
 export const issuePopup = msg({ en: 'Issue', ru: 'Задача' });
 export const issueGone = msg({

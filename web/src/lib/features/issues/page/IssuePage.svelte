@@ -4,14 +4,15 @@
   // the head cluster (the metadata line above the summary, the summary with icon actions, tags,
   // the parent) and the content beside the field panel in its own tone — the panel runs from the
   // metadata line down. The panel's side, width and collapsed state are personal settings
-  // (UI-018); on phones the panel is a section above the content. Opened by a former or internal
-  // ID, the page puts the current ID in the address (ISS-003). «Изменить», F2 or `e` turns the
+  // (UI-018); on phones the panel is a disclosure between the title and the content. Opened by a
+  // former or internal ID, the page puts the current ID in the address (ISS-003). «Изменить», F2 or `e` turns the
   // content into the edit form (ISS-018, ISS-047); the page is the `issue` context of the
   // shortcut framework — its keys act while no form or dialog has them — and the command dialog
   // is claimed for the shell's global combo and the letters of `commands_on_typing`. Tags, moving
   // and deleting are in the head and the field panel. Embedded in the board popup, the head's
   // corner carries «Открыть страницей» and the close button (`onclose`), level with the ID.
   import { goto } from '$app/navigation';
+  import ChevronDown from '@lucide/svelte/icons/chevron-down';
   import ExternalLink from '@lucide/svelte/icons/external-link';
   import Link2 from '@lucide/svelte/icons/link-2';
   import ListTree from '@lucide/svelte/icons/list-tree';
@@ -19,13 +20,16 @@
   import SquarePlus from '@lucide/svelte/icons/square-plus';
   import X from '@lucide/svelte/icons/x';
   import { onMount, untrack } from 'svelte';
+  import { MediaQuery } from 'svelte/reactivity';
 
-  import type { Issue, NewIssueLink, Project } from '#lib/api/schema.gen.ts';
-  import { MarkdownView } from '#lib/features/content/index.ts';
+  import type { Issue, IssueField, NewIssueLink, Project } from '#lib/api/schema.gen.ts';
+  import { MarkdownView, toggleTask } from '#lib/features/content/index.ts';
   import { projectHref } from '#lib/features/projects/index.ts';
   import * as common from '#lib/i18n/messages/common.ts';
   import { can, currentUser, preferences } from '#lib/session/index.ts';
+  import { NARROW } from '#lib/theme/breakpoints.ts';
   import { createMatchState, match } from '#lib/shortcuts/match.ts';
+  import { ConflictError } from '#lib/store/index.ts';
   import {
     claim,
     enter,
@@ -46,7 +50,7 @@
 
   import ActivityStream from '../activity/ActivityStream.svelte';
   import { ActivityStream as Stream } from '../activity/activity.svelte.ts';
-  import { assignToMe, setStar, setTag } from '../actions.ts';
+  import { assignToMe, saveTexts, setStar, setTag } from '../actions.ts';
   import CommentBox from '../comments/CommentBox.svelte';
   import { asAuthor } from '../comments/comments.ts';
   import AttachmentsSection from '../files/AttachmentsSection.svelte';
@@ -55,6 +59,7 @@
   import PageDrop from '../files/PageDrop.svelte';
   import FieldPanel from '../fields/FieldPanel.svelte';
   import { isBlock, isEmpty } from '../fields/field-values.ts';
+  import { saveField } from '../fields/save.ts';
   import IssueRef from '../IssueRef.svelte';
   import { issueHref, projectIssuesHref, type IssuePageData } from '../issues.ts';
   import AddLinkDialog from '../links/AddLinkDialog.svelte';
@@ -112,12 +117,17 @@
   }: Props = $props();
 
   const id = $props.id();
+  const narrow = new MediaQuery(NARROW, false);
   const PANEL_MIN = 160;
   const PANEL_MAX = 400;
 
+  let fieldsOpen = $derived(!narrow.current);
   /** The width while the handle is dragged; saved when the drag ends. */
   let dragged = $state<number | null>(null);
   let editing = $state(untrack(() => edit && issue.can.update));
+  let editSummary = $state(untrack(() => issue.summary));
+  let editSummaryError = $state<string | null>(null);
+  let editSummaryInput = $state<HTMLInputElement>();
   let tagging = $state(false);
   let moving = $state(false);
   /** The project the panel's dropdown chose, when the move needs the preview dialog. */
@@ -136,6 +146,37 @@
   const side = $derived(preferences.value('issue_panel_side'));
   const width = $derived(dragged ?? preferences.value('issue_panel_width'));
   const blocks = $derived(issue.fields.filter(isBlock));
+
+  /** Ticks or clears a checklist box of the description (CNT-041); a failure puts the box back. */
+  async function toggleDescription(line: number, checked: boolean): Promise<void> {
+    const description = toggleTask(issue.description, line, checked);
+    if (description === null) {
+      toasts.show({ message: m.descriptionChanged() });
+      throw new Error('The checklist item is gone');
+    }
+    try {
+      await saveTexts(issue.id, { description }, issue.text_version);
+    } catch (error) {
+      if (error instanceof ConflictError) toasts.show({ message: m.descriptionChanged() });
+      else showError(error);
+      throw error;
+    }
+  }
+
+  /** The same for a text field's blocks (CNT-041). */
+  async function toggleBlock(entry: IssueField, line: number, checked: boolean): Promise<void> {
+    const text = toggleTask(entry.text ?? '', line, checked);
+    if (text === null) {
+      toasts.show({ message: m.descriptionChanged() });
+      throw new Error('The checklist item is gone');
+    }
+    try {
+      await saveField(issue.id, { ...entry, text }, { kind: 'set', value: text });
+    } catch (error) {
+      showError(error);
+      throw error;
+    }
+  }
   // Keyed by the ID only: edits of the issue keep the loaded pages of its stream.
   const issueId = $derived(issue.id);
   const me = $derived(currentUser());
@@ -407,8 +448,11 @@
       </span>
     </Notice>
   {/if}
-  <MetaStrip {issue}>
+  <MetaStrip {issue} {embedded}>
     {#snippet corner()}
+      {#if embedded && !editing}
+        <VisibilityMenu {issue} text={!narrow.current} />
+      {/if}
       {#if embedded && onclose}
         <!-- issueHref resolves the address. -->
         <!-- eslint-disable svelte/no-navigation-without-resolve -->
@@ -430,18 +474,29 @@
   <div class={['frame', side]} style:--panel-width="{width / 10}rem">
     <div class="main">
       <div class="title">
-        <IssueHeader {issue}>
+        <IssueHeader
+          {issue}
+          {editing}
+          bind:summary={editSummary}
+          summaryError={editSummaryError}
+          bind:summaryInput={editSummaryInput}
+        >
           {#snippet actions()}
             {#if issue.can.update && !editing}
               <IconButton icon={Pencil} label={m.edit()} onclick={() => (editing = true)} />
             {/if}
             {#if !editing}
-              <VisibilityMenu {issue} />
+              {#if !embedded}<VisibilityMenu {issue} />{/if}
               {#if issue.can.update}
-                <TagPicker {issue} bind:open={tagging} icon />
+                <TagPicker
+                  {issue}
+                  bind:open={tagging}
+                  icon={!narrow.current}
+                  bare={narrow.current}
+                />
               {/if}
             {/if}
-            {#if canLink && !editing}
+            {#if canLink && !editing && !narrow.current}
               <IconButton
                 icon={Link2}
                 label={m.linkAction()}
@@ -450,6 +505,9 @@
             {/if}
             <IssueActions
               {issue}
+              compact={narrow.current}
+              ontag={issue.can.update && !editing ? () => (tagging = true) : undefined}
+              onlink={canLink && !editing ? () => startLinking('link') : undefined}
               ondelete={() => (deleting = true)}
               onattach={files && canAttach ? () => picker?.click() : undefined}
               oncommands={() => openCommands(false)}
@@ -477,12 +535,23 @@
       </div>
       <div class="content">
         {#if editing}
-          <EditMode {issue} onclose={() => (editing = false)} />
+          <EditMode
+            {issue}
+            bind:summary={editSummary}
+            bind:summaryError={editSummaryError}
+            summaryInput={editSummaryInput}
+            onclose={() => (editing = false)}
+          />
         {:else}
           <section class="block" aria-labelledby="{id}-description">
             <h2 class="sr-only" id="{id}-description">{m.description()}</h2>
             {#if issue.description}
-              <MarkdownView html={issue.description_html} refs={issue.refs} headingLevel={3} />
+              <MarkdownView
+                html={issue.description_html}
+                refs={issue.refs}
+                headingLevel={3}
+                ontoggle={issue.can.update ? toggleDescription : undefined}
+              />
             {:else}
               <p class="muted">{m.noDescription()}</p>
             {/if}
@@ -493,7 +562,14 @@
               {#if isEmpty(entry) || entry.html === null}
                 <p class="muted">{entry.empty_label}</p>
               {:else}
-                <MarkdownView html={entry.html} refs={issue.refs} headingLevel={3} />
+                <MarkdownView
+                  html={entry.html}
+                  refs={issue.refs}
+                  headingLevel={3}
+                  ontoggle={entry.editable && entry.text !== null
+                    ? (line: number, checked: boolean) => toggleBlock(entry, line, checked)
+                    : undefined}
+                />
               {/if}
             </section>
           {/each}
@@ -530,16 +606,19 @@
         onchange={resize}
       />
     </div>
-    <aside class="side" aria-label={m.fields()}>
-      <FieldPanel
-        {issue}
-        onmove={(project: Project) => {
-          moveTarget = project;
-          moving = true;
-        }}
-        boards={page?.boards}
-      />
-    </aside>
+    <details class="fields" bind:open={fieldsOpen}>
+      <summary><span>{m.fields()}</span><ChevronDown size={16} aria-hidden="true" /></summary>
+      <aside class="side" aria-label={m.fields()}>
+        <FieldPanel
+          {issue}
+          onmove={(project: Project) => {
+            moveTarget = project;
+            moving = true;
+          }}
+          boards={page?.boards}
+        />
+      </aside>
+    </details>
   </div>
 </div>
 
@@ -600,7 +679,27 @@
   }
 
   .page.embedded {
+    flex: 1;
+    min-height: 0;
     padding: 0;
+  }
+
+  .page.embedded .frame {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .page.embedded .main,
+  .page.embedded .side {
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  @media (width >= 48rem) {
+    .page.embedded .main {
+      padding-inline-end: var(--space-3);
+      scrollbar-gutter: stable;
+    }
   }
 
   .line {
@@ -675,16 +774,26 @@
   }
 
   /* The panel's own tone and the border facing the content mark it as one zone. */
-  .side {
+  .fields {
     flex: none;
     align-self: stretch;
     width: var(--panel-width);
-    padding: var(--space-2) var(--space-3);
     border-inline-start: 1px solid var(--color-border);
     background: var(--color-surface-sunken);
   }
 
-  .frame.start .side {
+  .fields > summary {
+    display: none;
+  }
+
+  .side {
+    width: 100%;
+    min-width: 0;
+    height: 100%;
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .frame.start .fields {
     border-inline-start: 0;
     border-inline-end: 1px solid var(--color-border);
   }
@@ -706,15 +815,30 @@
   }
 
   @media (width < 64rem) {
-    .side {
+    .fields {
       width: min(var(--panel-width), 30%);
     }
   }
 
-  /* Phones: the main column opens up so the fields sit between the title cluster and the content. */
+  /* Phones: the fields are a disclosure between the title cluster and the content. */
   @media (width < 48rem) {
     .page:not(.embedded) {
       padding: var(--space-2) var(--space-4) var(--space-12);
+    }
+
+    .page.embedded {
+      flex: none;
+      min-height: auto;
+    }
+
+    .page.embedded .frame {
+      flex: none;
+      min-height: auto;
+    }
+
+    .page.embedded .main,
+    .page.embedded .side {
+      overflow: visible;
     }
 
     .frame,
@@ -731,12 +855,43 @@
       order: 1;
     }
 
+    .fields,
+    .frame.start .fields {
+      width: auto;
+      border: 0;
+      border-block: 1px solid var(--color-border);
+      background: transparent;
+    }
+
+    .fields > summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: var(--control-md);
+      list-style: none;
+      font-weight: var(--weight-medium);
+      cursor: pointer;
+    }
+
+    .fields > summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .fields > summary :global(svg) {
+      transition: transform var(--duration-normal) var(--ease-out);
+    }
+
+    .fields[open] > summary :global(svg) {
+      transform: rotate(180deg);
+    }
+
     .side,
     .frame.start .side {
       width: auto;
-      padding: var(--space-3);
+      height: auto;
+      padding: var(--space-2) 0 0;
       border: 0;
-      border-radius: var(--radius-md);
+      background: transparent;
     }
 
     .handle {

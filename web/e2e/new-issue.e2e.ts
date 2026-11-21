@@ -5,7 +5,7 @@
 import { expect, test, type Page } from '@playwright/test';
 
 import type { Issue, Project, ProjectFields } from '../src/lib/api/schema.gen.ts';
-import { fieldButton, signIn } from './issues.ts';
+import { fieldButton, openFields, signIn } from './issues.ts';
 
 /**
  * Opens the new-issue form from the «New» menu of the shell, or from the overview of the project
@@ -79,6 +79,7 @@ test('ISS-005, ISS-006, ISS-008, ISS-010, ISS-011, FLD-057: create with a requir
   // ISS-005: the overview of the project opens the form in that project.
   await page.goto(`/projects/${key}`);
   const first = await openForm(page, 'project');
+  await openFields(page);
   const panel = first.form.getByRole('complementary', { name: 'Fields' });
   await expect(panel.getByRole('button', { name: new RegExp(name) })).toBeVisible();
 

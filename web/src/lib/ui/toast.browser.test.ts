@@ -8,7 +8,14 @@ import { ApiError } from '#lib/api/client.ts';
 import { expectAccessible, isPhone, smallTargets } from '../../test/a11y.ts';
 import Announcer from './Announcer.svelte';
 import { copyLink, copyText } from './copy.ts';
-import { DEFAULT_DURATION, MAX_TOASTS, UNDO_DURATION, showError, toasts } from './toast.svelte.ts';
+import {
+  DEFAULT_DURATION,
+  ERROR_DURATION,
+  MAX_TOASTS,
+  UNDO_DURATION,
+  showError,
+  toasts,
+} from './toast.svelte.ts';
 import Toaster from './Toaster.svelte';
 
 async function setup() {
@@ -52,12 +59,13 @@ describe('toasts', () => {
     expect(final).toHaveBeenCalledWith('timeout');
   });
 
-  it('UI-038: keeps errors until dismissed, with details and Try again', async () => {
+  it('UI-038: errors hold the screen longest, with details and Try again', async () => {
     await setup();
     const retry = vi.fn();
     vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
     showError(new ApiError(409, { code: 'conflict', message: 'stale' }, 'req-7'), retry);
-    vi.advanceTimersByTime(DEFAULT_DURATION * 10);
+    // Longer than every other toast, but not until dismissed.
+    vi.advanceTimersByTime(DEFAULT_DURATION + 2000);
     expect(toasts.items).toHaveLength(1);
     // Matchers below poll with timers, so the real ones must be back.
     vi.useRealTimers();
@@ -71,6 +79,17 @@ describe('toasts', () => {
     await page.getByRole('button', { name: 'Try again' }).click();
     expect(retry).toHaveBeenCalledOnce();
     await expect.element(page.getByText('Request ID: req-7')).not.toBeInTheDocument();
+  });
+
+  it('UI-038: an error closes by itself after its longer window', async () => {
+    await setup();
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout', 'performance'] });
+    showError(new ApiError(409, { code: 'conflict', message: 'stale' }, 'req-7'));
+    vi.advanceTimersByTime(ERROR_DURATION - 10);
+    expect(toasts.items).toHaveLength(1);
+    vi.advanceTimersByTime(20);
+    expect(toasts.items).toHaveLength(0);
+    vi.useRealTimers();
   });
 
   it('pauses while the pointer is over the toasts (WCAG 2.2.1)', async () => {

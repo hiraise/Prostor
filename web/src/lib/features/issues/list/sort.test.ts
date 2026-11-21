@@ -6,9 +6,33 @@ import type { FieldRef } from '#lib/api/schema.gen.ts';
 import { defaultColumns, parseColumn, shownColumns } from './columns.ts';
 import { nextDirection, sortedBy, sortedQuery } from './sort.ts';
 
-const PRIORITY: FieldRef = { id: 11, name: 'Priority', kind: 'enum', multi: false, builtin: null };
-const FIX: FieldRef = { id: 12, name: 'Fix version', kind: 'version', multi: true, builtin: null };
-const NOTES: FieldRef = { id: 15, name: 'Notes', kind: 'text', multi: false, builtin: null };
+const PRIORITY: FieldRef = {
+  id: 11,
+  name: 'Priority',
+  kind: 'enum',
+  multi: false,
+  builtin: null,
+  can_be_empty: false,
+  empty_label: '',
+};
+const FIX: FieldRef = {
+  id: 12,
+  name: 'Fix version',
+  kind: 'version',
+  multi: true,
+  builtin: null,
+  can_be_empty: true,
+  empty_label: 'No version',
+};
+const NOTES: FieldRef = {
+  id: 15,
+  name: 'Notes',
+  kind: 'text',
+  multi: false,
+  builtin: null,
+  can_be_empty: true,
+  empty_label: 'No notes',
+};
 
 describe('QRY-075: the sort clause of a header click', () => {
   it('replaces the clause the language found', () => {

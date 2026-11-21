@@ -66,7 +66,14 @@
   }
 </script>
 
-<Dialog bind:open={newIssueDialog.open} title={m.newIssue()} size="lg" onclose={closed}>
+<Dialog
+  bind:open={newIssueDialog.open}
+  title={m.newIssue()}
+  size="xl"
+  class="new-issue"
+  bare
+  onclose={closed}
+>
   {#if nowhere}
     <EmptyState title={m.noCreatableProjects()} />
   {:else if session.issue}
@@ -75,6 +82,9 @@
       first={newIssueDialog.target.project}
       onfinish={finish}
       onexpand={expand}
+      onclose={() => {
+        newIssueDialog.open = false;
+      }}
     />
   {:else}
     <Spinner />

@@ -5,7 +5,7 @@
 import { expect, test } from '@playwright/test';
 
 import type { Issue, IssueAnswer, Project } from '../src/lib/api/schema.gen.ts';
-import { fieldButton, signIn } from './issues.ts';
+import { fieldButton, issueAction, openFields, signIn } from './issues.ts';
 
 test('ISS-001, ISS-002, ISS-003, ISS-016, ISS-018, ISS-019, ISS-024, ISS-032, ISS-034, ISS-051: the issue page', async ({
   page,
@@ -47,6 +47,7 @@ test('ISS-001, ISS-002, ISS-003, ISS-016, ISS-018, ISS-019, ISS-024, ISS-032, IS
   await expect(page.getByText(`${renamed}-1`, { exact: true })).toBeVisible();
 
   // ISS-019: a field changes inline and is saved at once.
+  await openFields(page);
   const panel = page.getByRole('complementary', { name: 'Fields' });
   await fieldButton(panel, 'Priority').click();
   await page
@@ -97,7 +98,7 @@ test('ISS-001, ISS-002, ISS-003, ISS-016, ISS-018, ISS-019, ISS-024, ISS-032, IS
 
   // ISS-034: a new tag, put on the issue from the picker (the tag icon in the title row).
   const tag = `pale-${suffix.toLowerCase()}`;
-  await page.getByRole('button', { name: 'Add tag' }).click();
+  await issueAction(page, 'Add tag');
   const picker = page.getByRole('dialog', { name: 'Add tag' });
   await picker.getByRole('searchbox', { name: 'Find a tag' }).fill(tag);
   await picker.getByRole('button', { name: `Create tag “${tag}”` }).click();

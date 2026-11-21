@@ -390,6 +390,7 @@ export const issueClonedFrom = msg({
 });
 export const summaryChanged = msg({ en: 'Summary changed', ru: 'Название изменено' });
 export const descriptionChanged = msg({ en: 'Description changed', ru: 'Описание изменено' });
+export const commentChanged = msg({ en: 'Comment changed', ru: 'Комментарий изменён' });
 export const textChanged = msg<{ field: string }>({
   en: ({ field }) => `${field} changed`,
   ru: ({ field }) => `Поле «${field}» изменено`,

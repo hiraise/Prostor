@@ -1,5 +1,5 @@
 // Dragging cards on a desktop and on a phone (step 1.8a-6; BRD-068, BRD-069): a mouse drag, a touch
-// long press, Esc, a refused move that snaps back, the undo toast, and the card menu.
+// long press, Esc, a refused move that snaps back, and the undo toast.
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
 
@@ -222,49 +222,5 @@ describe('BRD-069: a refused move', () => {
     expect(toasts.items[0]?.detail).toBe('State: a reviewer is required');
     expect(summaries('Open')).toEqual(['Login form', 'Logout']);
     expect(summaries('In Progress')).toEqual(['Search']);
-  });
-});
-
-describe('BRD-068: the card menu', () => {
-  it('moves a card without a pointer and takes it off the board', async () => {
-    const calls = server({
-      [MOVE]: { body: placed(1, '0') },
-      'DELETE /boards/9/sprints/7/cards/102': { status: 204 },
-    });
-    const screen = await shown();
-
-    await screen.getByRole('button', { name: 'Actions of WEB-102' }).click();
-    await screen.getByRole('menuitem', { name: 'To the top' }).click();
-    await vi.waitFor(() => {
-      expect(summaries('Open')).toEqual(['Logout', 'Login form']);
-    });
-    expect(calls.find((call) => call.path.endsWith('/move'))?.body).toEqual({
-      column: 1,
-      version: 1,
-      before: 101,
-    });
-
-    await screen.getByRole('button', { name: 'Actions of WEB-102' }).click();
-    await screen.getByRole('menuitem', { name: 'Remove from board' }).click();
-    await vi.waitFor(() => {
-      expect(summaries('Open')).toEqual(['Login form']);
-    });
-    await vi.waitFor(() => {
-      expect(toasts.items.some((one) => one.message === 'Removed from the board')).toBe(true);
-    });
-    expect(calls.some((call) => call.method === 'DELETE')).toBe(true);
-  });
-
-  it('offers only «Open» on an issue the person may not change', async () => {
-    const readOnly = view({
-      issues: view().issues.map((one) => ({ ...one, can_update: false })),
-    });
-    server({ 'GET /boards/9/view': { body: readOnly } });
-    const screen = await shown();
-    await screen.getByRole('button', { name: 'Actions of WEB-102' }).click();
-    await expect.element(screen.getByRole('menuitem', { name: 'Open' })).toBeVisible();
-    // NTF-014: watching needs only reading the issue, so it stays offered.
-    await expect.element(screen.getByRole('menuitem', { name: 'Watch' })).toBeVisible();
-    expect(screen.getByRole('menuitem').elements()).toHaveLength(2);
   });
 });

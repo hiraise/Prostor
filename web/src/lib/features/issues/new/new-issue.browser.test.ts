@@ -147,6 +147,19 @@ function sent(calls: FakeRequest[]) {
 
 const summaryBox = () => page.getByRole('textbox', { name: /^Summary/ });
 const createButton = () => page.getByRole('button', { name: 'Create', exact: true });
+async function openFieldsOnPhone(): Promise<void> {
+  if (isPhone()) await page.getByText('Fields', { exact: true }).click();
+}
+
+async function chooseAction(name: string): Promise<void> {
+  if (isPhone()) {
+    await page.getByRole('button', { name: 'More', exact: true }).click();
+    const item = name === 'Watch it' ? 'menuitemradio' : 'menuitem';
+    await page.getByRole(item, { name, exact: true }).click();
+  } else {
+    await page.getByRole('button', { name, exact: true }).click();
+  }
+}
 
 beforeEach(() => {
   setAccessForTests(CREATOR);
@@ -176,6 +189,7 @@ describe('ISS-005: a new issue', () => {
       '/issues',
       { project: 3, draft: true, summary: '', description: '' },
     ]);
+    await openFieldsOnPhone();
     await expect.element(page.getByRole('button', { name: 'Ops', exact: true })).toBeVisible();
     await expect.element(createButton()).toBeDisabled();
     await userEvent.type(summaryBox(), '   ');
@@ -184,6 +198,12 @@ describe('ISS-005: a new issue', () => {
     const form = page.getByRole('form', { name: 'New issue form' });
     await expectAccessible(form.element());
     if (isPhone()) expect(smallTargets(form.element())).toEqual([]);
+
+    await page.getByRole('button', { name: 'Visible to everyone who sees the project' }).click();
+    const visibility = page.getByRole('dialog', { name: 'Visibility' });
+    await expect
+      .element(visibility.getByRole('radio', { name: 'Everyone who sees the project' }))
+      .toBeChecked();
   });
 
   it('takes the last project without a given one and lists the context, favorites, then names', async () => {
@@ -193,6 +213,7 @@ describe('ISS-005: a new issue', () => {
 
     await expect.element(summaryBox()).toBeVisible();
     expect(sent(calls)[0]?.[2]).toMatchObject({ project: 1 });
+    await openFieldsOnPhone();
     await page.getByRole('button', { name: 'Api', exact: true }).click();
     const radios = page.getByRole('group', { name: 'Project of the issue' }).getByRole('radio');
     await expect.poll(() => radios.elements().length).toBe(3);
@@ -230,6 +251,7 @@ describe('ISS-006: values of a new issue', () => {
     await render(NewIssuePage, {});
 
     const panel = page.getByRole('complementary', { name: 'Fields' });
+    await openFieldsOnPhone();
     await expect.element(panel.getByText('Major')).toBeVisible();
     await userEvent.type(summaryBox(), 'Login fails');
     await createButton().click();
@@ -251,14 +273,21 @@ describe('ISS-007: tags, star and files of a new issue', () => {
     await render(NewIssuePage, {});
 
     await expect.element(summaryBox()).toBeVisible();
-    await page.getByRole('button', { name: 'Add tag' }).click();
+    await chooseAction('Add tag');
     await page.getByRole('checkbox', { name: 'frontend' }).click();
     await userEvent.keyboard('{Escape}');
-    await page.getByRole('button', { name: 'Watch it' }).click();
+    await chooseAction('Watch it');
 
-    await expect
-      .element(page.getByRole('button', { name: 'Watch it' }))
-      .toHaveAttribute('aria-pressed', 'true');
+    if (isPhone()) {
+      await page.getByRole('button', { name: 'More', exact: true }).click();
+      await expect
+        .element(page.getByRole('menuitemradio', { name: 'Watch it' }))
+        .toHaveAttribute('aria-checked', 'true');
+    } else {
+      await expect
+        .element(page.getByRole('button', { name: 'Watch it' }))
+        .toHaveAttribute('aria-pressed', 'true');
+    }
     expect(sent(calls).slice(1)).toEqual([
       ['PUT', '/issues/900/tags/7', undefined],
       ['PUT', '/issues/900/star', undefined],
@@ -379,6 +408,30 @@ describe('ISS-010: the draft', () => {
     ]);
     session.release();
   });
+
+  it.skipIf(isPhone())(
+    'uses a compact dialog with a quiet focus and a growing description',
+    async () => {
+      server();
+      await render(NewIssueHost);
+      openNewIssue();
+      const dialog = page.getByRole('dialog', { name: 'New issue' });
+      await expect.element(summaryBox()).toHaveFocus();
+
+      expect(dialog.element().querySelector('.form-title')).toBeNull();
+      const summaryStyle = getComputedStyle(summaryBox().element());
+      expect(summaryStyle.outlineStyle).toBe('none');
+      expect(summaryStyle.borderBottomWidth).toBe('1px');
+
+      const description = dialog.getByRole('textbox', { name: 'Description', exact: true });
+      const editor = description.element().closest('.editor');
+      const frame = description.element().closest('.frame');
+      if (!editor || !frame) throw new Error('no description editor');
+      expect(editor.classList.contains('grow')).toBe(true);
+      expect(getComputedStyle(description.element()).flexGrow).toBe('1');
+      expect(frame.getBoundingClientRect().height).toBeGreaterThan(280);
+    },
+  );
 
   it('closing the dialog deletes an empty draft and keeps one with text, with a toast', async () => {
     if (isPhone()) {
@@ -538,7 +591,7 @@ describe('LNK-007, ISS-009: links of a new issue', () => {
     expect(sent(calls).some(([method]) => method === 'DELETE')).toBe(false);
   });
 
-  it('adds a link to the draft from its links section', async () => {
+  it('adds a link to the draft from the title action', async () => {
     const calls = server({
       'GET /link-types': { body: { items: [SUBTASK] } },
       'POST /issues/batch': { body: { items: [PARENT] } },
@@ -556,14 +609,13 @@ describe('LNK-007, ISS-009: links of a new issue', () => {
     preferences.set({ recent_issues: [501] });
     const screen = await render(NewIssuePage, {});
 
-    const links = screen.getByRole('region', { name: /^Links/ });
-    await expect.element(links.getByText('No links yet.')).toBeVisible();
-    await links.getByRole('button', { name: 'Add a link' }).click();
+    await chooseAction('Add a link');
     const dialog = page.getByRole('dialog', { name: 'Link issues' });
     await dialog.getByRole('combobox', { name: 'Link' }).selectOptions('child of');
     await dialog.getByRole('checkbox', { name: /WEB-12/ }).click();
     await dialog.getByRole('button', { name: 'Link', exact: true }).click();
 
+    const links = screen.getByRole('region', { name: /^Links/ });
     await expect.element(links.getByRole('link', { name: /WEB-12/ })).toBeVisible();
     expect(sent(calls)).toContainEqual([
       'POST',

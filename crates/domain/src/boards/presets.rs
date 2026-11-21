@@ -54,8 +54,8 @@ pub fn setup(preset: Preset, projects: &[ProjectFields]) -> Setup {
             _ => builtin_anywhere(projects, BuiltinField::Priority),
         },
         estimation_field: match preset {
-            Preset::Scrum => builtin_everywhere(projects, BuiltinField::Estimation),
-            _ => None,
+            Preset::Custom => None,
+            _ => builtin_everywhere(projects, BuiltinField::Estimation),
         },
     }
 }
@@ -248,7 +248,7 @@ mod tests {
         assert_eq!(scrum.estimation_field, Some(40));
         let kanban = setup(Preset::Kanban, &[a.clone(), b.clone()]);
         assert!(!kanban.sprints_on);
-        assert_eq!(kanban.estimation_field, None);
+        assert_eq!(kanban.estimation_field, Some(40));
         assert_eq!(kanban.columns[1].1.max, Some(5));
         let custom = setup(Preset::Custom, &[a, b]);
         assert!(custom.sprints_on);

@@ -134,6 +134,8 @@ pub fn field_ref(field: &prostor_store::fields::Field) -> FieldRef {
         kind: kind_key(&field.kind),
         multi: field.multi,
         builtin: builtin_key(field.builtin.as_deref()),
+        can_be_empty: field.can_be_empty,
+        empty_label: field.empty_label.clone(),
     }
 }
 

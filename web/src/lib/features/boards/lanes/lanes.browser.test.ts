@@ -264,31 +264,6 @@ describe('BRD-057: pages of lanes', () => {
 });
 
 describe('BRD-050: moving a card to another lane', () => {
-  it('moves by the card menu and sends the lane', async () => {
-    const calls = server({
-      'POST /boards/9/sprints/7/cards/102/move': {
-        body: {
-          card: { issue: 102, column: 1, lane: 'v:72', rank: 'c' },
-          issue: null,
-          refs: { fields: [], values: [], users: [], groups: [] },
-        },
-      },
-    });
-    const screen = await page();
-    await screen.getByRole('button', { name: 'Actions of WEB-102' }).click();
-    await screen.getByRole('menuitem', { name: 'Minor' }).click();
-    await vi.waitFor(() => {
-      expect(summaries('Open', 'Minor')).toEqual(['Logout']);
-    });
-    expect(calls.find((call) => call.path.endsWith('/move'))?.body).toEqual({
-      column: 1,
-      lane: 'v:72',
-      version: 1,
-    });
-    const minor = screen.getByRole('region', { name: 'Lane “Minor”' });
-    await expect.element(minor.getByText('1 card')).toBeVisible();
-  });
-
   it.skipIf(isPhone())('moves by dragging into a cell of another lane', async () => {
     const calls = server({
       'POST /boards/9/sprints/7/cards/102/move': {

@@ -104,6 +104,18 @@
     }
   }
 
+  $effect(() => {
+    const element = menu;
+    if (!open || !element) return;
+    const observer = new ResizeObserver(() => {
+      if (anchor && element.matches(':popover-open')) placeElement(element, anchor, placement, 4);
+    });
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+    };
+  });
+
   function handleTriggerKeydown(event: KeyboardEvent): void {
     if (event.key === 'ArrowDown') {
       event.preventDefault();

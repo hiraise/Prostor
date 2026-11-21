@@ -89,6 +89,29 @@ impl BoardRow {
     pub fn shown(&self, field: FieldId) -> bool {
         !self.hidden.contains(&field)
     }
+
+    /// The configured estimation, or the standard one of an existing kanban board.
+    pub fn estimation_field(&self) -> Option<FieldId> {
+        self.full.board.estimation_field_id.or_else(|| {
+            if Preset::parse(&self.full.board.preset) != Some(Preset::Kanban) {
+                return None;
+            }
+            let field = self
+                .fields
+                .iter()
+                .find(|f| f.builtin.as_deref() == Some(BuiltinField::Estimation.key()))?;
+            self.full
+                .board
+                .projects
+                .iter()
+                .all(|p| {
+                    self.attached
+                        .iter()
+                        .any(|a| a.project_id == *p && a.field_id == field.id)
+                })
+                .then_some(field.id)
+        })
+    }
 }
 
 /// What the viewer may do with the board.
@@ -368,7 +391,20 @@ pub(crate) async fn load(
     };
     let attached = store_fields::of_projects(&mut *conn, &full.board.projects).await?;
     let hidden = card_setup::hidden_fields(viewer, &attached);
-    let named = card_setup::named(&full.board);
+    let mut named = card_setup::named(&full.board);
+    if full.board.estimation_field_id.is_none()
+        && Preset::parse(&full.board.preset) == Some(Preset::Kanban)
+        && let Some(field) =
+            store_fields::by_builtin(&mut *conn, BuiltinField::Estimation.key()).await?
+        && full.board.projects.iter().all(|p| {
+            attached
+                .iter()
+                .any(|a| a.project_id == *p && a.field_id == field.id)
+        })
+        && !named.contains(&field.id)
+    {
+        named.push(field.id);
+    }
     let fields = if named.is_empty() {
         Vec::new()
     } else {

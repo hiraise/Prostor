@@ -202,7 +202,7 @@ fn cards_of(row: &BoardRow) -> BoardCards {
             _ => CardColor::None,
         },
         color_field: shown(b.color_field_id),
-        estimation: shown(b.estimation_field_id),
+        estimation: shown(row.estimation_field()),
         original_estimation: shown(b.original_estimation_field_id),
     }
 }

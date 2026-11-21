@@ -45,10 +45,9 @@ import {
   removeCard,
   setBoardProfile,
   untag,
-  unwatchIssue,
   updateBoard,
-  watchIssue,
 } from '../boards.ts';
+import { openNewIssue } from '#lib/features/issues/index.ts';
 import * as m from '../messages.ts';
 
 /** A cell: the IDs of its shown cards in order, and how many it holds. */
@@ -126,8 +125,6 @@ export class BoardState {
   dragging = $state(false);
   /** The issue shown in the popup (BRD-079), in edit mode (BRD-080). */
   popup = $state<{ issue: number; edit: boolean } | null>(null);
-  /** The cell whose create form is open (BRD-077), by `cellKey`. */
-  composing = $state<string | null>(null);
   #controller: AbortController | null = null;
   #waiting: (() => void)[] = [];
 
@@ -328,21 +325,6 @@ export class BoardState {
       const now = this.issues.get(issue);
       if (now) this.issues.set(issue, { ...now, tags: before.tags });
       failed(m.tagFailed({ name }), error);
-    }
-  }
-
-  /** Watches or unwatches a card's issue (NTF-014): the marker moves at once and rolls back. */
-  async watch(issue: number, on: boolean): Promise<void> {
-    const before = this.issues.get(issue);
-    if (!before) return;
-    this.issues.set(issue, { ...before, starred: on });
-    try {
-      if (on) await watchIssue(issue);
-      else await unwatchIssue(issue);
-    } catch (error) {
-      const now = this.issues.get(issue);
-      if (now) this.issues.set(issue, { ...now, starred: before.starred });
-      failed(m.watchFailed(), error);
     }
   }
 
@@ -570,6 +552,18 @@ export class BoardState {
   /** Opens an issue in the popup (BRD-079); `edit` starts in edit mode (BRD-080). */
   openIssue(issue: number, edit = false): void {
     this.popup = { issue, edit };
+  }
+
+  /** A cell draft is open in the new-issue dialog; the page reloads the view when it closes
+   * (a publish sends no board event, so the new card would not appear otherwise). */
+  awaitedDialog = false;
+
+  /** Opens the new-issue dialog on a draft of the cell (BRD-077): the card lands in it. */
+  async createInCell(column: number, lane: string | null): Promise<void> {
+    const draft = await this.cellDraft(column, lane);
+    if (draft === null) return;
+    this.awaitedDialog = true;
+    openNewIssue({ draft });
   }
 
   /** The person may create issues on the shown sprint: in some board project, not archived. */

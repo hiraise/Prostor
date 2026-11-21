@@ -7,7 +7,7 @@ import type { BoardView } from '#lib/api/schema.gen.ts';
 import { setAccessForTests, setSessionForTests } from '#lib/session/index.ts';
 import { toasts } from '#lib/ui/toast.svelte.ts';
 
-import { expectAccessible } from '../../../../test/a11y.ts';
+import { expectAccessible, isPhone } from '../../../../test/a11y.ts';
 import { fakeApi, type FakeRequest, type FakeRoute } from '../../../../test/fake-api.ts';
 import BoardPage from '../board/BoardPage.svelte';
 import { BoardState } from '../board/board-state.svelte.ts';
@@ -306,6 +306,7 @@ describe('BRD-081: the header filter', () => {
   it('sends the query with the view, puts it in the address and keeps it', async () => {
     const calls = server();
     const screen = await render(BoardPage, { board: SCRUM, now: LAST_DAY });
+    if (isPhone()) await screen.getByRole('button', { name: 'Card filter' }).click();
     const bar = screen.getByRole('search', { name: 'Card filter' });
     await bar.getByRole('combobox').fill('for: me');
     await bar.getByRole('button', { name: 'Find' }).click();
@@ -333,6 +334,7 @@ describe('BRD-081: the header filter', () => {
     const sorted = scrumView({ sort: [{ key: 'created', direction: 'desc', field: null }] });
     const calls = server({}, sorted);
     const screen = await render(BoardPage, { board: SCRUM, q: 'sort by: created', now: LAST_DAY });
+    if (isPhone()) await screen.getByRole('button', { name: 'Card filter' }).click();
     await expect.element(screen.getByText('Ordered by the query')).toBeVisible();
 
     const model = new BoardState(9, 11, 'sort by: created');

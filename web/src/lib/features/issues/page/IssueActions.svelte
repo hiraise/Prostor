@@ -1,8 +1,8 @@
 <script lang="ts">
   // «Ещё» of the issue page (ISS-017, P1 part): the copy actions (UI-006), «Прикрепить файлы»,
   // «Клонировать» when the project allows it (AUT-066), and «Удалить» for those who may delete.
-  // Items without the right are not shown; «Изменить», «Добавить тег» and «Связать» are icon
-  // buttons in the title row on every width and are not repeated here.
+  // Items without the right are not shown; on wide screens «Добавить тег» and «Связать» are
+  // icons in the title row, on phones they join this menu.
   import Copy from '@lucide/svelte/icons/copy';
   import CopyPlus from '@lucide/svelte/icons/copy-plus';
   import Ellipsis from '@lucide/svelte/icons/ellipsis';
@@ -13,6 +13,7 @@
   import Link from '@lucide/svelte/icons/link';
   import ListTree from '@lucide/svelte/icons/list-tree';
   import SquarePlus from '@lucide/svelte/icons/square-plus';
+  import Tag from '@lucide/svelte/icons/tag';
   import Paperclip from '@lucide/svelte/icons/paperclip';
   import Trash2 from '@lucide/svelte/icons/trash-2';
 
@@ -41,6 +42,10 @@
     oncommands?: () => unknown;
     /** «Повторить последнюю команду»; absent when nothing was applied in this tab yet. */
     onrepeat?: () => unknown;
+    /** On phones the title's tag and link actions join this menu. */
+    compact?: boolean;
+    ontag?: () => unknown;
+    onlink?: () => unknown;
   }
 
   let {
@@ -52,6 +57,9 @@
     onduplicate,
     oncommands,
     onrepeat,
+    compact = false,
+    ontag,
+    onlink,
   }: Props = $props();
 
   // The project's `clone_issue` toggle (AUT-066), looked up before the menu can open and cached
@@ -66,6 +74,18 @@
   const items = $derived.by((): MenuEntry[] => {
     const readable = issue.readable_id;
     const entries: MenuEntry[] = [];
+    if (compact && ontag) {
+      entries.push({ type: 'action', label: m.addTag(), icon: Tag, onSelect: () => void ontag() });
+    }
+    if (compact && onlink) {
+      entries.push({
+        type: 'action',
+        label: m.linkAction(),
+        icon: Link,
+        onSelect: () => void onlink(),
+      });
+    }
+    if (compact && entries.length > 0) entries.push({ type: 'separator' });
     if (readable) {
       entries.push(
         {

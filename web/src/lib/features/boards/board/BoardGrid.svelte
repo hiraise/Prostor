@@ -258,9 +258,9 @@
     display: flex;
     flex: 1;
     align-items: flex-start;
-    gap: var(--space-3);
+    gap: var(--space-2);
     min-height: 0;
-    padding: var(--space-3) var(--space-6) var(--space-6);
+    padding: var(--space-2) var(--space-4) var(--space-4);
     overflow: auto;
     overscroll-behavior-x: contain;
   }
@@ -278,7 +278,7 @@
   .heads,
   .row {
     display: flex;
-    gap: var(--space-3);
+    gap: var(--space-2);
     width: max-content;
   }
 
@@ -290,7 +290,7 @@
   }
 
   .heads .column {
-    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
   }
 
   .row {
@@ -298,7 +298,7 @@
   }
 
   .row .slot {
-    border-radius: 0 0 var(--radius-md) var(--radius-md);
+    border-radius: 0 0 var(--radius-sm) var(--radius-sm);
   }
 
   .lane {
@@ -321,7 +321,7 @@
 
   .column {
     display: flex;
-    flex: 0 0 17rem;
+    flex: 0 0 16rem;
     flex-direction: column;
     min-width: 0;
     border-radius: var(--radius-md);
@@ -329,15 +329,15 @@
   }
 
   .column.size-0 {
-    flex-basis: 14rem;
+    flex-basis: 13rem;
   }
 
   .column.size-2 {
-    flex-basis: 19rem;
+    flex-basis: 18rem;
   }
 
   .column.size-3 {
-    flex-basis: 22rem;
+    flex-basis: 21rem;
   }
 
   .column.collapsed {
@@ -358,6 +358,11 @@
   }
 
   /* One column at a time: full width, swiped, snapping to each column. */
+  .grid.zoom-column,
+  .grid.zoom-all {
+    padding: var(--space-2) var(--space-4) var(--space-4);
+  }
+
   .grid.zoom-column {
     scroll-snap-type: x mandatory;
     scroll-padding-inline: var(--space-4);
@@ -367,6 +372,17 @@
     flex-basis: 100%;
     scroll-snap-align: start;
     scroll-snap-stop: always;
+  }
+
+  .grid.zoom-column :global(.header) {
+    height: calc(var(--control-sm) + var(--space-6) + var(--space-2));
+    align-content: flex-start;
+  }
+
+  .grid.zoom-column :global(.limits) {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   /* The overview: every column narrow. */
@@ -385,8 +401,8 @@
     min-height: 2.75rem;
     padding: var(--space-2) var(--space-3);
     border: 0;
-    border-top: 3px solid var(--color-border);
-    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    border-top: 1px solid var(--color-border);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
     background: none;
     color: inherit;
     font: inherit;
@@ -399,7 +415,7 @@
   }
 
   .overview-head[aria-expanded='false'] {
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
   }
 
   .overview-name {

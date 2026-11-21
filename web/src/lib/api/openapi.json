@@ -19380,7 +19380,7 @@
           },
           "starred": {
             "type": "boolean",
-            "description": "The caller watches the issue (NTF-014): the card menu offers to watch or unwatch."
+            "description": "The caller watches the issue (NTF-014)."
           },
           "summary": {
             "type": "string"
@@ -20880,7 +20880,9 @@
           "name",
           "kind",
           "multi",
-          "builtin"
+          "builtin",
+          "can_be_empty",
+          "empty_label"
         ],
         "properties": {
           "builtin": {
@@ -20892,6 +20894,13 @@
                 "type": "null"
               }
             ]
+          },
+          "can_be_empty": {
+            "type": "boolean",
+            "description": "The field's own setting; a project attachment may override it (the issue page's\n`IssueField.required` is the attachment's truth)."
+          },
+          "empty_label": {
+            "type": "string"
           },
           "id": {
             "type": "integer",

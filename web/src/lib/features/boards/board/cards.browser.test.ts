@@ -1,6 +1,6 @@
 // Cards by their settings on a desktop and on a phone (step 1.8c-4; BRD-059…BRD-063, ISS-042):
-// the «Карточка» tab, fields in full or by first letter, color stripes with names, the lock and
-// the file count, editing on the card, estimation sums.
+// the «Карточка» tab, fields in full or by first letter, color stripes with accessible names,
+// the lock and the file count, editing on the card, estimation sums.
 import { userEvent } from 'vitest/browser';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { render } from 'vitest-browser-svelte';
@@ -15,6 +15,7 @@ import {
   ASSIGNEE,
   CARDS,
   ESTIMATION,
+  MAJOR,
   MEMBER,
   PRIORITY,
   SESSION,
@@ -113,16 +114,30 @@ describe('BRD-059: card fields', () => {
     await expect.element(initial).toBeVisible();
     expect(initial.element().textContent).toBe('MMajor');
   });
+
+  it('folds empty fields but keeps their editors one disclosure away', async () => {
+    server({});
+    const screen = await render(BoardPage, { board: board() });
+    const card = screen.getByRole('article', { name: 'WEB-102' });
+    expect(card.getByText(/Priority: not set/).elements()).toHaveLength(0);
+
+    await card.getByRole('button', { name: '1 empty field' }).click();
+    await expect.element(card.getByText(/Priority: not set/)).toBeVisible();
+    await expect.element(card.getByRole('button', { name: /Priority of WEB-102/ })).toBeVisible();
+    await card.getByRole('button', { name: 'Hide empty fields' }).click();
+    await expect.element(card.getByText(/Priority: not set/)).not.toBeInTheDocument();
+  });
 });
 
 describe('BRD-060: card colors', () => {
-  it('by a field: a stripe in the value color, with the value named on the card', async () => {
+  it('by a field: only the stripe is visible, with the value named for screen readers', async () => {
     const cards: Board['cards'] = { ...CARDS, fields: [], color: 'field', color_field: PRIORITY };
     const shown = view({ board: board({ cards }) });
     server({}, shown);
     const screen = await render(BoardPage, { board: shown.board });
     const card = screen.getByRole('article', { name: 'WEB-101' });
-    await expect.element(card.getByText('Major')).toBeVisible();
+    await expect.element(card.getByText('Color: Major')).toBeInTheDocument();
+    expect(card.getByText('Major').elements()).toHaveLength(0);
     const element = card.element() as HTMLElement;
     expect(element.classList.contains('striped')).toBe(true);
     expect(element.style.getPropertyValue('--stripe')).toBe('var(--value-3-fg)');
@@ -147,7 +162,27 @@ describe('BRD-060: card colors', () => {
   });
 });
 
+describe('BRD-059: card layout', () => {
+  it('aligns an editable field chip with the start of the title', async () => {
+    server({});
+    const screen = await render(BoardPage, { board: board() });
+    const card = screen.getByRole('article', { name: 'WEB-101' });
+    await expect.element(card).toBeVisible();
+    const title = card.element().querySelector('.title');
+    if (!title) throw new Error('no card title');
+    const chip = card.getByText('Major', { exact: true }).element();
+    expect(chip.getBoundingClientRect().left).toBeCloseTo(title.getBoundingClientRect().left, 0);
+  });
+});
+
 describe('BRD-062: estimation', () => {
+  it('shows when a card has no estimate', async () => {
+    server({});
+    const screen = await render(BoardPage, { board: board() });
+    const card = screen.getByRole('article', { name: 'WEB-102' });
+    await expect.element(card.getByText('No estimate', { exact: true })).toBeVisible();
+  });
+
   it('sums columns and the board, and an edit on a card moves the sums', async () => {
     const calls = server({ 'PUT /issues/101/fields/8': { body: {} } }, summed());
     const screen = await render(BoardPage, { board: board() });
@@ -202,36 +237,30 @@ describe('BRD-063: editing on cards', () => {
     const other = screen.getByRole('article', { name: 'WEB-102' });
     expect(other.getByText(/not set/).elements()).toHaveLength(0);
   });
-});
 
-describe('NTF-014: watching from a card', () => {
-  it('the card menu watches and unwatches, and a refusal brings the marker back', async () => {
-    let refuse = false;
-    const calls = server(
+  it('a field that cannot be emptied offers no empty choice on the card (FLD-057)', async () => {
+    const shown = view({ profile: { ...view().profile, card_size: 2 } });
+    server(
       {
-        'PUT /issues/101/star': () => (refuse ? failure(403, 'forbidden') : { status: 204 }),
-        'DELETE /issues/101/star': () => ({ status: 204 }),
+        [`GET /issues/101/fields/${String(PRIORITY.id)}/options`]: {
+          body: {
+            values: [{ ...MAJOR, released: false, release_date: null }],
+            users: [],
+            groups: [],
+            more: false,
+            can_add_value: false,
+            set: 3,
+          },
+        },
       },
-      view(),
+      shown,
     );
     const screen = await render(BoardPage, { board: board() });
     const card = screen.getByRole('article', { name: 'WEB-101' });
-    await card.getByRole('button', { name: 'Actions of WEB-101' }).click();
-
-    // Watching moves the marker at once; the menu item then offers to stop.
-    await screen.getByRole('menuitem', { name: 'Watch' }).click();
-    expect(calls.at(-1)?.method).toBe('PUT');
-    expect(calls.at(-1)?.path).toBe('/issues/101/star');
-    await card.getByRole('button', { name: 'Actions of WEB-101' }).click();
-    await screen.getByRole('menuitem', { name: 'Stop watching' }).click();
-    expect(calls.at(-1)?.method).toBe('DELETE');
-
-    // A refusal rolls the marker back, so the item still offers to watch.
-    refuse = true;
-    await card.getByRole('button', { name: 'Actions of WEB-101' }).click();
-    await screen.getByRole('menuitem', { name: 'Watch' }).click();
-    await card.getByRole('button', { name: 'Actions of WEB-101' }).click();
-    await expect.element(screen.getByRole('menuitem', { name: 'Watch' })).toBeVisible();
+    await card.getByRole('button', { name: /Priority of WEB-101/ }).click();
+    await expect.element(screen.getByRole('radio', { name: 'Major' })).toBeVisible();
+    // The field cannot be emptied: the list holds its values only, no empty row.
+    expect(screen.getByRole('radio').elements()).toHaveLength(1);
   });
 });
 

@@ -69,7 +69,7 @@ fn kind_of(fields: &[Field], id: FieldId) -> Option<FieldKind> {
 /// What the view sums (BRD-062): the estimation field when it exists, fits and the viewer reads
 /// it.
 pub(super) fn estimate(board: &BoardRow) -> Option<Estimate> {
-    let field = board.full.board.estimation_field_id?;
+    let field = board.estimation_field()?;
     if board.hidden.contains(&field) {
         return None;
     }

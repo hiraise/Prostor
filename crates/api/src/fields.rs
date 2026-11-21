@@ -75,6 +75,10 @@ pub struct FieldRef {
     pub multi: bool,
     #[schema(required = true)]
     pub builtin: Option<BuiltinField>,
+    /// The field's own setting; a project attachment may override it (the issue page's
+    /// `IssueField.required` is the attachment's truth).
+    pub can_be_empty: bool,
+    pub empty_label: String,
 }
 
 /// A value set as a reference.

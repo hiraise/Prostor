@@ -15,7 +15,7 @@ test('BRD-001, BRD-068, BRD-069, BRD-074, BRD-088, BRD-114: a board', async ({
   const phone = testInfo.project.name === 'phone';
   const key = `B${phone ? 'P' : 'D'}${String(Date.now()).slice(-6)}`;
   await signIn(page);
-  const { board, issues } = await boardWithCards(page, key, ['Alpha', 'Beta', 'Gamma']);
+  const { board, sprint, issues } = await boardWithCards(page, key, ['Alpha', 'Beta', 'Gamma']);
   const [first, second] = board.columns.map((column) => column.value.name);
   if (!first || !second) throw new Error('the board has fewer than two columns');
   const beta = issues[1];
@@ -31,6 +31,9 @@ test('BRD-001, BRD-068, BRD-069, BRD-074, BRD-088, BRD-114: a board', async ({
   await page.goto(`/boards/${String(board.id)}`);
   await expect(page.getByRole('heading', { level: 1 })).toContainText(board.name);
   await expect(cardsOf(page, first)).toHaveText(['Alpha', 'Beta', 'Gamma']);
+  const alphaCard = page.locator('[data-card]').filter({ hasText: 'Alpha' });
+  await expect(alphaCard.getByText('No estimate', { exact: true })).toBeVisible();
+  await expect(alphaCard.getByRole('button', { name: /Actions of/ })).toHaveCount(0);
 
   const grid = page.getByRole('region', { name: 'Columns' });
   if (phone) {
@@ -88,10 +91,13 @@ test('BRD-001, BRD-068, BRD-069, BRD-074, BRD-088, BRD-114: a board', async ({
   await expect(cardsOf(page, first)).toHaveText(['Gamma', 'Alpha']);
   await expect(cardsOf(watcher, first)).toHaveText(['Gamma', 'Alpha']);
 
-  // Alpha leaves the board through its card's menu.
-  const alphaId = issues[0]?.readable_id ?? '';
-  await page.getByRole('button', { name: `Actions of ${alphaId}` }).click();
-  await page.getByRole('menuitem', { name: 'Remove from board' }).click();
+  // Alpha leaves through the API; both open boards receive the change.
+  const alpha = issues[0];
+  if (!alpha) throw new Error('no issue');
+  const removed = await page.request.delete(
+    `/api/v1/boards/${String(board.id)}/sprints/${String(sprint)}/cards/${String(alpha.id)}`,
+  );
+  expect(removed.status()).toBe(204);
   await expect(cardsOf(page, first)).toHaveText(['Gamma']);
   await expect(cardsOf(watcher, first)).toHaveText(['Gamma']);
 

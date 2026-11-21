@@ -3,9 +3,10 @@
   // the summary (two lines on the smaller sizes, three on the larger), the assignee's avatar and
   // the estimation. Medium and up add the fields of the «Карточка» settings (BRD-059) and the
   // file count, large and up the tags, the largest the start of the description. A colored stripe
-  // on the leading edge shows the project or the value of the color field (BRD-060), always
-  // with a name beside it. People who may change the issue edit fields, the assignee and the
-  // estimation in place and take tags off (BRD-063). A restricted issue shows a lock (ISS-042).
+  // on the leading edge shows the project or the value of the color field (BRD-060); its name is
+  // available to screen readers without a visible label. People who may change the issue edit
+  // fields, the assignee and the estimation in place and take tags off (BRD-063). Empty custom
+  // fields stay behind a disclosure until they are needed. A restricted issue shows a lock.
   // The ID link covers the card: a click, Enter or a double click opens the issue in the board's
   // popup (BRD-079), F2 in its edit mode (BRD-080); Ctrl/⌘ or the middle button keep the link.
   import Lock from '@lucide/svelte/icons/lock';
@@ -36,7 +37,6 @@
   import * as m from '../messages.ts';
   import type { BoardState } from './board-state.svelte.ts';
   import { cardFieldOf, entryOf, formatNumber } from './card-fields.ts';
-  import CardMenu from './CardMenu.svelte';
 
   interface Props {
     issue: CardIssue;
@@ -76,11 +76,13 @@
   });
   const estimationRef = $derived(board.cards.estimation);
   const estimation = $derived(valueOf(estimationRef?.id)?.number ?? null);
-  /** The «Карточка» fields; empty ones only for people who may set them. */
+  const configured = $derived(board.cards.fields.filter((ref) => ref.kind !== 'text'));
+  let emptyOpen = $state(false);
+  const empty = $derived(
+    configured.filter((ref) => issue.can_update && valueOf(ref.id) === undefined),
+  );
   const shown = $derived(
-    board.cards.fields.filter(
-      (ref) => ref.kind !== 'text' && (issue.can_update || valueOf(ref.id) !== undefined),
-    ),
+    configured.filter((ref) => valueOf(ref.id) !== undefined || (issue.can_update && emptyOpen)),
   );
   /** The stripe: a color scheme and the name it stands for. */
   const stripe = $derived.by((): { color: number; name: string } | null => {
@@ -95,10 +97,6 @@
     }
     return null;
   });
-  /** The color field's value is named on the card unless a shown field names it already. */
-  const stripeNamed = $derived(
-    board.cards.color !== 'field' || shown.some((ref) => ref.id === board.cards.color_field?.id),
-  );
   const excerpt = $derived(size === 3 ? plainExcerpt(issue.excerpt) : '');
 
   function text(ref: FieldRef, field: CardField): string {
@@ -169,21 +167,18 @@
   aria-labelledby="card-{issue.id}"
 >
   <div class="top">
-    <span class="id" id="card-{issue.id}"><IssueRef issue={brief} summary={false} /></span>
+    <p class="title">
+      <span class="id" id="card-{issue.id}"><IssueRef issue={brief} summary={false} /></span>
+      <span class="summary">{issue.summary}</span>
+    </p>
     {#if issue.restricted}
       <span class="lock" role="img" aria-label={m.restricted()} title={m.restricted()}
         ><Lock size={14} aria-hidden="true" /></span
       >
     {/if}
-    {#if stripe}
-      {#if stripeNamed}
-        <span class="sr-only">{m.colorOf({ name: stripe.name })}</span>
-      {:else}
-        <span class="stripe-name"><ValueChip name={stripe.name} color={stripe.color} /></span>
-      {/if}
-    {/if}
-    <span class="tools">
-      {#if assigneeField && (assignee !== undefined || issue.can_update)}
+    {#if stripe}<span class="sr-only">{m.colorOf({ name: stripe.name })}</span>{/if}
+    {#if assigneeField && (assignee !== undefined || issue.can_update)}
+      <span class="tools">
         {#snippet person()}
           {#if assignee}
             <span class="avatar" role="img" aria-label={m.assignee({ name: assignee.full_name })}>
@@ -200,12 +195,10 @@
           {/if}
         {/snippet}
         {@render editable(assigneeField, person, 'person')}
-      {/if}
-      <span class="menu"><CardMenu {issue} {board} {model} /></span>
-    </span>
+      </span>
+    {/if}
   </div>
-  <p class="summary">{issue.summary}</p>
-  {#if size >= 1 && (shown.length > 0 || issue.files > 0)}
+  {#if size >= 1 && shown.length > 0}
     <dl class="fields">
       {#each shown as ref (ref.id)}
         {@const field = valueOf(ref.id)}
@@ -227,7 +220,7 @@
                       ></span
                     >
                   {:else if held}
-                    <ValueChip name={held.name} color={held.color} />
+                    <ValueChip name={held.name} color={held.color} size="sm" />
                   {:else}
                     <span class="plain">{name}</span>
                   {/if}
@@ -246,21 +239,23 @@
           </dd>
         </div>
       {/each}
-      {#if issue.files > 0}
-        <div class="field">
-          <dt class="sr-only">{m.filesLabel()}</dt>
-          <dd class="plain files">
-            <Paperclip size={14} aria-hidden="true" />{m.files({ count: issue.files })}
-          </dd>
-        </div>
-      {/if}
     </dl>
+  {/if}
+  {#if size >= 1 && empty.length > 0}
+    <button
+      type="button"
+      class="empty-toggle"
+      aria-expanded={emptyOpen}
+      onclick={() => {
+        emptyOpen = !emptyOpen;
+      }}>{emptyOpen ? m.hideEmptyFields() : m.emptyFields({ count: empty.length })}</button
+    >
   {/if}
   {#if size >= 2 && issue.tags.length > 0}
     <ul class="tags" aria-label={m.tagsLabel()}>
       {#each issue.tags as tag (tag.id)}
         <li>
-          <ValueChip name={tag.name} color={tag.color} />
+          <ValueChip name={tag.name} color={tag.color} size="sm" />
           {#if issue.can_update}
             <button
               type="button"
@@ -276,14 +271,29 @@
     </ul>
   {/if}
   {#if excerpt}<p class="excerpt">{excerpt}</p>{/if}
-  {#if estimationRef && (estimation !== null || issue.can_update)}
-    {#snippet estimate()}
-      <span>{estimation === null ? '—' : formatNumber(estimation, estimationRef.kind)}</span>
-    {/snippet}
-    <p class="estimation">
-      {#if !issue.can_update}<span class="sr-only">{`${estimationRef.name}: `}</span>{/if}
-      {@render editable(estimationRef, estimate, 'number')}
-    </p>
+  {#if (size >= 1 && issue.files > 0) || estimationRef}
+    <div class="meta">
+      {#if size >= 1 && issue.files > 0}
+        <span class="plain files"
+          ><Paperclip size={14} aria-hidden="true" /><span class="sr-only"
+            >{m.filesLabel()}:
+          </span><span>{m.files({ count: issue.files })}</span></span
+        >
+      {/if}
+      {#if estimationRef}
+        {#snippet estimate()}
+          <span
+            >{estimation === null
+              ? m.noEstimate()
+              : formatNumber(estimation, estimationRef.kind)}</span
+          >
+        {/snippet}
+        <p class="estimation">
+          {#if !issue.can_update}<span class="sr-only">{`${estimationRef.name}: `}</span>{/if}
+          {@render editable(estimationRef, estimate, 'number')}
+        </p>
+      {/if}
+    </div>
   {/if}
 </article>
 
@@ -291,20 +301,20 @@
   .card {
     position: relative;
     contain: layout paint;
+    container-type: inline-size;
     display: flex;
     flex-direction: column;
     gap: var(--space-1);
-    padding: var(--space-2) var(--space-3);
+    padding: var(--space-1_5) var(--space-2);
     border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
+    border-radius: var(--radius-sm);
     background: var(--color-surface-raised);
-    box-shadow: var(--shadow-sm);
     font-size: var(--text-sm);
   }
 
-  /* The color stripe (BRD-060) on the leading edge; the name is beside it or in a field. */
+  /* The color's full name stays available to screen readers; only the stripe is visible. */
   .striped {
-    border-inline-start: 4px solid var(--stripe);
+    border-inline-start: 2px solid var(--stripe);
   }
 
   .card:hover {
@@ -318,11 +328,24 @@
 
   .top {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
+    flex-wrap: nowrap;
+    align-items: flex-start;
     justify-content: space-between;
-    gap: var(--space-2);
+    gap: var(--space-1);
     min-height: 1.5rem;
+  }
+
+  .title {
+    display: -webkit-box;
+    flex: 1;
+    min-width: 0;
+    margin: 0;
+    overflow: hidden;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
   }
 
   .id {
@@ -344,14 +367,26 @@
 
   .lock {
     display: inline-flex;
+    flex-shrink: 0;
     color: var(--color-text-muted);
   }
 
-  /* Narrow cards (the phone overview) shrink the name so the tools stay on the card. */
-  .stripe-name {
-    min-width: 0;
-    margin-inline-end: auto;
-    overflow: hidden;
+  .empty-toggle {
+    position: relative;
+    z-index: 1;
+    align-self: flex-start;
+    min-height: 1.5rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-text-faint);
+    font: inherit;
+    font-size: var(--text-xs);
+    cursor: pointer;
+  }
+
+  .empty-toggle:hover {
+    color: var(--color-text);
   }
 
   /* Editors and tag removal sit above the link that covers the card. */
@@ -375,6 +410,11 @@
     font: inherit;
     text-align: start;
     cursor: pointer;
+  }
+
+  .edit.value {
+    max-width: calc(100cqi - var(--space-4));
+    margin-inline: calc(-1 * var(--space-1) - 1px);
   }
 
   .edit:hover,
@@ -409,6 +449,16 @@
     font-style: italic;
   }
 
+  .meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-1);
+    min-height: var(--space-5);
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+
   .files {
     display: inline-flex;
     align-items: center;
@@ -416,10 +466,22 @@
   }
 
   @media (pointer: coarse) {
+    .card {
+      padding: var(--space-2) var(--space-3);
+    }
+
+    .card.size-0 {
+      padding: var(--space-1) var(--space-2);
+    }
+
     .edit,
     .untag {
       min-height: 2.75rem;
       min-width: 2.75rem;
+    }
+
+    .empty-toggle {
+      min-height: 2.75rem;
     }
   }
 
@@ -436,36 +498,13 @@
     flex-shrink: 0;
   }
 
-  /* Above the link that covers the card; on a mouse it shows with the card's hover or focus. */
-  .menu {
-    position: relative;
-    z-index: 1;
-    display: inline-flex;
-  }
-
-  @media (pointer: fine) {
-    .menu {
-      opacity: 0;
-    }
-
-    .card:hover .menu,
-    .card:focus-within .menu {
-      opacity: 1;
-    }
-  }
-
   .summary {
-    display: -webkit-box;
-    overflow: hidden;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
+    margin-inline-start: var(--space-2);
     color: var(--color-text);
-    overflow-wrap: anywhere;
   }
 
-  .size-2 .summary,
-  .size-3 .summary {
+  .size-2 .title,
+  .size-3 .title {
     -webkit-line-clamp: 3;
     line-clamp: 3;
   }
@@ -480,10 +519,16 @@
     list-style: none;
   }
 
+  .field {
+    min-width: 0;
+    max-width: 100%;
+  }
+
   .field dd {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-1);
+    min-width: 0;
     margin: 0;
   }
 
@@ -503,7 +548,7 @@
   }
 
   .estimation {
-    align-self: flex-end;
+    margin-inline-start: auto;
     color: var(--color-text-muted);
     font-variant-numeric: tabular-nums;
   }

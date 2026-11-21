@@ -1,6 +1,7 @@
 <script lang="ts">
   // A cell: the cards of one column (in one lane) in the shared order; a truncated cell ends with
-  // «Ещё N», which shows the next page (BRD-057). Its «+» opens the create form in place (BRD-077).
+  // «Ещё N», which shows the next page (BRD-057). Its «+» opens the new-issue dialog on the cell's
+  // draft, so the card lands in the cell (BRD-077).
   import Plus from '@lucide/svelte/icons/plus';
 
   import type { Board, BoardColumn } from '#lib/api/schema.gen.ts';
@@ -9,8 +10,7 @@
 
   import type { CardSize } from '../boards.ts';
   import * as m from '../messages.ts';
-  import CellForm from '../popup/CellForm.svelte';
-  import { cellKey, type BoardState } from './board-state.svelte.ts';
+  import type { BoardState } from './board-state.svelte.ts';
   import Card from './Card.svelte';
 
   interface Props {
@@ -26,8 +26,6 @@
 
   const cell = $derived(model.cell(column.id, lane));
   const hidden = $derived(model.hidden(column.id, lane));
-  const key = $derived(cellKey(column.id, lane));
-  const composing = $derived(model.composing === key);
   const label = $derived(
     lane === null
       ? m.cellCards({ name: column.value.name })
@@ -45,7 +43,7 @@
         {/if}
       {/each}
     </ul>
-  {:else if lane === null && !composing}
+  {:else if lane === null}
     <!-- Lanes make many empty cells: there they stay blank. -->
     <p class="empty">{m.emptyCell()}</p>
   {/if}
@@ -59,17 +57,7 @@
       {m.moreCards({ count: hidden })}
     </Button>
   {/if}
-  {#if composing}
-    <CellForm
-      {board}
-      {column}
-      {lane}
-      {model}
-      onclose={() => {
-        if (model.composing === key) model.composing = null;
-      }}
-    />
-  {:else if model.canCreate}
+  {#if model.canCreate}
     <span class="add">
       <IconButton
         icon={Plus}
@@ -78,7 +66,7 @@
           ? m.addInCell({ name: column.value.name })
           : m.addInCell({ name: `${column.value.name} · ${model.laneLabel(lane).name}` })}
         onclick={() => {
-          model.composing = key;
+          void model.createInCell(column.id, lane);
         }}
       />
     </span>
@@ -89,10 +77,10 @@
   .cell {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
+    gap: var(--space-1_5);
     min-height: 4rem;
     height: 100%;
-    padding: var(--space-2);
+    padding: var(--space-1_5);
   }
 
   .cards {
@@ -100,10 +88,21 @@
     user-select: none;
     -webkit-touch-callout: none;
     flex-direction: column;
-    gap: var(--space-2);
+    gap: var(--space-1_5);
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+
+  @media (pointer: coarse) {
+    .cell,
+    .cards {
+      gap: var(--space-2);
+    }
+
+    .cell {
+      padding: var(--space-2);
+    }
   }
 
   .add {

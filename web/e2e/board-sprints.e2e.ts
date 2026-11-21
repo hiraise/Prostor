@@ -15,7 +15,7 @@ import type {
   Sprint,
 } from '../src/lib/api/schema.gen.ts';
 import { cardsOf, mouseDrag } from './boards.ts';
-import { signIn } from './issues.ts';
+import { openFields, signIn } from './issues.ts';
 
 async function json<T>(
   answer: Promise<{ status(): number; json(): Promise<unknown> }>,
@@ -136,6 +136,7 @@ test('BRD-089, BRD-098, BRD-100, BRD-101, ISS-020: sprints and the backlog', asy
 
   // Gamma joins the next sprint from its own page.
   await page.goto(`/issues/${gamma.readable_id ?? ''}`);
+  await openFields(page);
   const boards = page.getByRole('region', { name: 'Boards' });
   await expect(boards.getByText('Not on boards')).toBeVisible();
   await boards.getByRole('button', { name: 'Add to board' }).click();

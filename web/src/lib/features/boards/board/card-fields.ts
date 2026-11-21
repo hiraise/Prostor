@@ -38,9 +38,11 @@ export function entryOf(
   return {
     field: ref,
     editable,
-    empty_label: '',
+    // The field's own setting: a project attachment may override it, but the card payload
+    // carries no attachment — the server still refuses a clear it must refuse.
+    empty_label: ref.empty_label,
     private: false,
-    required: false,
+    required: !ref.can_be_empty,
     html: null,
     values: kind === 'user' || kind === 'group' ? [] : known(ids, names.values),
     users: kind === 'user' ? known(ids, names.users) : [],

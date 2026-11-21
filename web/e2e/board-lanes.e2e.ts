@@ -1,5 +1,5 @@
 // Lanes and creating on a board end to end (step 1.8c): a scrum board with parent lanes; a card
-// moves to another lane and becomes that issue's subtask (a drag on a desktop, the card menu on a
+// moves to another lane and becomes that issue's subtask (a drag on a desktop, an API move on a
 // phone); a card is created in a cell of a lane; it opens in the issue popup and is edited
 // there. Runs on a desktop and on a phone.
 import { expect, test, type Page } from '@playwright/test';
@@ -86,8 +86,19 @@ test('BRD-050, BRD-054, BRD-077, BRD-079, BRD-080, BRD-096: parent lanes and the
 
   // Alpha moves to «Checkout» and becomes its subtask.
   if (phone) {
-    await page.getByRole('button', { name: `Actions of ${alpha.readable_id ?? ''}` }).click();
-    await page.getByRole('menuitem', { name: 'Checkout' }).click();
+    const current = await json<Issue>(api.get(`/api/v1/issues/${String(alpha.id)}`));
+    const moved = await api.post(
+      `/api/v1/boards/${id}/sprints/${String(sprint)}/cards/${String(alpha.id)}/move`,
+      {
+        data: {
+          column: Number(columnId),
+          lane: checkout.lane.key,
+          index: 0,
+          version: current.version,
+        },
+      },
+    );
+    expect(moved.status()).toBeLessThan(300);
   } else {
     await mouseDrag(
       page,
@@ -99,12 +110,16 @@ test('BRD-050, BRD-054, BRD-077, BRD-079, BRD-080, BRD-096: parent lanes and the
   await expect(cellCards(page, column, 'Checkout')).toHaveText(['Alpha']);
   await expect.poll(() => parentOf(page, alpha.id)).toBe('Checkout');
 
-  // A card made in the cell of «Login» is a subtask of it.
+  // A card made in the cell of «Login» is a subtask of it: the new-issue form opens on the
+  // cell's draft, and «Create» publishes and opens the new issue's page. Back on the board
+  // the card sits in its cell.
   await page.getByRole('button', { name: `Add a card to “${column} · Login”` }).click();
-  const form = page.getByRole('form', { name: 'New card' });
+  const form = page.getByRole('form', { name: 'New issue form' });
   await form.getByRole('textbox', { name: 'Summary' }).fill('Delta');
-  await form.getByRole('button', { name: 'Add', exact: true }).click();
+  await form.getByRole('button', { name: 'Create', exact: true }).click();
   await expect(form).toBeHidden();
+  await expect(page.getByRole('heading', { level: 1, name: 'Delta' })).toBeVisible();
+  await page.goto(`/boards/${id}`);
   await expect(cellCards(page, column, 'Login')).toHaveText(['Delta']);
   const delta = page.locator('article').filter({ hasText: 'Delta' });
   const deltaId = (await delta.locator('.id a').textContent())?.trim() ?? '';

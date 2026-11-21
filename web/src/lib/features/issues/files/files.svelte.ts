@@ -151,7 +151,7 @@ export class IssueFiles {
       files.map((file, index) =>
         this.#send(file, {
           onprogress: (loaded, total) => {
-            this.#update(entries[index]?.key, { loaded, total });
+            this.#progress(entries[index]?.key, loaded, total);
           },
         }),
       ),
@@ -242,6 +242,16 @@ export class IssueFiles {
     this.pending = this.pending.map((entry) =>
       entry.key === key ? { ...entry, ...changes } : entry,
     );
+  }
+
+  /** Progress arrives per network flush — dozens of times a second per file; the bar shows
+   * whole percents, so the state (and with it the list) changes only when one does. */
+  #progress(key: number | undefined, loaded: number, total: number): void {
+    const entry = key === undefined ? undefined : this.pending.find((one) => one.key === key);
+    if (!entry) return;
+    const percent = (at: number, of: number): number => (of > 0 ? Math.floor((100 * at) / of) : 0);
+    if (percent(entry.loaded, entry.total) === percent(loaded, total)) return;
+    this.#update(key, { loaded, total });
   }
 }
 

@@ -1,5 +1,6 @@
 <script lang="ts">
-  // The issue's visibility (ISS-041…ISS-043) as the lock beside «Изменить»: the button shows the
+  // The issue's visibility (ISS-041…ISS-043) as the lock beside «Изменить» on the full page or a
+  // text button in the popup's metadata: the button shows the
   // state (a closed lock when the issue is limited to an audience), and the popover under it
   // changes the audience for those who may — saving at once, rolling back with the reason — or
   // names the audience for those who may not. The reporter is always included (ISS-041).
@@ -16,7 +17,7 @@
   import Popover from '#lib/ui/Popover.svelte';
   import { refusalText } from '#lib/features/fields/index.ts';
 
-  let { issue }: { issue: Issue } = $props();
+  let { issue, text = false }: { issue: Issue; text?: boolean } = $props();
 
   const restricted = $derived(isRestricted(issue.audience));
   const editable = $derived(issue.can.update);
@@ -63,12 +64,18 @@
 
 <Popover label={m.visibility()} bind:open>
   {#snippet trigger(props)}
-    <IconButton
-      icon={restricted ? Lock : LockOpen}
-      label={m.visibility()}
-      pressed={restricted}
-      {...props}
-    />
+    {#if text}
+      <Button variant="ghost" icon={restricted ? Lock : LockOpen} {...props}>
+        {restricted ? audienceText(issue.audience) : m.visibleToAll()}
+      </Button>
+    {:else}
+      <IconButton
+        icon={restricted ? Lock : LockOpen}
+        label={m.visibility()}
+        pressed={restricted}
+        {...props}
+      />
+    {/if}
   {/snippet}
   {#if editable}
     <div class="picker">
