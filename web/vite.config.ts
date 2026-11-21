@@ -68,7 +68,12 @@ export default defineConfig({
       {
         extends: true,
         // Pre-bundled up front, so Vite does not reload the page in the middle of a run.
-        optimizeDeps: { include: ['axe-core'] },
+        // The lucide icons stay out of the bundler entirely: their imports sit inside .svelte
+        // files, which the dependency scanner cannot read, so on a cold cache (CI) Vite found
+        // them only mid-run and re-optimized — reloading every open page into a half-broken
+        // state where Svelte components crashed with "Cannot read properties of undefined".
+        // Served as the tiny ESM files they are, there is nothing to discover late.
+        optimizeDeps: { include: ['axe-core'], exclude: ['@lucide/svelte'] },
         // Shared cases the server's tests run too (markdown-view.browser.test.ts reads them).
         server: { fs: { allow: ['.', '../crates/markup/tests'] } },
         test: {
