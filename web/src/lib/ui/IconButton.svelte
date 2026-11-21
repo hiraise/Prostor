@@ -48,6 +48,9 @@
     justify-content: center;
     width: var(--control-md);
     height: var(--control-md);
+    /* A fixed-size touch target must not flex-shrink: beside a long dialog title on a phone
+       it squeezed to 40 px with the wider system fonts of some machines (D-019). */
+    flex-shrink: 0;
     padding: 0;
     border: 1px solid transparent;
     border-radius: var(--radius-md);
