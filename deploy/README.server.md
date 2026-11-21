@@ -2,18 +2,11 @@
 
 Один контейнер с сервером и веб-интерфейсом внутри плюс PostgreSQL — [`Dockerfile`](Dockerfile) и [`compose.server.yaml`](compose.server.yaml). Рассчитано на машину профиля 2 vCPU / 4 ГБ.
 
-## Собрать образ
+Готовый образ публикуется в реестре: `ghcr.io/hiraise/prostor` (теги вида `0.1.0` и `latest` — релизы, `main` — текущее состояние разработки). Обе архитектуры: `linux/amd64` и `linux/arm64` — Docker сам выберет нужную.
 
-На машине с Docker и исходниками (для сервера x86‑64; замените платформу на `linux/arm64`, если сервер на ARM):
+## Установить
 
-```bash
-docker buildx build --platform linux/amd64 -f deploy/Dockerfile -t prostor:<версия> --load .
-docker save prostor:<версия> | gzip > prostor-<версия>.tar.gz
-```
-
-## Развернуть на сервере
-
-Нужны `prostor-<версия>.tar.gz` и `deploy/compose.server.yaml`. Рядом с compose-файлом создайте `.env`:
+Скачайте [`compose.server.yaml`](compose.server.yaml) и рядом создайте `.env`:
 
 ```bash
 POSTGRES_PASSWORD=$(openssl rand -hex 16)        # пароль базы
@@ -23,7 +16,7 @@ PROSTOR_SECRET_KEY=$(openssl rand -base64 32)  # ключ для хранени�
 Затем:
 
 ```bash
-docker load < prostor-<версия>.tar.gz
+docker compose -f compose.server.yaml pull
 docker compose -f compose.server.yaml up -d --wait
 docker compose -f compose.server.yaml logs app   # строка «… enter the setup code …»
 ```
@@ -34,7 +27,7 @@ docker compose -f compose.server.yaml logs app   # строка «… enter the 
 
 ## Обновление и резервные копии
 
-- **Обновление**: собрать новый образ, на сервере `docker load` и снова `docker compose -f compose.server.yaml up -d` — миграции применятся при старте сами.
+- **Обновление**: `docker compose -f compose.server.yaml pull && docker compose -f compose.server.yaml up -d` — миграции применятся при старте сами. Обновляться можно и на `main`, но релизные теги стабильнее.
 - **Резервные копии** (встроенных пока нет, ADM-001 в P2) — по крону, включают и базу, и том файлов:
 
 ```bash
@@ -44,3 +37,13 @@ docker run --rm -v prostor_appdata:/files -v "$PWD":/backup alpine \
 ```
 
 Перед обновлением — снапшот обеих копий; откат = старый образ плюс восстановленный дамп.
+
+## Собрать образ из исходников
+
+Для машины без доступа к реестру или своих правок (для сервера x86‑64; замените платформу на `linux/arm64`, если сервер на ARM):
+
+```bash
+docker buildx build --platform linux/amd64 -f deploy/Dockerfile -t prostor:local --load .
+```
+
+и замените `image:` в `compose.server.yaml` на `prostor:local`. Обновление — пересборка и `docker compose -f compose.server.yaml up -d`.

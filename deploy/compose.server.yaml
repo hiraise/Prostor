@@ -1,11 +1,14 @@
 # A small self-contained deployment: prostor and its PostgreSQL (deploy/Dockerfile, D-032's
-# 2 vCPU / 4 GB profile is enough). Copy this file and an `.env` beside it:
+# 2 vCPU / 4 GB profile is enough). The image is published: ghcr.io/hiraise/prostor —
+# version tags and `latest` are releases, `main` the current export. Copy this file and
+# an `.env` beside it:
 #   POSTGRES_PASSWORD=<a password>          # openssl rand -hex 16
 #   PROSTOR_SECRET_KEY=<32 bytes base64>  # openssl rand -base64 32; lets the mail screen store secrets
-# Then: docker compose -f compose.server.yaml up -d --wait
+# Then: docker compose -f compose.server.yaml pull
+# and   docker compose -f compose.server.yaml up -d --wait
 # and `docker compose -f compose.server.yaml logs app` for the setup code line; open the
 # address in a browser and finish the setup wizard (docs/guide/admin.md «Первый запуск»).
-# Upgrades: rebuild the image, `docker compose ... up -d` again — migrations run at start.
+# Upgrades: `pull` and `up -d` again — migrations run at start.
 name: prostor
 
 services:
@@ -28,7 +31,7 @@ services:
     restart: unless-stopped
 
   app:
-    image: prostor:1.12c
+    image: ghcr.io/hiraise/prostor:0.1.0
     # Secrets come from .env; add when needed:
     #   PROSTOR_SMTP_URL / PROSTOR_MAIL_FROM  - mail transport until the mail screen is set
     #   PROSTOR_TRUSTED_PROXIES=172.16.0.0/12   - behind a reverse proxy that sets X-Forwarded-For

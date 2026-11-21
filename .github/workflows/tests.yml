@@ -1,0 +1,62 @@
+# The checks every export and release runs on GitHub (D-068). A reusable job:
+# ci.yml calls it on a push to main, release.yml on a tag. The same stages as the
+# local `make check`, minus what needs the private tree or a desktop: the docs and
+# catalog stages (the export strips the tools), the web build and the shell size
+# (the image builds it), e2e (a local gate — the flakiest stage, and every export
+# has passed `make check` before it leaves).
+name: tests
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  # The committed .sqlx answers the compile-time query checks (D-015); testkit
+  # gives every test a fresh migrated database on the service below.
+  SQLX_OFFLINE: "true"
+  DATABASE_URL: postgres://prostor:prostor@localhost:5432/prostor
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18.6-alpine
+        env:
+          POSTGRES_USER: prostor
+          POSTGRES_PASSWORD: prostor
+          POSTGRES_DB: prostor
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U prostor"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install # the pinned toolchain, components and the wasm target (rust-toolchain.toml)
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --check
+      - run: cargo clippy --all-targets --locked
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
+      - run: cargo nextest run --locked
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm --prefix web ci --no-audit --no-fund
+      - run: make wasm # the query module the web app imports (web/src/lib/query)
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: chromium-${{ runner.os }}-${{ hashFiles('web/package-lock.json') }}
+      - run: cd web && npx playwright install --with-deps chromium
+      - run: npm --prefix web run -s lint
+      - run: npm --prefix web run -s typecheck
+      - run: npm --prefix web run -s test
